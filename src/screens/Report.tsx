@@ -40,7 +40,9 @@ export function Report() {
         logs: data!.rideLogs,
         period,
         today,
-        chartImage: chartRef.current?.toBase64Image('image/png', 1) ?? null,
+        chartImage: chartRef.current
+          ? { dataUrl: chartRef.current.toBase64Image('image/png', 1), width: chartRef.current.width, height: chartRef.current.height }
+          : null,
       });
     } finally {
       setPdfBusy(false);

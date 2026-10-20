@@ -17,6 +17,7 @@ import { createStorage, type DataMode } from './lib/storage';
 import { AppointmentForm } from './screens/AppointmentForm';
 import { Appointments } from './screens/Appointments';
 import { CheckIn } from './screens/CheckIn';
+import { Complaint } from './screens/Complaint';
 import { History } from './screens/History';
 import { Home } from './screens/Home';
 import { Report } from './screens/Report';
@@ -88,6 +89,9 @@ export function App() {
         break;
       case 'report':
         screen = <Report />;
+        break;
+      case 'complaint':
+        screen = <Complaint periodId={route.periodId} />;
         break;
       default:
         // Screens that aren't built yet fall back to Home.
