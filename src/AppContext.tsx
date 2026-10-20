@@ -6,6 +6,7 @@
 //   - mode:     'real' or 'demo'
 //   - storage:  the Storage object for the current mode
 //   - profile:  the rider's profile (or undefined before setup)
+//   - today:    today's date as "YYYY-MM-DD" (a fixed date in demo mode)
 //   - setProfile: update the profile after saving it
 //   - toggleDemo: switch demo mode on/off
 // ---------------------------------------------------------------------------
@@ -17,6 +18,7 @@ export interface AppContextValue {
   mode: DataMode;
   storage: Storage;
   profile: Profile | undefined;
+  today: string;
   setProfile(profile: Profile): void;
   toggleDemo(): void;
 }

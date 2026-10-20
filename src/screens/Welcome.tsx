@@ -5,7 +5,9 @@
 // ---------------------------------------------------------------------------
 import { useRef, useState, type FormEvent } from 'react';
 import { useApp } from '../AppContext';
+import { Screen } from '../components/Screen';
 import { Disclaimer } from '../components/Disclaimer';
+import { ErrorSummary, TextField } from '../components/FormFields';
 import { listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
 import type { Profile, Role } from '../types';
@@ -55,24 +57,15 @@ export function Welcome() {
   }
 
   const isCaregiver = form.role === 'caregiver';
-  const errorList = Object.values(errors);
 
   return (
-    <main className="screen">
-      <h1>Welcome to RideProof</h1>
+    <Screen title="Welcome to RideProof">
       <p>Keep track of your medical rides, and prove it when rides go wrong.</p>
       <Disclaimer />
 
       {/* noValidate: we show our own friendlier error messages instead of the browser's. */}
       <form onSubmit={handleSubmit} noValidate>
-        {errorList.length > 0 && (
-          <div className="error-summary" role="alert" tabIndex={-1} ref={errorSummaryRef}>
-            <p><strong>Please fix these:</strong></p>
-            <ul>
-              {errorList.map((message) => <li key={message}>{message}</li>)}
-            </ul>
-          </div>
-        )}
+        <ErrorSummary errors={Object.values(errors)} ref={errorSummaryRef} />
 
         {/* A fieldset + legend groups the two choices under one question. */}
         <fieldset className="choice-group">
@@ -156,43 +149,6 @@ export function Welcome() {
           {saving ? 'Saving…' : 'Save and continue'}
         </button>
       </form>
-    </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// A labeled text box that shows an error message underneath when needed.
-// Written once here so every field is accessible in the same way.
-// ---------------------------------------------------------------------------
-interface TextFieldProps {
-  id: string;
-  label: string;
-  value: string;
-  onChange(value: string): void;
-  hint?: string;
-  error?: string;
-  type?: 'text' | 'tel';
-  autoComplete?: string;
-}
-
-function TextField({ id, label, value, onChange, hint, error, type = 'text', autoComplete }: TextFieldProps) {
-  // aria-describedby links the box to its hint and error text, so a screen
-  // reader reads them aloud when the user lands on the box.
-  const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ');
-  return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      {hint && <p id={`${id}-hint`} className="field-hint">{hint}</p>}
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete={autoComplete}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy || undefined}
-      />
-      {error && <p id={`${id}-error`} className="field-error">{error}</p>}
-    </div>
+    </Screen>
   );
 }

@@ -7,10 +7,16 @@
 // ---------------------------------------------------------------------------
 import { useEffect, useMemo, useState } from 'react';
 import { AppContext, type AppContextValue } from './AppContext';
+import { BottomNav } from './components/BottomNav';
 import { Header } from './components/Header';
+import { Screen } from './components/Screen';
+import { getToday } from './lib/clock';
 import { loadDemoFlag, saveDemoFlag } from './lib/demoFlag';
-import { useRoute } from './lib/router';
+import { routeToHash, useRoute } from './lib/router';
 import { createStorage, type DataMode } from './lib/storage';
+import { AppointmentForm } from './screens/AppointmentForm';
+import { Appointments } from './screens/Appointments';
+import { CheckIn } from './screens/CheckIn';
 import { Home } from './screens/Home';
 import { Welcome } from './screens/Welcome';
 import type { Profile } from './types';
@@ -22,6 +28,9 @@ export function App() {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const route = useRoute();
+  const today = getToday(mode);
+  // A short text version of the screen we're on, e.g. "demo#/home".
+  const screenKey = `${mode}${routeToHash(route)}${profile ? '' : '-setup'}`;
 
   // Whenever the mode changes, load that mode's profile.
   useEffect(() => {
@@ -46,18 +55,31 @@ export function App() {
     setMode(next);
   }
 
-  const contextValue: AppContextValue = { mode, storage, profile, setProfile, toggleDemo };
+  const contextValue: AppContextValue = { mode, storage, profile, today, setProfile, toggleDemo };
 
   // Pick the screen to show.
   let screen;
   if (loading) {
-    screen = <main className="screen"><p>Loading…</p></main>;
+    screen = <Screen title="RideProof"><p>Loading…</p></Screen>;
   } else if (!profile) {
     screen = <Welcome />;
   } else {
-    switch (route) {
+    switch (route.name) {
       case 'home':
         screen = <Home />;
+        break;
+      case 'appointments':
+        screen = <Appointments />;
+        break;
+      case 'appointment-new':
+        screen = <AppointmentForm />;
+        break;
+      case 'appointment-edit':
+        // The key makes React start fresh if we go from editing one appointment to another.
+        screen = <AppointmentForm key={route.id} id={route.id} />;
+        break;
+      case 'checkin':
+        screen = <CheckIn />;
         break;
     }
   }
@@ -66,9 +88,11 @@ export function App() {
     <AppContext.Provider value={contextValue}>
       <Header />
       {/* The key makes React replay the fade-in each time the screen changes. */}
-      <div className="screen-transition" key={`${mode}-${route}-${profile ? 'ready' : 'setup'}`}>
+      <div className="screen-transition" key={screenKey}>
         {screen}
       </div>
+      {/* The bottom menu only makes sense once setup is done. */}
+      {profile && !loading && <BottomNav current={route} />}
     </AppContext.Provider>
   );
 }
