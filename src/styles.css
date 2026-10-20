@@ -433,3 +433,25 @@ textarea {
 .done-box { display: flex; align-items: center; gap: 0.75rem; color: var(--color-good); }
 .done-box h2 { margin: 0.5rem 0; font-size: 1.6rem; }
 .done-box h2:focus { outline: none; }
+
+/* ---------- Booking reminders ---------- */
+.card-reminder { border: 3px solid var(--color-warn); background: var(--color-warn-bg); }
+.card-reminder h2 { display: flex; align-items: center; gap: 0.5rem; color: var(--color-warn); }
+.reminder-item + .reminder-item { border-top: 2px solid #e2c780; margin-top: 1rem; padding-top: 0.5rem; }
+.reminder-title { font-weight: 700; margin-bottom: 0.25rem; }
+.reminder-item p { margin: 0.25rem 0; }
+
+/* A button that looks like a link, for less important actions. */
+.link-button {
+  min-height: var(--tap-size);
+  margin-top: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+}

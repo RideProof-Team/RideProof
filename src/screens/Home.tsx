@@ -3,18 +3,22 @@
 //   - Do I have an appointment today? -> big "Check in" button
 //   - When is my next appointment, and is the ride booked?
 //   - What's coming up after that?
-// Booking reminders are added here in Phase 4.
+//   - Is a ride booking deadline coming up? -> reminder with Call button
 // ---------------------------------------------------------------------------
 import { useApp } from '../AppContext';
+import { BookingReminders } from '../components/BookingReminders';
 import { BookingStatus } from '../components/BookingStatus';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { findLog } from '../lib/checkinFlow';
 import { formatLongDate, formatShortDate, formatTime } from '../lib/dates';
 import { APPOINTMENT_TYPE_LABELS, whose } from '../lib/labels';
-import { upcomingTrips, type Trip } from '../lib/recurrence';
+import { upcomingTrips } from '../lib/recurrence';
+import { bookingReminders } from '../lib/reminders';
 import { SEVERITY_DISPLAY, rideSeverity } from '../lib/rideStatus';
 import { routeToHash } from '../lib/router';
+import { getStateRule } from '../lib/stateRules';
+import type { Appointment } from '../types';
 import { useRideData } from '../lib/useRideData';
 
 /** How many appointments to list under "Coming up". */
@@ -34,10 +38,12 @@ export function Home() {
   const laterTrips = trips.filter((t) => t.date > today);
   const nextTrip = laterTrips[0];
   const comingUp = laterTrips.slice(1, 1 + COMING_UP_COUNT);
+  const stateRule = getStateRule(profile.state);
+  const reminders = stateRule ? bookingReminders(appointments, today, stateRule.bookingWindowBusinessDays) : [];
 
   // One tap to mark a ride as booked, right from Home.
-  async function markBooked(trip: Trip) {
-    await storage.saveAppointment({ ...trip.appointment, rideBooked: true });
+  async function markBooked(appointment: Appointment) {
+    await storage.saveAppointment({ ...appointment, rideBooked: true });
     await reload();
   }
 
@@ -93,7 +99,7 @@ export function Home() {
         </section>
       )}
 
-      {/* REMINDERS (Phase 4) */}
+      <BookingReminders reminders={reminders} onBooked={(r) => markBooked(r.appointment)} />
 
       {nextTrip && (
         <section className="card" aria-labelledby="next-heading">
@@ -106,20 +112,23 @@ export function Home() {
           </p>
           {nextTrip.appointment.clinicAddress && <p className="card-detail">{nextTrip.appointment.clinicAddress}</p>}
           <BookingStatus appointment={nextTrip.appointment} />
-          {!nextTrip.appointment.rideBooked && (
+          {/* Skip these buttons if the reminder box above already shows them. */}
+          {!nextTrip.appointment.rideBooked && !reminders.some((r) => r.appointment.id === nextTrip.appointment.id) && (
             <div className="button-stack">
               <a href={`tel:${profile.rideCompanyPhone}`} className="button-secondary">
                 <Icon name="phone" /> Call {profile.rideCompanyName} to book
               </a>
-              <button type="button" className="button-secondary" onClick={() => markBooked(nextTrip)}>
+              <button type="button" className="button-secondary" onClick={() => markBooked(nextTrip.appointment)}>
                 <Icon name="check" /> I booked this ride
               </button>
             </div>
           )}
           {nextTrip.appointment.rideBooked && !nextTrip.appointment.confirmationNumber && (
-            <a href={routeToHash({ name: 'appointment-edit', id: nextTrip.appointment.id })}>
-              Add confirmation number
-            </a>
+            <p>
+              <a href={routeToHash({ name: 'appointment-edit', id: nextTrip.appointment.id })}>
+                Add confirmation number
+              </a>
+            </p>
           )}
         </section>
       )}
