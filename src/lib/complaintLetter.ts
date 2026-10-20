@@ -67,7 +67,8 @@ function appointmentWords(logs: RideLog[]): string {
 }
 
 /**
- * The key sentence, for example:
+ * The key sentence, built from ALL rides logged in the period (so the date
+ * range covers every logged ride, not just the bad ones). For example:
  * "Between September 30 and October 28, 2026, my scheduled rides were late
  *  5 times and did not arrive 2 times, causing me to miss my dialysis
  *  appointment on October 14, 2026."
@@ -175,7 +176,7 @@ export function buildComplaintLetter({ profile, logs, period, today, stateRule }
       'for rides to my medical appointments. I am writing to file a formal complaint about repeated problems with these rides.',
   );
   lines.push('');
-  lines.push([summarySentence(problems), ...extraSentences(problems)].filter(Boolean).join(' '));
+  lines.push([summarySentence(inRange), ...extraSentences(inRange)].filter(Boolean).join(' '));
   lines.push('');
   lines.push(
     `In total, I logged ${plural(stats.totalRides, 'ride', 'rides')} during this time, and ` +

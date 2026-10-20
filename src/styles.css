@@ -97,13 +97,20 @@ h1[tabindex='-1']:focus { outline: none; }
 }
 
 .demo-banner {
+  display: block;
+  width: 100%;
+  min-height: var(--tap-size);
   padding: 0.35rem 1rem;
+  border: none;
   background: var(--color-demo);
   color: #ffffff;
+  font: inherit;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
+  cursor: pointer;
 }
+.demo-banner-hint { text-decoration: underline; margin-left: 0.4rem; }
 
 /* ---------- Screen layout ---------- */
 .screen {
@@ -512,4 +519,55 @@ textarea {
     line-height: 1.5;
     color: #000;
   }
+}
+
+/* ---------- Demo controls panel ---------- */
+.demo-dialog {
+  width: min(92vw, 420px);
+  max-height: 90vh;
+  padding: 1.25rem;
+  border: 3px solid var(--color-demo);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+/* The darkened background behind the open panel. */
+.demo-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+.demo-dialog h2 { margin-top: 0; }
+.demo-dialog h3 { font-size: 1.05rem; margin: 1rem 0 0; }
+.shortcut-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.5rem; }
+
+/* ---------- Notification-style pop-up ---------- */
+.toast {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 50;
+  width: min(94vw, 420px);
+  transform: translateX(-50%);
+  padding: 0.75rem 1rem;
+  border-radius: 18px;
+  background: #f8f8f8;
+  color: var(--color-text);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.3);
+  animation: toast-in 300ms ease-out;
+}
+@keyframes toast-in {
+  from { transform: translate(-50%, -120%); }
+  to { transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+.toast-app { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; color: var(--color-muted); }
+.toast-app img { border-radius: 5px; }
+.toast-title { margin: 0.25rem 0 0; font-weight: 700; }
+.toast-body { margin: 0.15rem 0 0; font-size: 1rem; }
+.toast-close {
+  min-height: var(--tap-size);
+  padding: 0 0.5rem;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }

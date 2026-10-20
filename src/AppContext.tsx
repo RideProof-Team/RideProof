@@ -9,10 +9,18 @@
 //   - today:    today's date as "YYYY-MM-DD" (a fixed date in demo mode)
 //   - setProfile: update the profile after saving it
 //   - toggleDemo: switch demo mode on/off
+//   - refreshAll: reload every screen's data (used by "Reset demo")
+//   - showToast:  show a pop-up message that looks like a phone notification
 // ---------------------------------------------------------------------------
 import { createContext, useContext } from 'react';
 import type { DataMode, Storage } from './lib/storage';
 import type { Profile } from './types';
+
+/** A pop-up message, styled like a phone notification. */
+export interface ToastMessage {
+  title: string;
+  body: string;
+}
 
 export interface AppContextValue {
   mode: DataMode;
@@ -21,6 +29,8 @@ export interface AppContextValue {
   today: string;
   setProfile(profile: Profile): void;
   toggleDemo(): void;
+  refreshAll(): void;
+  showToast(message: ToastMessage | null): void;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

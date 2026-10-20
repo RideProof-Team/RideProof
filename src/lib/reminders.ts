@@ -57,7 +57,7 @@ export function bookingReminders(
 export function reminderText(reminder: BookingReminder, profile: Profile): { title: string; body: string } {
   const who = profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your';
   const type = APPOINTMENT_TYPE_LABELS[reminder.appointment.type].toLowerCase();
-  const when = `${formatLongDate(reminder.tripDate)} at ${formatTime(reminder.appointment.time)}`;
+  const when = `at ${reminder.appointment.clinicName} on ${formatLongDate(reminder.tripDate)} at ${formatTime(reminder.appointment.time)}`;
   const deadline = formatLongDate(reminder.deadline);
 
   switch (reminder.urgency) {
