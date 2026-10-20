@@ -44,6 +44,8 @@ export interface Appointment {
   time: string;
   clinicName: string;
   clinicAddress: string;
+  /** Optional: the clinic's phone number, for tap-to-call. */
+  clinicPhone?: string;
   type: AppointmentType;
   recurrence: RecurrenceRule;
   rideBooked: boolean;
@@ -84,4 +86,7 @@ export interface RideLog {
   notes: string;
   /** Exact moment the log was saved (ISO format). Filled in automatically. */
   recordedAt: string;
+  /** Optional evidence: when pickup was scheduled, and when the driver came ("HH:MM"). */
+  scheduledPickup?: string;
+  actualPickup?: string;
 }

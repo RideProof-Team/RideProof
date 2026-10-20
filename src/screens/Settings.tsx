@@ -2,12 +2,15 @@
 // Settings.tsx — change your information, notifications, delete all data,
 // and information about the app.
 // ---------------------------------------------------------------------------
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { BackupButton, RestoreButton } from '../components/BackupControls';
 import { useApp } from '../AppContext';
 import { Disclaimer } from '../components/Disclaimer';
 import { Screen } from '../components/Screen';
 import { askNotificationPermission, clearSentNotifications, notificationPermission } from '../lib/notifications';
+import { saveLastBackupDate } from '../lib/backup';
 import { askConfirm } from '../lib/feedback';
+import { requestPersistentStorage, type PersistState } from '../lib/persist';
 import { navigate, routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
 import { createStorage } from '../lib/storage';
@@ -25,6 +28,10 @@ export function Settings() {
   const { profile, mode, setProfile, toggleDemo } = useApp();
   const [permission, setPermission] = useState(notificationPermission);
   const [deleting, setDeleting] = useState(false);
+  const [persist, setPersist] = useState<PersistState | null>(null);
+  useEffect(() => {
+    requestPersistentStorage().then(setPersist);
+  }, []);
   if (!profile) return null;
   const isDemo = mode === 'demo';
 
@@ -46,6 +53,7 @@ export function Settings() {
     await createStorage('demo').clearAll();
     clearSentNotifications('real');
     clearSentNotifications('demo');
+    saveLastBackupDate(null);
     setProfile(undefined);
     navigate({ name: 'home' }); // with no profile, this shows the Welcome screen
   }
@@ -86,6 +94,29 @@ export function Settings() {
         <p className="field-hint">
           On iPhone, notifications only work after you add RideProof to your Home Screen (see Help).
         </p>
+      </section>
+
+      <section className="card" aria-labelledby="backup-heading">
+        <h2 id="backup-heading">Back up your records</h2>
+        {isDemo ? (
+          <p>Backups are turned off in demo mode. Exit demo mode to back up your own data.</p>
+        ) : (
+          <>
+            <p>
+              Your records are saved only on this phone. Save a backup file and keep it somewhere safe (for example,
+              email it to yourself). If you get a new phone, you can restore it there.
+            </p>
+            <BackupButton />
+            <RestoreButton />
+            {persist && (
+              <p className="field-hint">
+                {persist === 'persisted'
+                  ? '✓ This browser has agreed to keep RideProof’s data until you delete it.'
+                  : 'This browser may clear saved data if the phone runs low on space. Add RideProof to your Home Screen and keep a backup to be safe.'}
+              </p>
+            )}
+          </>
+        )}
       </section>
 
       <section className="card danger-zone" aria-labelledby="delete-heading">

@@ -9,6 +9,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useApp } from '../AppContext';
 import { Screen } from '../components/Screen';
+import { RestoreButton } from '../components/BackupControls';
 import { Disclaimer } from '../components/Disclaimer';
 import { ErrorSummary, TextField } from '../components/FormFields';
 import { showSnackbar } from '../lib/feedback';
@@ -179,6 +180,12 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
         <button type="submit" className="button-primary" disabled={saving}>
           {saving ? 'Saving…' : editing ? 'Save changes' : 'Save and continue'}
         </button>
+        {!editing && (
+          <div className="restore-box">
+            <p>Moving from another phone?</p>
+            <RestoreButton label="Restore a RideProof backup" />
+          </div>
+        )}
         {editing && <a href="#/settings" className="button-secondary">Cancel</a>}
       </form>
     </Screen>

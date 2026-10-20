@@ -15,6 +15,7 @@ import { Screen } from './components/Screen';
 import { Toast } from './components/Toast';
 import { getToday } from './lib/clock';
 import { seedDemoIfEmpty } from './lib/demoData';
+import { requestPersistentStorage } from './lib/persist';
 import { loadDemoFlag, saveDemoFlag } from './lib/demoFlag';
 import { navigate, routeToHash, useRoute } from './lib/router';
 import { createStorage, type DataMode } from './lib/storage';
@@ -65,6 +66,11 @@ export function App() {
       cancelled = true;
     };
   }, [storage, dataVersion]);
+
+  // Once someone has real data, ask the browser to keep it permanently.
+  useEffect(() => {
+    if (mode === 'real' && profile) requestPersistentStorage();
+  }, [mode, profile]);
 
   function toggleDemo() {
     const next: DataMode = mode === 'demo' ? 'real' : 'demo';

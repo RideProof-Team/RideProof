@@ -763,3 +763,7 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 
 .skipped-list li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-divider); }
 .skipped-list .link-button { margin-top: 0; }
+
+.card-info { border-color: var(--color-primary); }
+.restore-box { margin-top: 1.5rem; padding-top: 0.5rem; border-top: 2px solid var(--color-divider); }
+.restore-box p { margin-bottom: 0; font-weight: 600; }

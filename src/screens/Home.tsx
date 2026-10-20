@@ -12,11 +12,12 @@ import { SkipDayButton } from '../components/SkipDayButton';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { findLog } from '../lib/checkinFlow';
-import { formatLongDate, formatShortDate, formatTime } from '../lib/dates';
+import { addDays, formatLongDate, formatShortDate, formatTime } from '../lib/dates';
 import { APPOINTMENT_TYPE_LABELS, whose } from '../lib/labels';
 import { upcomingTrips } from '../lib/recurrence';
 import { bookingReminders } from '../lib/reminders';
 import { SEVERITY_DISPLAY, rideSeverity } from '../lib/rideStatus';
+import { loadLastBackupDate } from '../lib/backup';
 import { showSnackbar } from '../lib/feedback';
 import { routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
@@ -27,7 +28,7 @@ import { useRideData } from '../lib/useRideData';
 const COMING_UP_COUNT = 4;
 
 export function Home() {
-  const { profile, today, storage } = useApp();
+  const { profile, today, storage, mode } = useApp();
   const { data, reload } = useRideData();
   if (!profile) return null;
   const title = profile.role === 'caregiver' ? `${profile.riderFirstName}'s rides` : `Hi, ${profile.riderFirstName}`;
@@ -168,6 +169,14 @@ export function Home() {
         </section>
       )}
 
+      {mode === 'real' && needsBackup(rideLogs.length, today) && (
+        <section className="card card-info" aria-labelledby="backup-nudge">
+          <h2 id="backup-nudge">Keep your records safe</h2>
+          <p>You have {rideLogs.length} rides logged, saved only on this phone. Save a backup file in case the phone is lost.</p>
+          <a href="#/settings" className="button-secondary">Back up now</a>
+        </section>
+      )}
+
       <section className="card" aria-labelledby="company-heading">
         <h2 id="company-heading">Ride company</h2>
         <p className="card-title">{profile.rideCompanyName}</p>
@@ -177,4 +186,11 @@ export function Home() {
       </section>
     </Screen>
   );
+}
+
+/** Remind about backups once there's something worth saving and none in the last 30 days. */
+function needsBackup(rideCount: number, today: string): boolean {
+  if (rideCount < 5) return false;
+  const last = loadLastBackupDate();
+  return !last || last < addDays(today, -30);
 }
