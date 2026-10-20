@@ -15,6 +15,7 @@ import type { Profile, Role } from '../types';
 const EMPTY_PROFILE: Profile = {
   role: 'rider',
   riderFirstName: '',
+  caregiverName: '',
   state: '',
   rideCompanyName: '',
   rideCompanyPhone: '',
@@ -48,6 +49,7 @@ export function Welcome() {
     const cleaned: Profile = {
       ...form,
       riderFirstName: form.riderFirstName.trim(),
+      caregiverName: form.role === 'caregiver' ? form.caregiverName.trim() : '',
       rideCompanyName: form.rideCompanyName.trim(),
       rideCompanyPhone: form.rideCompanyPhone.trim(),
       healthPlanName: form.healthPlanName.trim(),
@@ -98,6 +100,17 @@ export function Welcome() {
           onChange={(v) => update('riderFirstName', v)}
           autoComplete={isCaregiver ? 'off' : 'given-name'}
         />
+
+        {isCaregiver && (
+          <TextField
+            id="caregiverName"
+            label="Your first name (optional)"
+            hint="Used to sign letters, like “prepared with help from Maria.”"
+            value={form.caregiverName}
+            onChange={(v) => update('caregiverName', v)}
+            autoComplete="given-name"
+          />
+        )}
 
         <div className="field">
           <label htmlFor="state">State</label>

@@ -10,15 +10,16 @@ import { Icon } from '../components/Icon';
 import { APPOINTMENT_TYPE_LABELS } from '../lib/labels';
 import { describeSchedule, isPastAppointment } from '../lib/recurrence';
 import { routeToHash } from '../lib/router';
-import { useAppointments } from '../lib/useAppointments';
+import { useRideData } from '../lib/useRideData';
 import type { Appointment } from '../types';
 
 export function Appointments() {
   const { today } = useApp();
-  const { appointments } = useAppointments();
+  const { data } = useRideData();
 
-  if (!appointments) return <Screen title="Appointments"><p>Loading…</p></Screen>;
+  if (!data) return <Screen title="Appointments"><p>Loading…</p></Screen>;
 
+  const { appointments } = data;
   // Recurring first, then one-time appointments by date and time.
   const sorted = [...appointments].sort((a, b) => {
     const aRecurring = a.recurrence.kind === 'weekly' ? 0 : 1;

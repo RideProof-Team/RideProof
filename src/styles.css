@@ -342,3 +342,94 @@ h1[tabindex='-1']:focus { outline: none; }
 .summary-list { margin: 1rem 0; }
 .summary-list dt { font-weight: 700; margin-top: 0.75rem; }
 .summary-list dd { margin: 0; }
+
+/* ---------- Ride severity colors (History, check-in) ----------
+   good = green, late = yellow/amber, problem = red.
+   Always paired with an icon and a word. */
+:root {
+  --color-problem: #a4161a;        /* red, 7.6:1 on white */
+  --color-problem-bg: #fde4e4;
+  --color-late-border: #b7791f;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+.badge-good { color: var(--color-good); background: var(--color-good-bg); }
+.badge-late { color: var(--color-warn); background: var(--color-warn-bg); }
+.badge-problem { color: var(--color-problem); background: var(--color-problem-bg); }
+
+/* A thick colored stripe down the left side of each ride card. */
+.ride-card { border-left-width: 10px; }
+.sev-good { border-left-color: var(--color-good); }
+.sev-late { border-left-color: var(--color-late-border); }
+.sev-problem { border-left-color: var(--color-problem); }
+
+.ride-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap; }
+.ride-reason { margin: 0.25rem 0; font-weight: 700; }
+.ride-details { display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 0.75rem; margin: 0.5rem 0; }
+.ride-details dt { font-weight: 700; }
+.ride-details dd { margin: 0; }
+
+.plain-list { list-style: none; margin: 0; padding: 0; }
+.today-trip { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; }
+
+/* Text only screen readers can hear (adds context like which date a link is for). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Check-in ---------- */
+.trip-line { margin: 0 0 0.5rem; padding: 0.5rem 0.75rem; background: var(--color-surface); border-radius: var(--radius); }
+.step-count { margin: 0.75rem 0 0; color: var(--color-muted); font-weight: 600; }
+.question { font-size: 1.5rem; margin: 0.25rem 0 1rem; }
+.question:focus { outline: none; }
+
+.answer-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.answer-button {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem 1.25rem;
+  border: 3px solid currentColor;
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.tone-good { color: var(--color-good); }
+.tone-late { color: var(--color-warn); }
+.tone-problem { color: var(--color-problem); }
+.tone-neutral { color: var(--color-primary); }
+/* The answer picked earlier (when going Back) is filled in. */
+.answer-button[aria-pressed='true'] { background: var(--color-surface); box-shadow: inset 0 0 0 3px currentColor; }
+.answer-button[aria-pressed='true']::after { content: '✓ Chosen'; margin-left: auto; font-size: 1rem; }
+
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  font: inherit;
+}
+
+.done-box { display: flex; align-items: center; gap: 0.75rem; color: var(--color-good); }
+.done-box h2 { margin: 0.5rem 0; font-size: 1.6rem; }
+.done-box h2:focus { outline: none; }

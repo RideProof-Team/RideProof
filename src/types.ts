@@ -14,6 +14,8 @@ export interface Profile {
   role: Role;
   /** The rider's first name (even in caregiver mode, this is the rider). */
   riderFirstName: string;
+  /** Caregiver mode only, optional: the helper's own first name. */
+  caregiverName: string;
   /** Two-letter state code, e.g. "WA". Must match a key in stateRules.json. */
   state: string;
   rideCompanyName: string;
@@ -57,6 +59,12 @@ export type ReturnRideStatus = 'on_time' | 'late' | 'never_came' | 'not_needed';
 export interface RideLog {
   id: string;
   appointmentId: string;
+  /**
+   * Copied from the appointment when the log is saved, so History and
+   * reports still make sense if the appointment is edited or deleted later.
+   */
+  clinicName: string;
+  appointmentType: AppointmentType;
   /**
    * "YYYY-MM-DD" of the trip. Needed because one recurring appointment
    * produces many trips, so the appointment id alone isn't enough.

@@ -7,26 +7,30 @@
 // ---------------------------------------------------------------------------
 import { useApp } from '../AppContext';
 import { BookingStatus } from '../components/BookingStatus';
-import { Screen } from '../components/Screen';
 import { Icon } from '../components/Icon';
+import { Screen } from '../components/Screen';
+import { findLog } from '../lib/checkinFlow';
 import { formatLongDate, formatShortDate, formatTime } from '../lib/dates';
 import { APPOINTMENT_TYPE_LABELS, whose } from '../lib/labels';
 import { upcomingTrips, type Trip } from '../lib/recurrence';
-import { navigate, routeToHash } from '../lib/router';
-import { useAppointments } from '../lib/useAppointments';
+import { SEVERITY_DISPLAY, rideSeverity } from '../lib/rideStatus';
+import { routeToHash } from '../lib/router';
+import { useRideData } from '../lib/useRideData';
 
 /** How many appointments to list under "Coming up". */
 const COMING_UP_COUNT = 4;
 
 export function Home() {
   const { profile, today, storage } = useApp();
-  const { appointments, reload } = useAppointments();
+  const { data, reload } = useRideData();
   if (!profile) return null;
   const title = profile.role === 'caregiver' ? `${profile.riderFirstName}'s rides` : `Hi, ${profile.riderFirstName}`;
-  if (!appointments) return <Screen title={title}><p>Loading…</p></Screen>;
+  if (!data) return <Screen title={title}><p>Loading…</p></Screen>;
+  const { appointments, rideLogs } = data;
 
   const trips = upcomingTrips(appointments, today);
   const todaysTrips = trips.filter((t) => t.date === today);
+  const notCheckedIn = todaysTrips.filter((t) => !findLog(rideLogs, t.appointment.id, t.date));
   const laterTrips = trips.filter((t) => t.date > today);
   const nextTrip = laterTrips[0];
   const comingUp = laterTrips.slice(1, 1 + COMING_UP_COUNT);
@@ -36,6 +40,12 @@ export function Home() {
     await storage.saveAppointment({ ...trip.appointment, rideBooked: true });
     await reload();
   }
+
+  // With exactly one trip left to check in on, the button goes straight to it.
+  const checkInHref =
+    notCheckedIn.length === 1
+      ? routeToHash({ name: 'checkin', appointmentId: notCheckedIn[0].appointment.id, date: today })
+      : routeToHash({ name: 'checkin' });
 
   return (
     <Screen title={title}>
@@ -54,17 +64,36 @@ export function Home() {
       {todaysTrips.length > 0 && (
         <section className="card card-today" aria-labelledby="today-heading">
           <h2 id="today-heading">Today</h2>
-          {todaysTrips.map((trip) => (
-            <p key={trip.appointment.id} className="card-detail">
-              <strong>{formatTime(trip.appointment.time)}</strong> — {APPOINTMENT_TYPE_LABELS[trip.appointment.type]} at{' '}
-              {trip.appointment.clinicName}
-            </p>
-          ))}
-          <button type="button" className="button-primary button-big" onClick={() => navigate({ name: 'checkin' })}>
-            Check in on today's ride
-          </button>
+          <ul className="plain-list">
+            {todaysTrips.map((trip) => {
+              const log = findLog(rideLogs, trip.appointment.id, trip.date);
+              return (
+                <li key={trip.appointment.id} className="today-trip">
+                  <span>
+                    <strong>{formatTime(trip.appointment.time)}</strong> —{' '}
+                    {APPOINTMENT_TYPE_LABELS[trip.appointment.type]} at {trip.appointment.clinicName}
+                  </span>
+                  {log && (
+                    <span className={`badge badge-${rideSeverity(log)}`}>
+                      <Icon name="check" size={20} />
+                      Checked in: {SEVERITY_DISPLAY[rideSeverity(log)].label}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {notCheckedIn.length > 0 ? (
+            <a href={checkInHref} className="button-primary button-big">
+              Check in on today's ride
+            </a>
+          ) : (
+            <a href="#/history" className="button-secondary">See ride history</a>
+          )}
         </section>
       )}
+
+      {/* REMINDERS (Phase 4) */}
 
       {nextTrip && (
         <section className="card" aria-labelledby="next-heading">

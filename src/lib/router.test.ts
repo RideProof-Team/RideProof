@@ -10,6 +10,13 @@ describe('router', () => {
       { name: 'appointment-new' },
       { name: 'appointment-edit', id: 'abc-123' },
       { name: 'checkin' },
+      { name: 'checkin', appointmentId: 'abc', date: '2026-10-30' },
+      { name: 'history' },
+      { name: 'report' },
+      { name: 'complaint' },
+      { name: 'help' },
+      { name: 'settings' },
+      { name: 'profile-edit' },
     ];
     for (const route of routes) {
       expect(parseRoute(routeToHash(route))).toEqual(route);

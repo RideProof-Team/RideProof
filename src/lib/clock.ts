@@ -17,3 +17,17 @@ export const DEMO_TODAY = '2026-10-30';
 export function getToday(mode: DataMode): string {
   return mode === 'demo' ? DEMO_TODAY : toDateString(new Date());
 }
+
+/**
+ * The exact moment, for a ride log's automatic timestamp. In demo mode
+ * we keep the real time of day but use DEMO_TODAY's date, so demo logs
+ * don't look like they were saved on a different day.
+ */
+export function nowTimestamp(mode: DataMode): string {
+  const now = new Date();
+  if (mode === 'demo') {
+    const [year, month, day] = DEMO_TODAY.split('-').map(Number);
+    now.setFullYear(year, month - 1, day);
+  }
+  return now.toISOString();
+}

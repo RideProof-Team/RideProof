@@ -7,6 +7,7 @@ import type { Appointment, Profile, RideLog } from '../types';
 const realProfile: Profile = {
   role: 'rider',
   riderFirstName: 'Test Rider',
+  caregiverName: '',
   state: 'WA',
   rideCompanyName: 'Real Test Rides',
   rideCompanyPhone: '555-0199',
@@ -30,6 +31,8 @@ const appointment: Appointment = {
 const rideLog: RideLog = {
   id: 'log-1',
   appointmentId: 'appt-1',
+  clinicName: 'Test Clinic',
+  appointmentType: 'dialysis',
   rideDate: '2026-10-28',
   pickupStatus: 'late',
   minutesLate: 30,

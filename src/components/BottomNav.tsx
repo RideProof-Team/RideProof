@@ -25,6 +25,7 @@ const ITEMS: NavItem[] = [
     route: { name: 'appointments' },
     matches: ['appointments', 'appointment-new', 'appointment-edit'],
   },
+  { label: 'History', icon: 'list', route: { name: 'history' }, matches: ['history'] },
 ];
 
 export function BottomNav({ current }: { current: Route }) {

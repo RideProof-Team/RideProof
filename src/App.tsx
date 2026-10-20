@@ -17,6 +17,7 @@ import { createStorage, type DataMode } from './lib/storage';
 import { AppointmentForm } from './screens/AppointmentForm';
 import { Appointments } from './screens/Appointments';
 import { CheckIn } from './screens/CheckIn';
+import { History } from './screens/History';
 import { Home } from './screens/Home';
 import { Welcome } from './screens/Welcome';
 import type { Profile } from './types';
@@ -79,8 +80,14 @@ export function App() {
         screen = <AppointmentForm key={route.id} id={route.id} />;
         break;
       case 'checkin':
-        screen = <CheckIn />;
+        screen = <CheckIn appointmentId={route.appointmentId} date={route.date} />;
         break;
+      case 'history':
+        screen = <History />;
+        break;
+      default:
+        // Screens that aren't built yet fall back to Home.
+        screen = <Home />;
     }
   }
 

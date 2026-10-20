@@ -6,6 +6,7 @@ import type { Profile } from '../types';
 const good: Profile = {
   role: 'caregiver',
   riderFirstName: 'Rosa',
+  caregiverName: '',
   state: 'WA',
   rideCompanyName: 'Sample Ride Co.',
   rideCompanyPhone: '555-0100',
