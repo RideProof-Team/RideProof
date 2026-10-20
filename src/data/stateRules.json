@@ -1,0 +1,71 @@
+{
+  "_note": "EVERY value in this file is a PLACEHOLDER. VERIFY with the state's Medicaid website before relying on it. JSON does not allow comments, so notes are stored in fields that start with an underscore. No real phone numbers are included on purpose.",
+  "states": {
+    "WA": {
+      "name": "Washington",
+      "isPlaceholder": true,
+      "bookingWindowBusinessDays": 2,
+      "_bookingWindowBusinessDaysNote": "PLACEHOLDER - VERIFY with the state's Medicaid website",
+      "complaintContacts": [
+        {
+          "name": "PLACEHOLDER: Transportation broker complaint line",
+          "phone": "PLACEHOLDER - look up",
+          "email": "",
+          "website": "",
+          "_note": "PLACEHOLDER - VERIFY with the state's Medicaid website"
+        },
+        {
+          "name": "PLACEHOLDER: State Medicaid agency",
+          "phone": "PLACEHOLDER - look up",
+          "email": "",
+          "website": "",
+          "_note": "PLACEHOLDER - VERIFY with the state's Medicaid website"
+        }
+      ]
+    },
+    "CA": {
+      "name": "California",
+      "isPlaceholder": true,
+      "bookingWindowBusinessDays": 3,
+      "_bookingWindowBusinessDaysNote": "PLACEHOLDER - VERIFY with the state's Medicaid website",
+      "complaintContacts": [
+        {
+          "name": "PLACEHOLDER: Health plan member services",
+          "phone": "PLACEHOLDER - look up",
+          "email": "",
+          "website": "",
+          "_note": "PLACEHOLDER - VERIFY with the state's Medicaid website"
+        },
+        {
+          "name": "PLACEHOLDER: State Medicaid ombudsman",
+          "phone": "PLACEHOLDER - look up",
+          "email": "",
+          "website": "",
+          "_note": "PLACEHOLDER - VERIFY with the state's Medicaid website"
+        }
+      ]
+    },
+    "TX": {
+      "name": "Texas",
+      "isPlaceholder": true,
+      "bookingWindowBusinessDays": 2,
+      "_bookingWindowBusinessDaysNote": "PLACEHOLDER - VERIFY with the state's Medicaid website",
+      "complaintContacts": [
+        {
+          "name": "PLACEHOLDER: Medical transportation program complaint line",
+          "phone": "PLACEHOLDER - look up",
+          "email": "",
+          "website": "",
+          "_note": "PLACEHOLDER - VERIFY with the state's Medicaid website"
+        },
+        {
+          "name": "PLACEHOLDER: State Medicaid ombudsman",
+          "phone": "PLACEHOLDER - look up",
+          "email": "",
+          "website": "",
+          "_note": "PLACEHOLDER - VERIFY with the state's Medicaid website"
+        }
+      ]
+    }
+  }
+}

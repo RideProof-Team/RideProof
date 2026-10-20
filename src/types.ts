@@ -1,0 +1,73 @@
+// ---------------------------------------------------------------------------
+// types.ts — the "shape" of every piece of data RideProof stores.
+//
+// TypeScript types don't run; they are a contract. If any part of the app
+// tries to save an appointment without a date, or uses a pickup status that
+// isn't on the list, TypeScript reports an error before the app even runs.
+// ---------------------------------------------------------------------------
+
+/** Who is using the app: the rider themself, or someone helping them. */
+export type Role = 'rider' | 'caregiver';
+
+/** Information about the rider. There is only ever one profile. */
+export interface Profile {
+  role: Role;
+  /** The rider's first name (even in caregiver mode, this is the rider). */
+  riderFirstName: string;
+  /** Two-letter state code, e.g. "WA". Must match a key in stateRules.json. */
+  state: string;
+  rideCompanyName: string;
+  rideCompanyPhone: string;
+  /** Optional, so it can be an empty string. */
+  healthPlanName: string;
+}
+
+export type AppointmentType = 'dialysis' | 'checkup' | 'specialist' | 'therapy' | 'other';
+
+/** Days of the week, numbered like JavaScript's Date.getDay(): 0 = Sunday. */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * How an appointment repeats.
+ * - { kind: 'none' }: it happens once, on its date.
+ * - { kind: 'weekly', weekdays: [1, 3, 5] }: every Mon/Wed/Fri, starting on its date.
+ */
+export type RecurrenceRule = { kind: 'none' } | { kind: 'weekly'; weekdays: Weekday[] };
+
+export interface Appointment {
+  id: string;
+  /** "YYYY-MM-DD". For recurring appointments, this is the first day. */
+  date: string;
+  /** "HH:MM" in 24-hour time, e.g. "09:00". */
+  time: string;
+  clinicName: string;
+  clinicAddress: string;
+  type: AppointmentType;
+  recurrence: RecurrenceRule;
+  rideBooked: boolean;
+  confirmationNumber: string;
+}
+
+export type PickupStatus = 'on_time' | 'late' | 'never_came';
+export type MinutesLate = 15 | 30 | 60;  // 60 means "60 or more"
+export type AppointmentOutcome = 'made_it' | 'late' | 'missed';
+export type ReturnRideStatus = 'on_time' | 'late' | 'never_came' | 'not_needed';
+
+/** What happened on one ride. Created by the check-in flow. */
+export interface RideLog {
+  id: string;
+  appointmentId: string;
+  /**
+   * "YYYY-MM-DD" of the trip. Needed because one recurring appointment
+   * produces many trips, so the appointment id alone isn't enough.
+   */
+  rideDate: string;
+  pickupStatus: PickupStatus;
+  /** Only filled in when pickupStatus is 'late'. */
+  minutesLate: MinutesLate | null;
+  appointmentOutcome: AppointmentOutcome;
+  returnRideStatus: ReturnRideStatus;
+  notes: string;
+  /** Exact moment the log was saved (ISO format). Filled in automatically. */
+  recordedAt: string;
+}

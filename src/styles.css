@@ -1,0 +1,210 @@
+/* ---------------------------------------------------------------------------
+   styles.css — how RideProof looks.
+   "Mobile-first": styles are written for a phone (~390px wide) first.
+   Accessibility rules we follow everywhere:
+     - body text is at least 18px
+     - anything you can tap is at least 48px tall
+     - text/background contrast meets WCAG AA (4.5:1) or better
+     - color is never the only way information is shown
+   --------------------------------------------------------------------------- */
+
+/* Colors live in one place as "variables" so they're easy to change. */
+:root {
+  --color-text: #1a1a1a;
+  --color-muted: #4a4a4a;
+  --color-bg: #ffffff;
+  --color-surface: #f2f5f8;
+  --color-border: #6b7280;
+  --color-primary: #0b4f8a;        /* dark blue: 8.6:1 contrast on white */
+  --color-primary-text: #ffffff;
+  --color-focus: #ffbf47;          /* bright outline when using a keyboard */
+  --color-error: #b3261e;
+  --color-demo: #6b3fa0;           /* purple so demo mode is obvious */
+
+  --radius: 12px;
+  --tap-size: 48px;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+}
+
+h1 { font-size: 1.6rem; line-height: 1.25; margin: 0.5rem 0 0.75rem; }
+
+a { color: var(--color-primary); }
+
+/* A clear, thick outline shows where keyboard focus is. */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Header and demo banner ---------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.app-name { font-weight: 700; font-size: 1.2rem; }
+
+.demo-button {
+  min-height: var(--tap-size);
+  min-width: var(--tap-size);
+  padding: 0 1rem;
+  border: 2px solid var(--color-primary-text);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-primary-text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.demo-button[aria-pressed='true'] {
+  background: var(--color-primary-text);
+  color: var(--color-primary);
+}
+
+.demo-banner {
+  padding: 0.35rem 1rem;
+  background: var(--color-demo);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------- Screen layout ---------- */
+.screen {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+/* Simple fade-and-slide when moving between screens. */
+.screen-transition { animation: screen-in 200ms ease-out; }
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+/* People who get motion sickness can turn off animations in their phone settings. */
+@media (prefers-reduced-motion: reduce) {
+  .screen-transition { animation: none; }
+}
+
+/* ---------- Forms ---------- */
+.field { margin-bottom: 1.25rem; }
+
+.field label,
+.choice-group legend {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: var(--tap-size);
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'] {
+  border-color: var(--color-error);
+  border-width: 3px;
+}
+
+.field-hint { margin: 0 0 0.35rem; color: var(--color-muted); font-size: 1rem; }
+
+/* Errors use an icon-like "!" prefix too, not just red color. */
+.field-error { margin: 0.35rem 0 0; color: var(--color-error); font-weight: 600; }
+.field-error::before { content: '⚠ '; }
+
+.error-summary {
+  border: 3px solid var(--color-error);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+.error-summary p { margin: 0; }
+.error-summary ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+
+/* Big tappable cards for the rider/caregiver choice. */
+.choice-group { border: none; padding: 0; margin: 0 0 1.25rem; }
+
+.choice-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 64px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+/* The selected card gets a thicker blue border AND a filled radio dot. */
+.choice-card:has(input:checked) {
+  border: 3px solid var(--color-primary);
+  background: var(--color-surface);
+}
+.choice-card input { width: 28px; height: 28px; flex-shrink: 0; accent-color: var(--color-primary); }
+.choice-label { display: block; font-weight: 700; }
+.choice-hint { display: block; color: var(--color-muted); font-size: 1rem; }
+
+/* ---------- Buttons ---------- */
+.button-primary {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.button-primary:disabled { opacity: 0.7; cursor: wait; }
+
+/* ---------- Text blocks ---------- */
+.disclaimer {
+  padding: 0.75rem 1rem;
+  border-left: 5px solid var(--color-primary);
+  background: var(--color-surface);
+  font-size: 1rem;
+}
+
+.privacy-note { color: var(--color-muted); font-size: 1rem; }
+
+.summary-list { margin: 1rem 0; }
+.summary-list dt { font-weight: 700; margin-top: 0.75rem; }
+.summary-list dd { margin: 0; }
