@@ -7,6 +7,7 @@
 // so we don't pull in a big routing library.
 // ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react';
+import { askConfirm, type ConfirmOptions } from './feedback';
 
 /**
  * Every screen in the app. Some screens need extra information, like
@@ -79,6 +80,38 @@ export function navigate(route: Route): void {
   window.location.hash = routeToHash(route);
 }
 
+// ---------------------------------------------------------------------------
+// "You have unsaved changes" protection.
+//
+// A screen with unsaved work calls useLeaveWarning(true, {...}). Then, if
+// the address changes (a menu tap, a Back button, or the phone's back
+// gesture), we put the old address back, ask the user, and only move on
+// if they say "Leave".
+// ---------------------------------------------------------------------------
+let leaveWarning: ConfirmOptions | null = null;
+// The address of the screen being shown right now.
+let currentHash = typeof window === 'undefined' ? '' : window.location.hash;
+
+/** Turn the warning off right away, e.g. just before navigating after a save. */
+export function allowLeave() {
+  leaveWarning = null;
+}
+
+export function useLeaveWarning(active: boolean, options: ConfirmOptions) {
+  const { title, message, confirmLabel } = options;
+  useEffect(() => {
+    if (!active) return;
+    leaveWarning = { title, message, confirmLabel, cancelLabel: 'Stay', danger: true };
+    // Closing the tab or app: browsers only allow their own generic message.
+    const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      leaveWarning = null;
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [active, title, message, confirmLabel]);
+}
+
 /**
  * A React "hook" that returns the current route and re-renders the app
  * whenever it changes (when navigate() is called or Back is pressed).
@@ -86,7 +119,21 @@ export function navigate(route: Route): void {
 export function useRoute(): Route {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
   useEffect(() => {
-    const onChange = () => setRoute(parseRoute(window.location.hash));
+    const onChange = async () => {
+      const target = window.location.hash;
+      if (leaveWarning && target !== currentHash) {
+        const warning = leaveWarning;
+        // Put the old address back while we ask. pushState changes the
+        // address without firing another "hashchange" event.
+        history.pushState(null, '', currentHash || '#/home');
+        if (!(await askConfirm(warning))) return; // "Stay"
+        leaveWarning = null;
+        window.location.hash = target; // "Leave": go where they wanted
+        return;
+      }
+      currentHash = target;
+      setRoute(parseRoute(target));
+    };
     window.addEventListener('hashchange', onChange);
     // The function returned here runs when the component goes away,
     // so we stop listening and don't leak memory.

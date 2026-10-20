@@ -51,7 +51,7 @@ export function Settings() {
   }
 
   return (
-    <Screen title="Settings">
+    <Screen title="Settings" back={{ to: { name: 'help' }, label: 'Help' }}>
       <section className="card" aria-labelledby="info-heading">
         <h2 id="info-heading">Your information</h2>
         <dl className="summary-list">

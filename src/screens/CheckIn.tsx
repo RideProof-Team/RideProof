@@ -32,7 +32,7 @@ import {
 } from '../lib/labels';
 import { tripsBetween } from '../lib/recurrence';
 import { askConfirm, showSnackbar } from '../lib/feedback';
-import { navigate, routeToHash } from '../lib/router';
+import { allowLeave, navigate, routeToHash, useLeaveWarning } from '../lib/router';
 import { newId } from '../lib/storage';
 import { useRideData } from '../lib/useRideData';
 import type { AppointmentType, Profile, RideLog } from '../types';
@@ -47,12 +47,13 @@ interface TripInfo {
 }
 
 const TITLE = 'Ride check-in';
+const BACK = { to: { name: 'home' } as const, label: 'Home' };
 
 export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?: string }) {
   const { today, profile } = useApp();
   const { data } = useRideData();
 
-  if (!data || !profile) return <Screen title={TITLE}><p>Loading…</p></Screen>;
+  if (!data || !profile) return <Screen title={TITLE} back={BACK}><p>Loading…</p></Screen>;
   const { appointments, rideLogs } = data;
 
   // --- A specific trip was named in the address ---
@@ -64,10 +65,9 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
     const source = appointment ?? existing;
     if (!source) {
       return (
-        <Screen title={TITLE}>
+        <Screen title={TITLE} back={BACK}>
           <p>Sorry, that ride wasn't found.</p>
-          <a href="#/home" className="button-secondary">Back to Home</a>
-        </Screen>
+            </Screen>
       );
     }
     const trip: TripInfo = {
@@ -98,7 +98,7 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
   // Zero or several trips today: let the user choose.
   const choices = todaysTrips.length > 1 ? todaysTrips : tripsNeedingCheckIn(appointments, rideLogs, today);
   return (
-    <Screen title={TITLE}>
+    <Screen title={TITLE} back={BACK}>
       <p>
         {todaysTrips.length > 1
           ? 'There is more than one appointment today. Which ride do you want to check in on?'
@@ -123,7 +123,6 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
       {todaysTrips.length === 0 && choices.length === 0 && (
         <p>There are no recent rides to check in on.</p>
       )}
-      <a href="#/home" className="button-secondary">Back to Home</a>
     </Screen>
   );
 }
@@ -147,6 +146,14 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   const [saved, setSaved] = useState<RideLog | null>(null);
   const questionRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
+
+  // Warn before leaving a check-in that was started but not saved.
+  const original = existing ? JSON.stringify(answersFromLog(existing)) : JSON.stringify({ notes: '' });
+  useLeaveWarning(!saved && JSON.stringify(answers) !== original, {
+    title: 'Leave without saving?',
+    message: 'This check-in is not saved yet. Your answers will be lost.',
+    confirmLabel: 'Leave without saving',
+  });
 
   // Each time the question changes, move focus to it so screen readers read it.
   // (Skip the very first one: the screen heading gets focus then.)
@@ -173,7 +180,6 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   function goBack() {
     const previous = previousStep(step, answers);
     if (previous) setStep(previous);
-    else window.history.back();
   }
 
   async function save() {
@@ -187,6 +193,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       recordedAt: existing?.recordedAt ?? nowTimestamp(mode),
     });
     await storage.saveRideLog(log);
+    allowLeave();
     setSaved(log);
   }
 
@@ -200,6 +207,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
     });
     if (!ok) return;
     await storage.deleteRideLog(existing.id);
+    allowLeave();
     navigate({ name: 'history' });
     showSnackbar('Check-in deleted.', {
       label: 'Undo',
@@ -225,7 +233,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       saved.pickupStatus !== 'on_time' || saved.appointmentOutcome !== 'made_it' ||
       saved.returnRideStatus === 'late' || saved.returnRideStatus === 'never_came';
     return (
-      <Screen title={TITLE}>
+      <Screen title={TITLE} back={BACK}>
         {tripLine}
         <div className="done-box" role="status">
           <Icon name="check" size={40} />
@@ -326,15 +334,17 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   }
 
   return (
-    <Screen title={TITLE}>
+    <Screen title={TITLE} back={BACK}>
       {tripLine}
       <p className="step-count">Question {steps.indexOf(step) + 1} of {steps.length}</p>
       {/* aria-live isn't needed: focus moves to this heading on each step. */}
       <h2 className="question" tabIndex={-1} ref={questionRef}>{question}</h2>
       {content}
-      <button type="button" className="button-secondary" onClick={goBack}>
-        Back
-      </button>
+      {steps.indexOf(step) > 0 && (
+        <button type="button" className="button-secondary" onClick={goBack}>
+          Previous question
+        </button>
+      )}
       {existing && step === 'pickup' && (
         <button type="button" className="button-danger" onClick={deleteLog}>
           Delete this check-in

@@ -742,3 +742,18 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
   .ride-details { display: block; }
   .ride-details dd { margin-bottom: 0.4rem; }
 }
+
+/* "‹ Back to Schedule" link at the top of inner screens. */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: var(--tap-size);
+  margin-top: 0.25rem;
+  padding-right: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+.back-link span { font-size: 1.6rem; line-height: 1; }
+.back-link:hover { text-decoration: underline; }

@@ -11,6 +11,7 @@ import { Screen } from '../components/Screen';
 import { buildComplaintLetter, hadProblem } from '../lib/complaintLetter';
 import { findPeriod, logsInRange, reportPeriods } from '../lib/reportStats';
 import { getStateRule, type ComplaintContact } from '../lib/stateRules';
+import { useLeaveWarning } from '../lib/router';
 import { useRideData } from '../lib/useRideData';
 
 const SUBJECT = 'Complaint about Medicaid non-emergency medical transportation (NEMT)';
@@ -34,8 +35,14 @@ export function Complaint({ periodId: initialPeriodId }: { periodId?: string }) 
     // Only re-run when the period or loaded data changes, not on every keystroke.
   }, [original]);
 
+  useLeaveWarning(letter !== null && original !== '' && letter !== original, {
+    title: 'Leave without saving your edits?',
+    message: 'Your changes to the letter will be lost. Copy it or download it first if you want to keep them.',
+    confirmLabel: 'Leave and lose edits',
+  });
+
   if (!data || !profile || !period || letter === null) {
-    return <Screen title="Complaint letter"><p>Loading…</p></Screen>;
+    return <Screen title="Complaint letter" back={{ to: { name: 'report' }, label: 'Report' }}><p>Loading…</p></Screen>;
   }
 
   const problemCount = logsInRange(data.rideLogs, period.from, period.to).filter(hadProblem).length;
@@ -64,7 +71,7 @@ export function Complaint({ periodId: initialPeriodId }: { periodId?: string }) 
   }
 
   return (
-    <Screen title="Complaint letter">
+    <Screen title="Complaint letter" back={{ to: { name: 'report' }, label: 'Report' }}>
       <div className="field">
         <label htmlFor="letter-period">Time period</label>
         <select id="letter-period" value={period.id} onChange={(e) => setPeriodId(e.target.value)}>

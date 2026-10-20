@@ -12,7 +12,7 @@ import { Screen } from '../components/Screen';
 import { Disclaimer } from '../components/Disclaimer';
 import { ErrorSummary, TextField } from '../components/FormFields';
 import { showSnackbar } from '../lib/feedback';
-import { navigate } from '../lib/router';
+import { allowLeave, navigate, useLeaveWarning } from '../lib/router';
 import { listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
 import type { Profile, Role } from '../types';
@@ -33,6 +33,11 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
   const [errors, setErrors] = useState<ProfileErrors>({});
   const [saving, setSaving] = useState(false);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+  useLeaveWarning(editing && JSON.stringify(form) !== JSON.stringify(profile), {
+    title: 'Leave without saving?',
+    message: 'Your changes to your information will be lost.',
+    confirmLabel: 'Leave without saving',
+  });
 
   // One helper to update any single field of the form.
   function update<K extends keyof Profile>(field: K, value: Profile[K]) {
@@ -62,6 +67,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
     await storage.saveProfile(cleaned);
     setProfile(cleaned);
     if (editing) {
+      allowLeave();
       navigate({ name: 'settings' });
       showSnackbar('Changes saved.');
     }
@@ -70,7 +76,10 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
   const isCaregiver = form.role === 'caregiver';
 
   return (
-    <Screen title={editing ? 'Your information' : 'Welcome to RideProof'}>
+    <Screen
+      title={editing ? 'Your information' : 'Welcome to RideProof'}
+      back={editing ? { to: { name: 'settings' }, label: 'Settings' } : undefined}
+    >
       {!editing && <p>Keep track of your medical rides, and prove it when rides go wrong.</p>}
       <Disclaimer />
 

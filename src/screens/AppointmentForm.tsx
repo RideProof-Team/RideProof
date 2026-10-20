@@ -9,11 +9,13 @@ import { Screen } from '../components/Screen';
 import { ErrorSummary, TextField } from '../components/FormFields';
 import { APPOINTMENT_TYPE_LABELS, WEEKDAY_NAMES, WEEKDAY_SHORT, WEEKDAYS_IN_ORDER } from '../lib/labels';
 import { askConfirm, showSnackbar } from '../lib/feedback';
-import { navigate } from '../lib/router';
+import { allowLeave, navigate, useLeaveWarning } from '../lib/router';
 import { newId } from '../lib/storage';
 import { validateAppointment, type AppointmentErrors } from '../lib/validateAppointment';
 import { weekdayOf } from '../lib/dates';
 import type { Appointment, AppointmentType, Weekday } from '../types';
+
+const BACK = { to: { name: 'appointments' } as const, label: 'Schedule' };
 
 const TYPES = Object.keys(APPOINTMENT_TYPE_LABELS) as AppointmentType[];
 
@@ -34,7 +36,16 @@ function blankAppointment(today: string): Appointment {
 export function AppointmentForm({ id }: { id?: string }) {
   const { storage, today, refreshAll } = useApp();
   // undefined = still loading; null = an id was given but not found.
-  const [form, setForm] = useState<Appointment | null | undefined>(id ? undefined : blankAppointment(today));
+  const [form, setForm] = useState<Appointment | null | undefined>(id ? undefined : () => blankAppointment(today));
+  // A text copy of the form as it started, to tell if anything was changed.
+  const [startedAs, setStartedAs] = useState<string | null>(null);
+  if (form && startedAs === null) setStartedAs(JSON.stringify(form));
+  const changed = Boolean(form) && startedAs !== null && JSON.stringify(form) !== startedAs;
+  useLeaveWarning(changed, {
+    title: 'Leave without saving?',
+    message: 'Your changes to this appointment will be lost.',
+    confirmLabel: 'Leave without saving',
+  });
   const [errors, setErrors] = useState<AppointmentErrors>({});
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const isEditing = Boolean(id);
@@ -46,12 +57,11 @@ export function AppointmentForm({ id }: { id?: string }) {
     storage.listAppointments().then((all) => setForm(all.find((a) => a.id === id) ?? null));
   }, [id, storage]);
 
-  if (form === undefined) return <Screen title={title}><p>Loading…</p></Screen>;
+  if (form === undefined) return <Screen title={title} back={BACK}><p>Loading…</p></Screen>;
   if (form === null) {
     return (
-      <Screen title={title}>
+      <Screen title={title} back={BACK}>
         <p>Sorry, that appointment wasn't found. It may have been deleted.</p>
-        <p><a href="#/appointments">Back to appointments</a></p>
       </Screen>
     );
   }
@@ -92,6 +102,7 @@ export function AppointmentForm({ id }: { id?: string }) {
       // A confirmation number only makes sense if the ride is booked.
       confirmationNumber: appt.rideBooked ? appt.confirmationNumber.trim() : '',
     });
+    allowLeave(); // it's saved, so no "unsaved changes" warning
     navigate({ name: 'appointments' });
     showSnackbar(isEditing ? 'Changes saved.' : 'Appointment added.');
   }
@@ -107,6 +118,7 @@ export function AppointmentForm({ id }: { id?: string }) {
     // Keep a copy of the saved version so "Undo" can put it back.
     const saved = (await storage.listAppointments()).find((a) => a.id === appt.id);
     await storage.deleteAppointment(appt.id);
+    allowLeave();
     navigate({ name: 'appointments' });
     showSnackbar('Appointment deleted.', saved && {
       label: 'Undo',
@@ -120,7 +132,7 @@ export function AppointmentForm({ id }: { id?: string }) {
   const repeats = appt.recurrence.kind === 'weekly';
 
   return (
-    <Screen title={title}>
+    <Screen title={title} back={BACK}>
 
       <form onSubmit={handleSubmit} noValidate>
         <ErrorSummary errors={Object.values(errors)} ref={errorSummaryRef} />
