@@ -12,6 +12,7 @@ import { saveLastBackupDate } from '../lib/backup';
 import { resetOnboarding } from '../lib/onboarding';
 import { askConfirm } from '../lib/feedback';
 import { requestPersistentStorage, type PersistState } from '../lib/persist';
+import { loadTheme, saveTheme, type ThemeChoice } from '../lib/theme';
 import { navigate, routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
 import { createStorage } from '../lib/storage';
@@ -30,6 +31,7 @@ export function Settings() {
   const [permission, setPermission] = useState(notificationPermission);
   const [deleting, setDeleting] = useState(false);
   const [persist, setPersist] = useState<PersistState | null>(null);
+  const [theme, setTheme] = useState<ThemeChoice>(loadTheme);
   useEffect(() => {
     requestPersistentStorage().then(setPersist);
   }, []);
@@ -79,6 +81,33 @@ export function Settings() {
           )}
         </dl>
         <a href={routeToHash({ name: 'profile-edit' })} className="button-secondary">Edit your information</a>
+      </section>
+
+      <section className="card" aria-labelledby="appearance-heading">
+        <h2 id="appearance-heading">Appearance</h2>
+        <fieldset className="choice-group">
+          <legend className="visually-hidden">Light or dark colors</legend>
+          <div className="chip-row">
+            {([
+              ['auto', 'Match my phone'],
+              ['light', 'Light'],
+              ['dark', 'Dark'],
+            ] as [ThemeChoice, string][]).map(([value, label]) => (
+              <label key={value} className="chip">
+                <input
+                  type="radio"
+                  name="theme"
+                  checked={theme === value}
+                  onChange={() => {
+                    setTheme(value);
+                    saveTheme(value);
+                  }}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       </section>
 
       <section className="card" aria-labelledby="notify-heading">

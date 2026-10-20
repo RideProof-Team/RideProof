@@ -30,6 +30,14 @@
   --color-snackbar-bg: #1f2933;
   --color-snackbar-text: #ffffff;
   --color-snackbar-action: #ffd166;
+  --color-header-bg: #0b4f8a;      /* the blue top bar (same in light and dark) */
+  --color-header-text: #ffffff;
+  --color-danger-solid: #b3261e;   /* red button with white text */
+  --color-warn-divider: #e2c780;
+  --color-toast-bg: #f8f8f8;
+  --color-chart-grid: #e5e7eb;
+  /* Tells the browser to draw built-in parts (date pickers, scrollbars) to match. */
+  color-scheme: light;
 
   --radius: 12px;
   --tap-size: 48px;
@@ -107,8 +115,8 @@ h1[tabindex='-1']:focus { outline: none; }
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
+  background: var(--color-header-bg);
+  color: var(--color-header-text);
 }
 
 .app-name { font-weight: 700; font-size: 1.2rem; min-width: 0; }
@@ -117,10 +125,10 @@ h1[tabindex='-1']:focus { outline: none; }
   min-height: var(--tap-size);
   min-width: var(--tap-size);
   padding: 0 1rem;
-  border: 2px solid var(--color-primary-text);
+  border: 2px solid var(--color-header-text);
   border-radius: var(--radius);
   background: transparent;
-  color: var(--color-primary-text);
+  color: var(--color-header-text);
   font: inherit;
   font-size: 1rem;
   font-weight: 600;
@@ -129,8 +137,8 @@ h1[tabindex='-1']:focus { outline: none; }
   cursor: pointer;
 }
 .demo-button[aria-pressed='true'] {
-  background: var(--color-primary-text);
-  color: var(--color-primary);
+  background: var(--color-header-text);
+  color: var(--color-header-bg);
 }
 
 .demo-banner {
@@ -304,7 +312,7 @@ h1[tabindex='-1']:focus { outline: none; }
   display: block;
   padding: 1rem;
   margin: 1rem 0;
-  border: 2px solid #d0d7de;
+  border: 2px solid var(--color-divider);
   border-radius: var(--radius);
   background: var(--color-bg);
 }
@@ -342,7 +350,7 @@ h1[tabindex='-1']:focus { outline: none; }
   bottom: 0;
   z-index: 10;
   background: var(--color-bg);
-  border-top: 2px solid #d0d7de;
+  border-top: 2px solid var(--color-divider);
   /* Keeps the menu above the iPhone's home bar. */
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -488,7 +496,7 @@ textarea {
 /* ---------- Booking reminders ---------- */
 .card-reminder { border: 3px solid var(--color-warn); background: var(--color-warn-bg); }
 .card-reminder h2 { display: flex; align-items: center; gap: 0.5rem; color: var(--color-warn); }
-.reminder-item + .reminder-item { border-top: 2px solid #e2c780; margin-top: 1rem; padding-top: 0.5rem; }
+.reminder-item + .reminder-item { border-top: 2px solid var(--color-warn-divider); margin-top: 1rem; padding-top: 0.5rem; }
 .reminder-title { font-weight: 700; margin-bottom: 0.25rem; }
 .reminder-item p { margin: 0.25rem 0; }
 
@@ -515,7 +523,7 @@ textarea {
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.75rem;
-  border: 2px solid #d0d7de;
+  border: 2px solid var(--color-divider);
   border-top: 6px solid currentColor;
   border-radius: var(--radius);
 }
@@ -529,7 +537,7 @@ textarea {
 .table-toggle summary { min-height: var(--tap-size); display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--color-primary); }
 .table-scroll { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { padding: 0.4rem; border-bottom: 1px solid #d0d7de; text-align: left; }
+.data-table th, .data-table td { padding: 0.4rem; border-bottom: 1px solid var(--color-divider); text-align: left; }
 
 /* ---------- Complaint letter ---------- */
 .placeholder-warning {
@@ -542,7 +550,7 @@ textarea {
   color: var(--color-warn);
   font-weight: 600;
 }
-.contact-list li { padding: 0.5rem 0; border-bottom: 1px solid #d0d7de; }
+.contact-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--color-divider); }
 .contact-list li:last-child { border-bottom: none; }
 .letter-box { font-size: 1rem; line-height: 1.5; }
 .action-status { min-height: 1.5em; font-weight: 600; color: var(--color-good); }
@@ -592,7 +600,7 @@ textarea {
   transform: translateX(-50%);
   padding: 0.75rem 1rem;
   border-radius: 18px;
-  background: #f8f8f8;
+  background: var(--color-toast-bg);
   color: var(--color-text);
   box-shadow: 0 8px 30px rgb(0 0 0 / 0.3);
   animation: toast-in 300ms ease-out;
@@ -652,7 +660,7 @@ textarea {
   padding: 0.75rem 1rem;
   border: none;
   border-radius: var(--radius);
-  background: var(--color-error);
+  background: var(--color-danger-solid);
   color: #ffffff;
   font: inherit;
   font-weight: 700;
@@ -783,7 +791,7 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
   color: var(--color-primary);
   font-weight: 800;
 }
-.start-steps li.done .start-mark { background: var(--color-good); border-color: var(--color-good); color: #ffffff; }
+.start-steps li.done .start-mark { background: var(--color-good); border-color: var(--color-good); color: var(--color-bg); }
 .start-steps li.done .start-title { color: var(--color-muted); text-decoration: line-through; }
 .start-title { margin: 0.2rem 0 0; font-weight: 700; }
 .start-detail { margin: 0.25rem 0 0; }
@@ -807,3 +815,70 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .clinic-actions { display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
 .clinic-actions a { flex: 1 1 7rem; padding-left: 0.5rem; padding-right: 0.5rem; white-space: nowrap; }
 .today-extras { margin-top: 0.5rem; }
+
+/* ---------- Dark mode ----------
+   The same color NAMES get darker values. Every pair was checked to meet
+   WCAG contrast (4.5:1 or better; most are over 7:1).
+   - "Automatic" follows the phone's setting (prefers-color-scheme), unless
+     the user picked Light in Settings (data-theme="light").
+   - Picking Dark in Settings (data-theme="dark") always uses dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+  --color-good: #6fdc8c;
+  --color-good-bg: #11331d;
+  --color-warn: #ffd166;
+  --color-warn-bg: #3a2c06;
+  --color-text: #f1f3f5;
+  --color-muted: #c3c9cf;
+  --color-bg: #121417;
+  --color-surface: #1d2228;
+  --color-border: #8b949e;
+  --color-primary: #8ec5ff;
+  --color-primary-text: #08223d;
+  --color-error: #ff8f8f;
+  --color-divider: #3a424b;
+  --color-hover: #232a32;
+  --color-pressed: #2d3640;
+  --color-snackbar-bg: #e9edf1;
+  --color-snackbar-text: #121417;
+  --color-snackbar-action: #0b4f8a;
+  --color-warn-divider: #6b5420;
+  --color-toast-bg: #2a3038;
+  --color-chart-grid: #2f363e;
+  --color-problem: #ff8f8f;
+  --color-problem-bg: #3d1515;
+  --color-late-border: #e0a43a;
+  color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --color-good: #6fdc8c;
+  --color-good-bg: #11331d;
+  --color-warn: #ffd166;
+  --color-warn-bg: #3a2c06;
+  --color-text: #f1f3f5;
+  --color-muted: #c3c9cf;
+  --color-bg: #121417;
+  --color-surface: #1d2228;
+  --color-border: #8b949e;
+  --color-primary: #8ec5ff;
+  --color-primary-text: #08223d;
+  --color-error: #ff8f8f;
+  --color-divider: #3a424b;
+  --color-hover: #232a32;
+  --color-pressed: #2d3640;
+  --color-snackbar-bg: #e9edf1;
+  --color-snackbar-text: #121417;
+  --color-snackbar-action: #0b4f8a;
+  --color-warn-divider: #6b5420;
+  --color-toast-bg: #2a3038;
+  --color-chart-grid: #2f363e;
+  --color-problem: #ff8f8f;
+  --color-problem-bg: #3d1515;
+  --color-late-border: #e0a43a;
+  color-scheme: dark;
+}
+
+/* The PDF's copy of the chart: drawn off-screen, wide, always light. */
+.print-chart { position: absolute; left: -10000px; top: 0; width: 640px; visibility: hidden; }
+.print-chart .chart-box { height: 320px; }

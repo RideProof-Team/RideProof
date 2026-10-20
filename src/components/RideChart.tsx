@@ -17,6 +17,7 @@ import {
 import { forwardRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { WeekCounts } from '../lib/reportStats';
+import { cssColor, useIsDark } from '../lib/theme';
 
 // Chart.js only includes the pieces you "register", which keeps the app smaller.
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -31,11 +32,27 @@ export const CHART_COLORS = {
 const reduceMotion =
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCounts[] }>(function RideChart({ weeks }, ref) {
+/** Light-mode colors, always used for the PDF (paper is white). */
+const PRINT = { text: '#1a1a1a', muted: '#4a4a4a', grid: '#e5e7eb', background: '#ffffff' };
+
+interface Props {
+  weeks: WeekCounts[];
+  /** Draw for the PDF: light colors and no animation, whatever the screen theme. */
+  forPrint?: boolean;
+}
+
+export const RideChart = forwardRef<ChartJS<'bar'> | undefined, Props>(function RideChart({ weeks, forPrint = false }, ref) {
+  // Chart.js draws on a <canvas>, which can't use CSS colors directly, so we
+  // read the current text/grid colors and redraw when light/dark changes.
+  const dark = useIsDark();
+  const text = forPrint ? PRINT.text : cssColor('--color-text') || PRINT.text;
+  const muted = forPrint ? PRINT.muted : cssColor('--color-muted') || PRINT.muted;
+  const grid = forPrint ? PRINT.grid : cssColor('--color-chart-grid') || PRINT.grid;
+  const background = forPrint ? PRINT.background : cssColor('--color-bg') || PRINT.background;
   // Shared look for each colored part of the bars.
   const barStyle = {
-    // A 2px white border makes a small gap between stacked pieces.
-    borderColor: '#ffffff',
+    // A 2px border in the background color makes a small gap between stacked pieces.
+    borderColor: background,
     borderWidth: 2,
     borderRadius: 4,
     borderSkipped: false as const,
@@ -58,6 +75,8 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCou
   return (
     <div className="chart-box">
       <Bar
+        // A new key when light/dark changes makes Chart.js redraw with new colors.
+        key={!forPrint && dark ? 'dark' : 'light'}
         ref={ref}
         data={data}
         role="img"
@@ -65,12 +84,12 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCou
         options={{
           responsive: true,
           maintainAspectRatio: false,
-          animation: reduceMotion ? false : { duration: 600 },
+          animation: reduceMotion || forPrint ? false : { duration: 600 },
           plugins: {
             legend: {
               position: 'top',
               align: 'start',
-              labels: { font: { size: 16 }, color: '#1a1a1a', boxWidth: 18, boxHeight: 18, useBorderRadius: true, borderRadius: 4 },
+              labels: { font: { size: 16 }, color: text, boxWidth: 18, boxHeight: 18, useBorderRadius: true, borderRadius: 4 },
             },
             tooltip: {
               titleFont: { size: 16 },
@@ -86,7 +105,7 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCou
               stacked: true,
               grid: { display: false },
               ticks: {
-                color: '#4a4a4a',
+                color: muted,
                 font: { size: 16 },
                 // Show just "Sep 28" under each bar to save space.
                 callback: (_value, index) => weeks[index]?.label,
@@ -97,9 +116,9 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCou
             y: {
               stacked: true,
               beginAtZero: true,
-              ticks: { precision: 0, color: '#4a4a4a', font: { size: 16 } },
-              grid: { color: '#e5e7eb' },
-              title: { display: true, text: 'Rides', color: '#4a4a4a', font: { size: 16 } },
+              ticks: { precision: 0, color: muted, font: { size: 16 } },
+              grid: { color: grid },
+              title: { display: true, text: 'Rides', color: muted, font: { size: 16 } },
             },
           },
         }}

@@ -20,7 +20,7 @@ export function Report() {
   const { today, profile, mode } = useApp();
   const { data } = useRideData();
   const [periodId, setPeriodId] = useState('past-month');
-  // The chart, so the PDF can include a picture of it (Phase 6).
+  // The off-screen, light-colored chart, so the PDF can include a picture of it.
   const chartRef = useRef<ChartJS<'bar'> | undefined>(undefined);
   const [pdfBusy, setPdfBusy] = useState(false);
   // Tick off "See your report" in the Getting started list (real data only).
@@ -90,7 +90,11 @@ export function Report() {
       {stats.totalRides > 0 && (
         <section aria-labelledby="chart-heading">
           <h2 id="chart-heading">Rides by week</h2>
-          <RideChart ref={chartRef} weeks={weeks} />
+          <RideChart weeks={weeks} />
+          {/* A second copy, off-screen and in light colors, used only for the PDF. */}
+          <div className="print-chart" aria-hidden="true">
+            <RideChart ref={chartRef} weeks={weeks} forPrint />
+          </div>
           {/* <details> is a built-in show/hide box that works with keyboards and screen readers. */}
           <details className="table-toggle">
             <summary>Show as a table</summary>
