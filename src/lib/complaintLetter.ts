@@ -10,7 +10,7 @@
 // years, and so on. Each of those is its own small function below.
 // ---------------------------------------------------------------------------
 import type { AppointmentType, Profile, RideLog } from '../types';
-import { formatLongDate, parseDate } from './dates';
+import { formatLongDate, formatTime, parseDate } from './dates';
 import { computeStats, logsInRange, plural, type ReportPeriod } from './reportStats';
 import type { StateRule } from './stateRules';
 
@@ -120,6 +120,14 @@ export function extraSentences(logs: RideLog[]): string[] {
   return sentences;
 }
 
+/** "Scheduled for 8:15 AM; the driver came at 9:20 AM." (or '' if no times). */
+export function pickupTimesText(log: RideLog): string {
+  const parts: string[] = [];
+  if (log.scheduledPickup) parts.push(`Scheduled for ${formatTime(log.scheduledPickup)}`);
+  if (log.actualPickup) parts.push(`${parts.length ? 'the driver' : 'The driver'} came at ${formatTime(log.actualPickup)}`);
+  return parts.length ? `${parts.join('; ')}.` : '';
+}
+
 /** One line describing what went wrong on one ride. */
 export function describeProblem(log: RideLog): string {
   const parts: string[] = [];
@@ -132,6 +140,8 @@ export function describeProblem(log: RideLog): string {
   if (log.returnRideStatus === 'never_came') parts.push('My ride home never came');
   if (log.returnRideStatus === 'late') parts.push('My ride home was late');
   let line = parts.join('. ') + '.';
+  const times = pickupTimesText(log);
+  if (times) line += ` Pickup was ${times.charAt(0).toLowerCase()}${times.slice(1)}`;
   if (log.notes) line += ` Note: "${log.notes}"`;
   return line;
 }

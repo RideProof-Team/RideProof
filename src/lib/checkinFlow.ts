@@ -27,6 +27,9 @@ export interface Answers {
   appointmentOutcome?: AppointmentOutcome;
   returnRideStatus?: ReturnRideStatus;
   notes: string;
+  /** Optional "HH:MM" times for extra evidence. */
+  scheduledPickup?: string;
+  actualPickup?: string;
 }
 
 /** Which steps apply, given the answers. "How late?" only appears if the ride was late. */
@@ -57,6 +60,10 @@ export function answersFromLog(log: RideLog): Answers {
     appointmentOutcome: log.appointmentOutcome,
     returnRideStatus: log.returnRideStatus,
     notes: log.notes,
+    // Only include times that were actually saved, so an untouched edit
+    // counts as "no changes".
+    ...(log.scheduledPickup ? { scheduledPickup: log.scheduledPickup } : {}),
+    ...(log.actualPickup ? { actualPickup: log.actualPickup } : {}),
   };
 }
 
@@ -84,6 +91,9 @@ export function buildRideLog(answers: Answers, details: LogDetails): RideLog {
     appointmentOutcome: answers.appointmentOutcome,
     returnRideStatus: answers.returnRideStatus,
     notes: answers.notes.trim(),
+    scheduledPickup: answers.scheduledPickup || undefined,
+    // There's no "driver came at" time if the driver never came.
+    actualPickup: answers.pickupStatus === 'never_came' ? undefined : answers.actualPickup || undefined,
   };
 }
 

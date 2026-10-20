@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildRideLog, findLog, nextStep, previousStep, stepsFor, tripsNeedingCheckIn } from './checkinFlow';
-import { rideSeverity } from './rideStatus';
+import { describeProblem, pickupTimesText } from './complaintLetter';
+import { filterLogs, rideSeverity } from './rideStatus';
 import type { Appointment, RideLog } from '../types';
 
 const details = {
@@ -98,5 +99,65 @@ describe('tripsNeedingCheckIn', () => {
   it('finds a log by appointment and date', () => {
     expect(findLog([logged], 'appt-1', '2026-10-28')).toBe(logged);
     expect(findLog([logged], 'appt-1', '2026-10-26')).toBeUndefined();
+  });
+});
+
+describe('pickup times', () => {
+  const answers = {
+    pickupStatus: 'late' as const,
+    minutesLate: 60 as const,
+    appointmentOutcome: 'late' as const,
+    returnRideStatus: 'on_time' as const,
+    notes: '',
+    scheduledPickup: '08:15',
+    actualPickup: '09:20',
+  };
+
+  it('saves the optional times', () => {
+    expect(buildRideLog(answers, details)).toMatchObject({ scheduledPickup: '08:15', actualPickup: '09:20' });
+  });
+
+  it('drops "driver came at" when the driver never came, and empty boxes', () => {
+    const log = buildRideLog({ ...answers, pickupStatus: 'never_came', scheduledPickup: '' }, details);
+    expect(log.actualPickup).toBeUndefined();
+    expect(log.scheduledPickup).toBeUndefined();
+  });
+
+  it('describes the times in History, the letter, and the PDF', () => {
+    const log = buildRideLog(answers, details);
+    expect(pickupTimesText(log)).toBe('Scheduled for 8:15 AM; the driver came at 9:20 AM.');
+    expect(describeProblem(log)).toBe(
+      'Pickup was an hour or more late. I arrived late to my appointment. Pickup was scheduled for 8:15 AM; the driver came at 9:20 AM.',
+    );
+    expect(pickupTimesText({ ...log, scheduledPickup: undefined })).toBe('The driver came at 9:20 AM.');
+    expect(pickupTimesText({ ...log, scheduledPickup: undefined, actualPickup: undefined })).toBe('');
+  });
+});
+
+describe('History filters', () => {
+  const mk = (rideDate: string, extra: Partial<RideLog>) =>
+    buildRideLog(
+      { pickupStatus: 'on_time', appointmentOutcome: 'made_it', returnRideStatus: 'on_time', notes: '', ...extra } as never,
+      { ...details, id: rideDate, rideDate },
+    );
+  const logs = [
+    mk('2026-10-01', {}),
+    mk('2026-10-02', { pickupStatus: 'late', minutesLate: 15 }),
+    mk('2026-10-03', { pickupStatus: 'never_came', appointmentOutcome: 'missed', returnRideStatus: 'not_needed' }),
+    mk('2026-10-04', { returnRideStatus: 'never_came', notes: 'Waited 2 hours for ride home' }),
+  ];
+  const ids = (list: RideLog[]) => list.map((l) => l.id);
+
+  it('filters by kind of problem', () => {
+    expect(ids(filterLogs(logs, 'all', ''))).toHaveLength(4);
+    expect(ids(filterLogs(logs, 'problems', ''))).toEqual(['2026-10-02', '2026-10-03', '2026-10-04']);
+    expect(ids(filterLogs(logs, 'late', ''))).toEqual(['2026-10-02']);
+    expect(ids(filterLogs(logs, 'never_came', ''))).toEqual(['2026-10-03', '2026-10-04']);
+  });
+
+  it('searches notes and clinic names, ignoring case', () => {
+    expect(ids(filterLogs(logs, 'all', 'WAITED'))).toEqual(['2026-10-04']);
+    expect(ids(filterLogs(logs, 'all', 'test clinic'))).toHaveLength(4);
+    expect(ids(filterLogs(logs, 'late', 'waited'))).toEqual([]);
   });
 });

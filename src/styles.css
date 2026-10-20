@@ -882,3 +882,12 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 /* The PDF's copy of the chart: drawn off-screen, wide, always light. */
 .print-chart { position: absolute; left: -10000px; top: 0; width: 640px; visibility: hidden; }
 .print-chart .chart-box { height: 320px; }
+
+/* ---------- History search and filters ---------- */
+.history-tools { margin-bottom: 0.5rem; }
+.search-field label { display: flex; align-items: center; gap: 0.4rem; }
+.filter-count { margin: 0; color: var(--color-muted); font-weight: 600; }
+
+.time-details { margin: 0.75rem 0; }
+.time-details summary { min-height: var(--tap-size); display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--color-primary); }
+.time-details .field { margin: 0.5rem 0 0.75rem; }

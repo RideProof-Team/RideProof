@@ -325,6 +325,23 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
             onChange={(e) => setAnswers({ ...answers, notes: e.target.value })}
             aria-describedby="notes-hint"
           />
+          <details className="time-details" open={Boolean(answers.scheduledPickup || answers.actualPickup)}>
+            <summary>Add pickup times (optional, makes a stronger record)</summary>
+            <TimeBox
+              id="scheduledPickup"
+              label="Pickup time you were given"
+              value={answers.scheduledPickup}
+              onChange={(v) => setAnswers({ ...answers, scheduledPickup: v })}
+            />
+            {answers.pickupStatus !== 'never_came' && (
+              <TimeBox
+                id="actualPickup"
+                label="Time the driver actually came"
+                value={answers.actualPickup}
+                onChange={(v) => setAnswers({ ...answers, actualPickup: v })}
+              />
+            )}
+          </details>
           <button type="button" className="button-primary button-big" onClick={save}>
             Save check-in
           </button>
@@ -378,6 +395,16 @@ function Options<T extends string | number>({
           <span>{option.label}</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+/** A labeled time picker. An empty box means "not filled in". */
+function TimeBox({ id, label, value, onChange }: { id: string; label: string; value?: string; onChange(v: string): void }) {
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <input id={id} type="time" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }

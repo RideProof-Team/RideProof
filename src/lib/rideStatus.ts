@@ -36,3 +36,27 @@ export function severityReason(log: RideLog): string {
   if (log.appointmentOutcome === 'late') return 'Arrived late';
   return 'On time';
 }
+
+// ---------------------------------------------------------------------------
+// Filtering History ("show only problems", or search for a word).
+// ---------------------------------------------------------------------------
+export type HistoryFilter = 'all' | 'problems' | 'late' | 'never_came';
+
+export const HISTORY_FILTER_LABELS: Record<HistoryFilter, string> = {
+  all: 'All rides',
+  problems: 'Problems only',
+  late: 'Late',
+  never_came: 'Never came',
+};
+
+export function filterLogs(logs: RideLog[], filter: HistoryFilter, search: string): RideLog[] {
+  const words = search.trim().toLowerCase();
+  return logs.filter((log) => {
+    if (filter === 'problems' && rideSeverity(log) === 'good') return false;
+    if (filter === 'late' && log.pickupStatus !== 'late' && log.returnRideStatus !== 'late') return false;
+    if (filter === 'never_came' && log.pickupStatus !== 'never_came' && log.returnRideStatus !== 'never_came') return false;
+    // Search the clinic name and notes, ignoring upper/lower case.
+    if (words && !`${log.clinicName} ${log.notes}`.toLowerCase().includes(words)) return false;
+    return true;
+  });
+}

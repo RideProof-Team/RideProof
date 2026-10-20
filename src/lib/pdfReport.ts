@@ -7,6 +7,7 @@
 import type { Profile, RideLog } from '../types';
 import { formatLongDate } from './dates';
 import { APPOINTMENT_TYPE_LABELS, MINUTES_LATE_SHORT, OUTCOME_LABELS, PICKUP_LABELS, RETURN_LABELS } from './labels';
+import { pickupTimesText } from './complaintLetter';
 import { PdfWriter, pdfSafe } from './pdfWriter';
 import { computeStats, headline, logsInRange, type ReportPeriod } from './reportStats';
 import { getStateRule } from './stateRules';
@@ -107,7 +108,7 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
     const cells = [
       formatLongDate(ride.rideDate).replace(/^(\w{3})\w*/, '$1'), // "Wed, October 14"
       `${APPOINTMENT_TYPE_LABELS[ride.appointmentType]}, ${ride.clinicName}`,
-      pickup,
+      [pickup, pickupTimesText(ride)].filter(Boolean).join(' '),
       OUTCOME_LABELS[ride.appointmentOutcome],
       RETURN_LABELS[ride.returnRideStatus],
     ];
