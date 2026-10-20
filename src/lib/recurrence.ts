@@ -24,6 +24,12 @@ export interface Trip {
  * way dates do, so we can compare them with < and >.
  */
 export function appointmentDates(appointment: Appointment, from: string, to: string): string[] {
+  const skipped = appointment.skippedDates ?? [];
+  return datesFromRule(appointment, from, to).filter((date) => !skipped.includes(date));
+}
+
+/** The dates the rule says, before taking out skipped days. */
+function datesFromRule(appointment: Appointment, from: string, to: string): string[] {
   const rule = appointment.recurrence;
 
   if (rule.kind === 'none') {
@@ -89,4 +95,20 @@ export function describeSchedule(appointment: Appointment): string {
 /** True if a one-time appointment is over. Recurring ones are never "past". */
 export function isPastAppointment(appointment: Appointment, today: string): boolean {
   return appointment.recurrence.kind === 'none' && appointment.date < today;
+}
+
+// ---------------------------------------------------------------------------
+// Skipping one day ("dialysis is cancelled this Monday").
+// These return a NEW appointment instead of changing the old one, which
+// makes "Undo" easy: just save the old one again.
+// ---------------------------------------------------------------------------
+
+export function skipTrip(appointment: Appointment, date: string): Appointment {
+  const skipped = appointment.skippedDates ?? [];
+  if (skipped.includes(date)) return appointment;
+  return { ...appointment, skippedDates: [...skipped, date].sort() };
+}
+
+export function restoreTrip(appointment: Appointment, date: string): Appointment {
+  return { ...appointment, skippedDates: (appointment.skippedDates ?? []).filter((d) => d !== date) };
 }

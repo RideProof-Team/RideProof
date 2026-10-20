@@ -7,6 +7,7 @@
 import { useApp } from '../AppContext';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
+import { SkipDayButton } from '../components/SkipDayButton';
 import { tripsNeedingCheckIn } from '../lib/checkinFlow';
 import { formatLongDate, formatTime, parseDate } from '../lib/dates';
 import {
@@ -26,7 +27,7 @@ const MAX_UNLOGGED = 5;
 
 export function History() {
   const { today } = useApp();
-  const { data } = useRideData();
+  const { data, reload } = useRideData();
   if (!data) return <Screen title="Ride history"><p>Loading…</p></Screen>;
 
   const unlogged = tripsNeedingCheckIn(data.appointments, data.rideLogs, today).slice(0, MAX_UNLOGGED);
@@ -57,6 +58,12 @@ export function History() {
                   {' — '}
                   {APPOINTMENT_TYPE_LABELS[trip.appointment.type]}
                 </a>
+                <SkipDayButton
+                  appointment={trip.appointment}
+                  date={trip.date}
+                  onChange={reload}
+                  label="No appointment that day? Skip it"
+                />
               </li>
             ))}
           </ul>

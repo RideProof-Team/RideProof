@@ -8,6 +8,7 @@
 import { useApp } from '../AppContext';
 import { BookingReminders } from '../components/BookingReminders';
 import { BookingStatus } from '../components/BookingStatus';
+import { SkipDayButton } from '../components/SkipDayButton';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { findLog } from '../lib/checkinFlow';
@@ -87,11 +88,13 @@ export function Home() {
                     <strong>{formatTime(trip.appointment.time)}</strong> —{' '}
                     {APPOINTMENT_TYPE_LABELS[trip.appointment.type]} at {trip.appointment.clinicName}
                   </span>
-                  {log && (
+                  {log ? (
                     <span className={`badge badge-${rideSeverity(log)}`}>
                       <Icon name="check" size={20} />
                       Checked in: {SEVERITY_DISPLAY[rideSeverity(log)].label}
                     </span>
+                  ) : (
+                    <SkipDayButton appointment={trip.appointment} date={trip.date} onChange={reload} />
                   )}
                 </li>
               );
@@ -131,6 +134,7 @@ export function Home() {
               </button>
             </div>
           )}
+          <SkipDayButton appointment={nextTrip.appointment} date={nextTrip.date} onChange={reload} />
           {nextTrip.appointment.rideBooked && !nextTrip.appointment.confirmationNumber && (
             <p>
               <a href={routeToHash({ name: 'appointment-edit', id: nextTrip.appointment.id })}>
@@ -157,6 +161,7 @@ export function Home() {
                   <Icon name={trip.appointment.rideBooked ? 'check' : 'warning'} size={20} />
                   {trip.appointment.rideBooked ? 'Booked' : 'Not booked'}
                 </span>
+                <SkipDayButton appointment={trip.appointment} date={trip.date} onChange={reload} label="Skip this day" />
               </li>
             ))}
           </ul>

@@ -1,7 +1,8 @@
 // Tests for recurring appointments and date helpers. Run with: npm test
 import { describe, expect, it } from 'vitest';
 import { addDays, formatTime, weekdayOf } from './dates';
-import { appointmentDates, describeSchedule, isPastAppointment, tripsBetween, upcomingTrips } from './recurrence';
+import { appointmentDates, describeSchedule, isPastAppointment, restoreTrip, skipTrip, tripsBetween, upcomingTrips } from './recurrence';
+import { bookingReminders } from './reminders';
 import type { Appointment } from '../types';
 
 function makeAppointment(overrides: Partial<Appointment>): Appointment {
@@ -119,5 +120,34 @@ describe('isPastAppointment', () => {
     expect(isPastAppointment(makeAppointment({ date: '2026-10-30' }), '2026-10-30')).toBe(false);
     const weekly = makeAppointment({ date: '2026-01-01', recurrence: { kind: 'weekly', weekdays: [1] } });
     expect(isPastAppointment(weekly, '2026-10-30')).toBe(false);
+  });
+});
+
+describe('skipping one day', () => {
+  const weekly = makeAppointment({ recurrence: { kind: 'weekly', weekdays: [1, 3, 5] } });
+
+  it('leaves a skipped day out of the schedule, keeping the rest', () => {
+    const skipped = skipTrip(weekly, '2026-11-11');
+    expect(appointmentDates(skipped, '2026-11-09', '2026-11-13')).toEqual(['2026-11-09', '2026-11-13']);
+    expect(appointmentDates(weekly, '2026-11-09', '2026-11-13')).toHaveLength(3); // original unchanged
+  });
+
+  it('can cancel a one-time appointment and restore it', () => {
+    const once = makeAppointment({ date: '2026-11-05' });
+    const cancelled = skipTrip(once, '2026-11-05');
+    expect(appointmentDates(cancelled, '2026-11-01', '2026-11-30')).toEqual([]);
+    expect(appointmentDates(restoreTrip(cancelled, '2026-11-05'), '2026-11-01', '2026-11-30')).toEqual(['2026-11-05']);
+  });
+
+  it('does not add the same day twice, and works with older appointments that have no list', () => {
+    expect(weekly.skippedDates).toBeUndefined();
+    const twice = skipTrip(skipTrip(weekly, '2026-11-11'), '2026-11-11');
+    expect(twice.skippedDates).toEqual(['2026-11-11']);
+  });
+
+  it('moves the booking reminder to the next real trip', () => {
+    const unbooked = makeAppointment({ rideBooked: false, recurrence: { kind: 'weekly', weekdays: [1, 3, 5] } });
+    expect(bookingReminders([unbooked], '2026-10-30', 2)[0].tripDate).toBe('2026-10-30');
+    expect(bookingReminders([skipTrip(unbooked, '2026-10-30')], '2026-10-30', 2)[0].tripDate).toBe('2026-11-02');
   });
 });

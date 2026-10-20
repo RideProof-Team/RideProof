@@ -12,7 +12,8 @@ import { askConfirm, showSnackbar } from '../lib/feedback';
 import { allowLeave, navigate, useLeaveWarning } from '../lib/router';
 import { newId } from '../lib/storage';
 import { validateAppointment, type AppointmentErrors } from '../lib/validateAppointment';
-import { weekdayOf } from '../lib/dates';
+import { formatLongDate, weekdayOf } from '../lib/dates';
+import { restoreTrip } from '../lib/recurrence';
 import type { Appointment, AppointmentType, Weekday } from '../types';
 
 const BACK = { to: { name: 'appointments' } as const, label: 'Schedule' };
@@ -247,6 +248,23 @@ export function AppointmentForm({ id }: { id?: string }) {
             value={appt.confirmationNumber}
             onChange={(v) => update('confirmationNumber', v)}
           />
+        )}
+
+        {(appt.skippedDates ?? []).length > 0 && (
+          <fieldset className="choice-group">
+            <legend>Skipped days</legend>
+            <p className="field-hint">These days are left out of the schedule. Tap "Restore" to put one back.</p>
+            <ul className="plain-list skipped-list">
+              {(appt.skippedDates ?? []).map((date) => (
+                <li key={date}>
+                  <span>{formatLongDate(date, true)}</span>
+                  <button type="button" className="link-button" onClick={() => setForm(restoreTrip(appt, date))}>
+                    Restore<span className="visually-hidden"> {formatLongDate(date)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
         )}
 
         <button type="submit" className="button-primary">Save appointment</button>

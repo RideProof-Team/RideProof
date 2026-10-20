@@ -24,6 +24,7 @@
   --color-focus: #ffbf47;          /* bright outline when using a keyboard */
   --color-error: #b3261e;
   --color-demo: #6b3fa0;           /* purple so demo mode is obvious */
+  --color-divider: #d0d7de;
   --color-hover: #eef3f8;
   --color-pressed: #dbe5ef;
   --color-snackbar-bg: #1f2933;
@@ -707,7 +708,9 @@ textarea {
 button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color: transparent; }
 .button-primary:hover:not(:disabled), .button-danger-solid:hover { filter: brightness(1.12); }
 .button-secondary:hover, .button-danger:hover, .answer-button:hover, .card-link:hover,
-.chip:hover, .choice-card:hover, .demo-button:hover { background-color: var(--color-hover); }
+.chip:hover, .choice-card:hover { background-color: var(--color-hover); }
+/* The header buttons sit on dark blue, so they get a see-through white instead. */
+.demo-button:not([aria-pressed='true']):hover { background-color: rgb(255 255 255 / 0.15); }
 .bottom-nav a:hover { background-color: var(--color-hover); }
 .button-primary:active:not(:disabled), .button-danger-solid:active { filter: brightness(0.85); }
 .button-secondary:active, .button-danger:active, .answer-button:active, .card-link:active,
@@ -757,3 +760,6 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 }
 .back-link span { font-size: 1.6rem; line-height: 1; }
 .back-link:hover { text-decoration: underline; }
+
+.skipped-list li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-divider); }
+.skipped-list .link-button { margin-top: 0; }

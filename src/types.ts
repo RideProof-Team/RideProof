@@ -48,6 +48,12 @@ export interface Appointment {
   recurrence: RecurrenceRule;
   rideBooked: boolean;
   confirmationNumber: string;
+  /**
+   * Days this appointment is NOT happening (e.g. dialysis cancelled for a
+   * holiday), as "YYYY-MM-DD". Optional, because appointments saved by
+   * older versions of RideProof don't have it.
+   */
+  skippedDates?: string[];
 }
 
 export type PickupStatus = 'on_time' | 'late' | 'never_came';
