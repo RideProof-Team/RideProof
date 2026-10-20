@@ -5,6 +5,7 @@
 import { useApp } from '../AppContext';
 import { Disclaimer } from '../components/Disclaimer';
 import { Icon } from '../components/Icon';
+import { InstallButton } from '../components/PwaPrompts';
 import { Screen } from '../components/Screen';
 import { routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
@@ -100,6 +101,7 @@ export function Help() {
           <li><strong>Android:</strong> In Chrome, tap the ⋮ menu, then "Add to Home screen" or "Install app".</li>
         </ul>
         <p>After that, RideProof opens like a regular app and works without internet.</p>
+        <InstallButton />
       </section>
 
       <a href={routeToHash({ name: 'settings' })} className="button-secondary">Settings and delete data</a>

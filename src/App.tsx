@@ -11,6 +11,7 @@ import { AppContext, type AppContextValue, type ToastMessage } from './AppContex
 import { BottomNav } from './components/BottomNav';
 import { FeedbackHost } from './components/FeedbackHost';
 import { Header } from './components/Header';
+import { UpdateBanner } from './components/PwaPrompts';
 import { Screen } from './components/Screen';
 import { Toast } from './components/Toast';
 import { getToday } from './lib/clock';
@@ -154,6 +155,7 @@ export function App() {
       {/* Lets keyboard users jump past the header straight to the screen's content. */}
       <a href="#main" className="skip-link" onClick={skipToMain}>Skip to main content</a>
       <Header />
+      <UpdateBanner />
       {toast && <Toast message={toast} onClose={closeToast} />}
       {/* The key makes React replay the fade-in each time the screen changes. */}
       <div className="screen-transition" key={screenKey}>

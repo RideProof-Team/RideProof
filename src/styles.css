@@ -788,3 +788,17 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .start-title { margin: 0.2rem 0 0; font-weight: 700; }
 .start-detail { margin: 0.25rem 0 0; }
 .checkin-later { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+
+/* ---------- "New version ready" bar ---------- */
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-primary);
+  font-weight: 600;
+}
+.update-banner .button-primary { width: auto; min-height: var(--tap-size); margin: 0; padding: 0.4rem 1rem; font-size: 1rem; }

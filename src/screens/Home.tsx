@@ -10,6 +10,7 @@ import { BookingReminders } from '../components/BookingReminders';
 import { BookingStatus } from '../components/BookingStatus';
 import { CheckInNudge } from '../components/CheckInNudge';
 import { GettingStarted } from '../components/GettingStarted';
+import { InstallCard } from '../components/PwaPrompts';
 import { SkipDayButton } from '../components/SkipDayButton';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
@@ -187,6 +188,8 @@ export function Home() {
           </ul>
         </section>
       )}
+
+      {mode === 'real' && <InstallCard />}
 
       {mode === 'real' && needsBackup(rideLogs.length, today) && (
         <section className="card card-info" aria-labelledby="backup-nudge">
