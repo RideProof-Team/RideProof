@@ -24,6 +24,11 @@
   --color-focus: #ffbf47;          /* bright outline when using a keyboard */
   --color-error: #b3261e;
   --color-demo: #6b3fa0;           /* purple so demo mode is obvious */
+  --color-hover: #eef3f8;
+  --color-pressed: #dbe5ef;
+  --color-snackbar-bg: #1f2933;
+  --color-snackbar-text: #ffffff;
+  --color-snackbar-action: #ffd166;
 
   --radius: 12px;
   --tap-size: 48px;
@@ -625,6 +630,98 @@ textarea {
 .help-steps li { margin-bottom: 0.6rem; }
 .danger-zone { border-color: var(--color-error); }
 
+/* ---------- Confirm dialog ---------- */
+.confirm-dialog {
+  width: min(92vw, 420px);
+  padding: 1.25rem;
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+.confirm-dialog::backdrop { background: rgb(0 0 0 / 0.55); }
+.confirm-dialog h2 { margin-top: 0; }
+.button-danger-solid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-error);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- Snackbar (short message with Undo) ---------- */
+.snackbar-region {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* Just above the bottom menu (64px tall) and the iPhone home bar. */
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding: 0 0.75rem;
+  pointer-events: none;
+}
+.snackbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(100%, 560px);
+  padding: 0.4rem 0.4rem 0.4rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-snackbar-bg);
+  color: var(--color-snackbar-text);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
+  pointer-events: auto;
+  animation: snackbar-in 200ms ease-out;
+}
+.snackbar span { flex: 1; font-weight: 600; }
+@keyframes snackbar-in { from { opacity: 0; transform: translateY(12px); } }
+.snackbar-action,
+.snackbar-close {
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  padding: 0 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-snackbar-action);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.snackbar-close { color: var(--color-snackbar-text); font-weight: 400; }
+
+/* ---------- Tap feedback ----------
+   Everything you can tap gets darker when pressed (and lighter when hovered
+   with a mouse), so the app feels like it's responding to your finger. */
+button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color: transparent; }
+.button-primary:hover:not(:disabled), .button-danger-solid:hover { filter: brightness(1.12); }
+.button-secondary:hover, .button-danger:hover, .answer-button:hover, .card-link:hover,
+.chip:hover, .choice-card:hover, .demo-button:hover { background-color: var(--color-hover); }
+.bottom-nav a:hover { background-color: var(--color-hover); }
+.button-primary:active:not(:disabled), .button-danger-solid:active { filter: brightness(0.85); }
+.button-secondary:active, .button-danger:active, .answer-button:active, .card-link:active,
+.chip:active, .choice-card:active, .bottom-nav a:active, .link-button:active,
+.snackbar-action:active, .demo-banner:active { background-color: var(--color-pressed); }
+/* A tiny "push in" — skipped for people who turn off motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .button-primary, .button-secondary, .button-danger, .button-danger-solid, .answer-button {
+    transition: transform 80ms ease-out, filter 80ms, background-color 80ms;
+  }
+  .button-primary:active:not(:disabled), .button-secondary:active, .button-danger:active,
+  .button-danger-solid:active, .answer-button:active { transform: scale(0.98); }
+}
+
 /* ---------- Very large text ----------
    In a media query, "em" is based on the user's text-size setting, not the
    screen. A 390px phone is about 24em wide at normal text size, but only
@@ -636,6 +733,7 @@ textarea {
   .app-header { position: static; }
   .screen { padding-bottom: 2rem; }
   .bottom-nav { position: static; border-top-width: 3px; }
+  .snackbar-region { bottom: 0.75rem; }
   .header-bar { flex-wrap: wrap; }
   .bottom-nav ul { display: grid; grid-template-columns: 1fr; }
   .bottom-nav a { flex-direction: row; gap: 0.5rem; padding: 0.5rem; }

@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { AppContext, type AppContextValue, type ToastMessage } from './AppContext';
 import { BottomNav } from './components/BottomNav';
+import { FeedbackHost } from './components/FeedbackHost';
 import { Header } from './components/Header';
 import { Screen } from './components/Screen';
 import { Toast } from './components/Toast';
@@ -154,6 +155,7 @@ export function App() {
       </div>
       {/* The bottom menu only makes sense once setup is done. */}
       {profile && !loading && <BottomNav current={route} />}
+      <FeedbackHost />
     </AppContext.Provider>
   );
 }

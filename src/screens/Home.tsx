@@ -16,6 +16,7 @@ import { APPOINTMENT_TYPE_LABELS, whose } from '../lib/labels';
 import { upcomingTrips } from '../lib/recurrence';
 import { bookingReminders } from '../lib/reminders';
 import { SEVERITY_DISPLAY, rideSeverity } from '../lib/rideStatus';
+import { showSnackbar } from '../lib/feedback';
 import { routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
 import type { Appointment } from '../types';
@@ -45,6 +46,13 @@ export function Home() {
   async function markBooked(appointment: Appointment) {
     await storage.saveAppointment({ ...appointment, rideBooked: true });
     await reload();
+    showSnackbar('Marked as booked.', {
+      label: 'Undo',
+      run: async () => {
+        await storage.saveAppointment(appointment);
+        await reload();
+      },
+    });
   }
 
   // With exactly one trip left to check in on, the button goes straight to it.

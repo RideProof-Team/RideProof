@@ -31,6 +31,7 @@ import {
   RETURN_LABELS,
 } from '../lib/labels';
 import { tripsBetween } from '../lib/recurrence';
+import { askConfirm, showSnackbar } from '../lib/feedback';
 import { navigate, routeToHash } from '../lib/router';
 import { newId } from '../lib/storage';
 import { useRideData } from '../lib/useRideData';
@@ -139,7 +140,7 @@ interface Option<T> {
 }
 
 function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: RideLog; profile: Profile }) {
-  const { storage, mode } = useApp();
+  const { storage, mode, refreshAll } = useApp();
   // If this trip was already logged, start with the old answers so they can be changed.
   const [answers, setAnswers] = useState<Answers>(() => (existing ? answersFromLog(existing) : { notes: '' }));
   const [step, setStep] = useState<Step>('pickup');
@@ -191,9 +192,22 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
 
   async function deleteLog() {
     if (!existing) return;
-    if (!window.confirm('Delete this check-in? This cannot be undone.')) return;
+    const ok = await askConfirm({
+      title: 'Delete this check-in?',
+      message: `Your record of the ride on ${formatLongDate(existing.rideDate)} will be removed.`,
+      confirmLabel: 'Delete check-in',
+      danger: true,
+    });
+    if (!ok) return;
     await storage.deleteRideLog(existing.id);
     navigate({ name: 'history' });
+    showSnackbar('Check-in deleted.', {
+      label: 'Undo',
+      run: async () => {
+        await storage.saveRideLog(existing);
+        refreshAll();
+      },
+    });
   }
 
   const tripLine = (

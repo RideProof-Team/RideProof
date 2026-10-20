@@ -11,6 +11,7 @@ import { useApp } from '../AppContext';
 import { Screen } from '../components/Screen';
 import { Disclaimer } from '../components/Disclaimer';
 import { ErrorSummary, TextField } from '../components/FormFields';
+import { showSnackbar } from '../lib/feedback';
 import { navigate } from '../lib/router';
 import { listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
@@ -60,7 +61,10 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
     };
     await storage.saveProfile(cleaned);
     setProfile(cleaned);
-    if (editing) navigate({ name: 'settings' });
+    if (editing) {
+      navigate({ name: 'settings' });
+      showSnackbar('Changes saved.');
+    }
   }
 
   const isCaregiver = form.role === 'caregiver';

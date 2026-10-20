@@ -8,6 +8,7 @@ import { useApp } from '../AppContext';
 import { Screen } from '../components/Screen';
 import { ErrorSummary, TextField } from '../components/FormFields';
 import { APPOINTMENT_TYPE_LABELS, WEEKDAY_NAMES, WEEKDAY_SHORT, WEEKDAYS_IN_ORDER } from '../lib/labels';
+import { askConfirm, showSnackbar } from '../lib/feedback';
 import { navigate } from '../lib/router';
 import { newId } from '../lib/storage';
 import { validateAppointment, type AppointmentErrors } from '../lib/validateAppointment';
@@ -31,7 +32,7 @@ function blankAppointment(today: string): Appointment {
 }
 
 export function AppointmentForm({ id }: { id?: string }) {
-  const { storage, today } = useApp();
+  const { storage, today, refreshAll } = useApp();
   // undefined = still loading; null = an id was given but not found.
   const [form, setForm] = useState<Appointment | null | undefined>(id ? undefined : blankAppointment(today));
   const [errors, setErrors] = useState<AppointmentErrors>({});
@@ -92,13 +93,28 @@ export function AppointmentForm({ id }: { id?: string }) {
       confirmationNumber: appt.rideBooked ? appt.confirmationNumber.trim() : '',
     });
     navigate({ name: 'appointments' });
+    showSnackbar(isEditing ? 'Changes saved.' : 'Appointment added.');
   }
 
   async function handleDelete() {
-    // window.confirm shows the phone's built-in "Are you sure?" box.
-    if (!window.confirm('Delete this appointment? Rides you already logged will be kept.')) return;
+    const ok = await askConfirm({
+      title: 'Delete this appointment?',
+      message: 'Rides you already logged for it will be kept in your history.',
+      confirmLabel: 'Delete appointment',
+      danger: true,
+    });
+    if (!ok) return;
+    // Keep a copy of the saved version so "Undo" can put it back.
+    const saved = (await storage.listAppointments()).find((a) => a.id === appt.id);
     await storage.deleteAppointment(appt.id);
     navigate({ name: 'appointments' });
+    showSnackbar('Appointment deleted.', saved && {
+      label: 'Undo',
+      run: async () => {
+        await storage.saveAppointment(saved);
+        refreshAll();
+      },
+    });
   }
 
   const repeats = appt.recurrence.kind === 'weekly';

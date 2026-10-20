@@ -7,6 +7,7 @@ import { useApp } from '../AppContext';
 import { Disclaimer } from '../components/Disclaimer';
 import { Screen } from '../components/Screen';
 import { askNotificationPermission, clearSentNotifications, notificationPermission } from '../lib/notifications';
+import { askConfirm } from '../lib/feedback';
 import { navigate, routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
 import { createStorage } from '../lib/storage';
@@ -28,9 +29,15 @@ export function Settings() {
   const isDemo = mode === 'demo';
 
   async function deleteEverything() {
-    const ok = window.confirm(
-      'Delete ALL of your RideProof data from this device? This includes your appointments and ride history. This cannot be undone.',
-    );
+    const ok = await askConfirm({
+      title: 'Delete all your data?',
+      message:
+        'This erases your information, appointments, and ride history from this device. It cannot be undone. ' +
+        'Save a backup first if you might want it later.',
+      confirmLabel: 'Yes, delete everything',
+      cancelLabel: 'Keep my data',
+      danger: true,
+    });
     if (!ok) return;
     setDeleting(true);
     // Erase the real database, the demo database, and the small notes kept
