@@ -21,16 +21,18 @@ When a medical ride fails, a patient may report it by phone, but they rarely hav
 | Screen | What it does |
 |---|---|
 | **Welcome / setup** | Choose rider or caregiver, enter first name, state, ride company and phone. |
-| **Home** | Today's appointment with a big **Check in on today's ride** button, booking reminders, the next appointment and whether its ride is booked, and what's coming up. |
-| **Schedule** | Add, edit, and delete appointments, including repeating ones (e.g. every Mon/Wed/Fri). |
-| **Ride check-in** | One question per screen with big buttons: pickup → how late → appointment outcome → ride home → optional notes. Timestamped automatically. |
-| **History** | Every logged ride, color-coded **and** labeled with icons and words (green = on time, yellow = late, red = problem). Lists recent trips that still need a check-in. |
+| **Home** | Today's appointment with a big **Check in on today's ride** button (it appears once the appointment time has passed), Directions and Call clinic buttons, booking reminders, the next appointment and whether its ride is booked, what's coming up, and a "Getting started" checklist for new users. |
+| **Schedule** | Add, edit, and delete appointments, including repeating ones (e.g. every Mon/Wed/Fri). Skip a single day (holiday, cancellation) without changing the rest, and restore it later. |
+| **Ride check-in** | One question per screen with big buttons: pickup → how late → appointment outcome → ride home → optional notes and pickup times. Timestamped automatically. |
+| **History** | Every logged ride, color-coded **and** labeled with icons and words (green = on time, yellow = late, red = problem). Search and filters (Problems only, Late, Never came). Lists recent trips that still need a check-in. |
 | **Report** | Totals for a time period, a headline sentence, a week-by-week chart, **Download PDF report**, and **Create complaint letter**. |
 | **Complaint letter** | A formal letter written from the logs, editable before sending, with Copy, Email, Download PDF, and Print. Shows who to send it to based on the state rules file. |
 | **Help** | What to do when a ride (or ride home) doesn't come, the state's rules, and how to install the app. |
-| **Settings** | Edit your information, notification status, **Delete all my data**, and privacy info. |
+| **Settings** | Edit your information, Light / Dark / Match my phone appearance, notifications, **Back up / Restore**, **Delete all my data**, and privacy info. |
 
-It's also a **Progressive Web App**: it can be installed on a phone's home screen and works with no internet connection.
+It's also a **Progressive Web App**: it can be installed on a phone's home screen (with an Install button on Android), works with no internet connection, and shows "A new version is ready" when you publish an update.
+
+**Everyday app comforts:** "‹ Back" links on inner screens (an installed iPhone app has no browser Back button), clear "Are you sure?" dialogs, "Saved" messages with **Undo**, a warning before leaving unsaved changes, and buttons that visibly react when tapped.
 
 ---
 
@@ -41,7 +43,7 @@ You need [Node.js](https://nodejs.org/) version 20 or newer.
 ```bash
 npm install        # download the libraries (first time only)
 npm run dev        # start the app at http://localhost:5173
-npm test           # run the 80 automated tests
+npm test           # run the 97 automated tests
 npm run build      # build the final app into the dist/ folder
 npm run preview    # try the built app (including offline mode) at http://localhost:4173
 ```
@@ -124,7 +126,7 @@ src/
 vite.config.ts          Build settings + a small plugin that writes the offline file list
 ```
 
-**Tests** (`npm test`, 80 tests in 9 files) cover the tricky logic: business-day deadlines and holidays, recurring appointment dates, report statistics, the complaint letter's wording, the check-in question order, and that demo data never mixes with real data.
+**Tests** (`npm test`, 97 tests in 10 files) cover the tricky logic: business-day deadlines and holidays, recurring appointment dates and skipped days, report statistics, the complaint letter's wording, the check-in question order, History filters, backup files, and that demo data never mixes with real data.
 
 ## Accessibility
 
@@ -143,6 +145,8 @@ Many RideProof users are elderly or disabled, so accessibility was a requirement
 
 - Everything is stored only on the device, in the browser's IndexedDB. Nothing is sent anywhere.
 - **Settings → Delete all my data** erases everything RideProof saved.
+- **Settings → Save a backup file** makes a readable JSON file the user keeps themselves (for example, by emailing it to themselves). Restoring it is the only way data moves to another phone, and it's always the user's choice.
+- RideProof asks the browser for *persistent storage*, so the browser won't quietly delete records to free up space.
 - The complaint letter leaves a `[bracketed]` space for the Medicaid ID instead of storing it.
 - All demo data is fictional, and no real patient data appears anywhere in the code.
 
@@ -151,7 +155,7 @@ Many RideProof users are elderly or disabled, so accessibility was a requirement
 - **Notifications only arrive while the app is open** (or opened). Without a server, a web app can't wake itself up to send a reminder. The Home screen reminders always work.
 - On iPhone, notifications only work after the app is added to the Home Screen.
 - Rider entries are the rider's own record, not independent proof. A dated record made at the time is still strong evidence.
-- Ideas: export/import a backup file, Spanish and other languages, verified rules for all 50 states.
+- Ideas: Spanish and other languages, more than one rider per caregiver, verified rules for all 50 states.
 
 ---
 
@@ -194,6 +198,22 @@ These are the hardest problems we solved, written so they can be adapted for the
 ### 9. Reminders without a server
 **Problem:** Normal apps get push notifications from a server, and RideProof has none, for privacy.
 **Solution:** Reminders are calculated on the device and always shown on the Home screen. If the user allows it, the same reminders are also sent as browser notifications, at most once per reminder per day. The app works fully if notifications are blocked or unsupported. Demo mode adds a "Simulate reminder" button with an in-app pop-up, so the reminder shows up in screen recordings.
+
+### 10. Never losing someone's records
+**Problem:** With no accounts or server, a lost phone, a new phone, or a browser cleaning up space could erase months of evidence.
+**Solution:** First, RideProof asks the browser for *persistent storage*. Second, users can save a **backup file** and restore it on any device. Because a backup file comes from outside the app, the restore code checks every field (dates, times, statuses) and explains problems in plain words ("This file is not a RideProof backup."). It fills in fields that older backups didn't have, and it refuses to restore into demo storage. Tests cover a full round trip through a real JSON file.
+
+### 11. Finding a hidden bug in offline updates
+**Problem:** While testing the "A new version is ready" message, the app sometimes failed to start after an update.
+**Solution:** The cause was subtle. Some web servers mark files with a `Vary` header ("this answer depends on how you ask"), and the browser's script requests ask slightly differently from how the service worker saved them, so the saved copies weren't found. We changed the lookup to search only the current version's saved files and to ignore `Vary`. We also made the service worker refuse to save a file that comes back as an HTML page (some hosts answer missing files that way), so a bad update can never replace a working one. New versions now wait until the user taps **Update**, so the app never changes in the middle of a check-in.
+
+### 12. Exceptions to a repeating schedule
+**Problem:** Dialysis happens every Mon/Wed/Fri, except when a holiday or cancellation means it doesn't. Without a way to say so, those days showed up as "missing check-ins" and threw off reminders.
+**Solution:** Each appointment keeps a short list of skipped dates, and the one function that works out trip dates leaves them out. Because every screen gets its dates from that function, reminders, check-ins, History, and the report all handle skipped days correctly without any extra code. Skipping makes a *new* copy of the appointment instead of changing the old one, which makes **Undo** simple: save the old copy again.
+
+### 13. Dark mode that still works on paper
+**Problem:** Dark mode is easy for normal page parts, but the chart is drawn on a `<canvas>`, which can't use the page's color settings. Worse, the PDF uses a picture of the chart, and a dark-mode picture would print light-gray text on white paper.
+**Solution:** Every color became a named token with a light and a dark value, each pair checked against WCAG contrast. The chart reads the current colors and redraws when the theme changes. The PDF gets its own off-screen copy of the chart, always in light colors (and wider, so every week is labeled).
 
 ---
 
