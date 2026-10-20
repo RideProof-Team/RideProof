@@ -17,7 +17,22 @@
     <title>RideProof</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Shown only if the app fails to start (React replaces it as soon as it
+        runs). The styles are written right here, because if the app didn't
+        load, the app's own styles may not have loaded either.
+      -->
+      <div style="font-family: system-ui, sans-serif; font-size: 18px; line-height: 1.5; padding: 24px; color: #1a1a1a; background: #ffffff; position: fixed; inset: 0; overflow: auto;">
+        <p style="font-weight: 700; font-size: 22px; margin-top: 0;">RideProof is starting…</p>
+        <p>If this message doesn't go away, the app couldn't start. Try reloading the page.</p>
+        <p style="color: #4a4a4a;">For the person setting up the website: make sure the build command is
+          <code>npm run build</code> and the output folder is <code>dist</code>.</p>
+      </div>
+    </div>
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; font-size: 18px; padding: 24px;">RideProof needs JavaScript turned on.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
