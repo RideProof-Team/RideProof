@@ -6,22 +6,27 @@
 //   - buttons to download a PDF report or create a complaint letter
 // ---------------------------------------------------------------------------
 import type { Chart as ChartJS } from 'chart.js';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../AppContext';
 import { Icon, type IconName } from '../components/Icon';
 import { RideChart } from '../components/RideChart';
 import { Screen } from '../components/Screen';
 import { computeStats, findPeriod, headline, reportPeriods, weeklyCounts } from '../lib/reportStats';
+import { markReportViewed } from '../lib/onboarding';
 import { routeToHash } from '../lib/router';
 import { useRideData } from '../lib/useRideData';
 
 export function Report() {
-  const { today, profile } = useApp();
+  const { today, profile, mode } = useApp();
   const { data } = useRideData();
   const [periodId, setPeriodId] = useState('past-month');
   // The chart, so the PDF can include a picture of it (Phase 6).
   const chartRef = useRef<ChartJS<'bar'> | undefined>(undefined);
   const [pdfBusy, setPdfBusy] = useState(false);
+  // Tick off "See your report" in the Getting started list (real data only).
+  useEffect(() => {
+    if (mode === 'real') markReportViewed();
+  }, [mode]);
 
   if (!data || !profile) return <Screen title="Report"><p>Loading…</p></Screen>;
 

@@ -9,6 +9,7 @@ import { Disclaimer } from '../components/Disclaimer';
 import { Screen } from '../components/Screen';
 import { askNotificationPermission, clearSentNotifications, notificationPermission } from '../lib/notifications';
 import { saveLastBackupDate } from '../lib/backup';
+import { resetOnboarding } from '../lib/onboarding';
 import { askConfirm } from '../lib/feedback';
 import { requestPersistentStorage, type PersistState } from '../lib/persist';
 import { navigate, routeToHash } from '../lib/router';
@@ -54,6 +55,7 @@ export function Settings() {
     clearSentNotifications('real');
     clearSentNotifications('demo');
     saveLastBackupDate(null);
+    resetOnboarding();
     setProfile(undefined);
     navigate({ name: 'home' }); // with no profile, this shows the Welcome screen
   }

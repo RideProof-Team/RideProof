@@ -18,6 +18,16 @@ export function getToday(mode: DataMode): string {
   return mode === 'demo' ? DEMO_TODAY : toDateString(new Date());
 }
 
+/** The pretend time of day in demo mode: after Rosa's 9:00 AM dialysis. */
+export const DEMO_NOW_TIME = '12:00';
+
+/** The time right now as "HH:MM" (24-hour), for comparing with appointment times. */
+export function getNowTime(mode: DataMode): string {
+  if (mode === 'demo') return DEMO_NOW_TIME;
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
 /**
  * The exact moment, for a ride log's automatic timestamp. In demo mode
  * we keep the real time of day but use DEMO_TODAY's date, so demo logs

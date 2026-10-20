@@ -767,3 +767,24 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .card-info { border-color: var(--color-primary); }
 .restore-box { margin-top: 1.5rem; padding-top: 0.5rem; border-top: 2px solid var(--color-divider); }
 .restore-box p { margin-bottom: 0; font-weight: 600; }
+
+/* ---------- Getting started ---------- */
+.start-steps { list-style: none; margin: 0; padding: 0; }
+.start-steps li { display: flex; gap: 0.75rem; padding: 0.4rem 0; }
+.start-mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  color: var(--color-primary);
+  font-weight: 800;
+}
+.start-steps li.done .start-mark { background: var(--color-good); border-color: var(--color-good); color: #ffffff; }
+.start-steps li.done .start-title { color: var(--color-muted); text-decoration: line-through; }
+.start-title { margin: 0.2rem 0 0; font-weight: 700; }
+.start-detail { margin: 0.25rem 0 0; }
+.checkin-later { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }

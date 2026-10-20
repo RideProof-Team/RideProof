@@ -8,10 +8,14 @@
 import { useApp } from '../AppContext';
 import { BookingReminders } from '../components/BookingReminders';
 import { BookingStatus } from '../components/BookingStatus';
+import { CheckInNudge } from '../components/CheckInNudge';
+import { GettingStarted } from '../components/GettingStarted';
 import { SkipDayButton } from '../components/SkipDayButton';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { findLog } from '../lib/checkinFlow';
+import { getNowTime } from '../lib/clock';
+import { introHidden } from '../lib/onboarding';
 import { addDays, formatLongDate, formatShortDate, formatTime } from '../lib/dates';
 import { APPOINTMENT_TYPE_LABELS, whose } from '../lib/labels';
 import { upcomingTrips } from '../lib/recurrence';
@@ -38,6 +42,9 @@ export function Home() {
   const trips = upcomingTrips(appointments, today);
   const todaysTrips = trips.filter((t) => t.date === today);
   const notCheckedIn = todaysTrips.filter((t) => !findLog(rideLogs, t.appointment.id, t.date));
+  // Is it after the appointment time yet? Then the ride has happened (or should have).
+  const nowTime = getNowTime(mode);
+  const readyToCheckIn = notCheckedIn.some((t) => t.appointment.time <= nowTime);
   const laterTrips = trips.filter((t) => t.date > today);
   const nextTrip = laterTrips[0];
   const comingUp = laterTrips.slice(1, 1 + COMING_UP_COUNT);
@@ -67,7 +74,10 @@ export function Home() {
     <Screen title={title}>
       <p className="today-line">Today is {formatLongDate(today, true)}</p>
 
-      {appointments.length === 0 && (
+      {mode === 'real' && <GettingStarted hasAppointments={appointments.length > 0} hasCheckIns={rideLogs.length > 0} />}
+      {mode === 'real' && <CheckInNudge trips={notCheckedIn} />}
+
+      {appointments.length === 0 && introHidden() && (
         <section className="card">
           <h2>Get started</h2>
           <p>Add {profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your'} medical appointments so RideProof can track the rides.</p>
@@ -101,11 +111,20 @@ export function Home() {
               );
             })}
           </ul>
-          {notCheckedIn.length > 0 ? (
+          {notCheckedIn.length > 0 && readyToCheckIn && (
             <a href={checkInHref} className="button-primary button-big">
               Check in on today's ride
             </a>
-          ) : (
+          )}
+          {notCheckedIn.length > 0 && !readyToCheckIn && (
+            <>
+              <p className="checkin-later">
+                <Icon name="clock" /> After the ride, come back here to check in.
+              </p>
+              <a href={checkInHref} className="button-secondary">Check in now</a>
+            </>
+          )}
+          {notCheckedIn.length === 0 && (
             <a href="#/history" className="button-secondary">See ride history</a>
           )}
         </section>
