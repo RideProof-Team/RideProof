@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // BottomNav.tsx — the menu along the bottom of the screen, where thumbs
-// reach easily on a phone. More items are added in later phases.
+// reach easily on a phone.
 //
 // These are ordinary links (<a href="#/...">), so they work with a
 // keyboard and screen readers with no extra code. aria-current="page"
@@ -27,6 +27,7 @@ const ITEMS: NavItem[] = [
   },
   { label: 'History', icon: 'list', route: { name: 'history' }, matches: ['history'] },
   { label: 'Report', icon: 'chart', route: { name: 'report' }, matches: ['report', 'complaint'] },
+  { label: 'Help', icon: 'help', route: { name: 'help' }, matches: ['help', 'settings', 'profile-edit'] },
 ];
 
 export function BottomNav({ current }: { current: Route }) {

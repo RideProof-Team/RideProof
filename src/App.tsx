@@ -21,9 +21,11 @@ import { AppointmentForm } from './screens/AppointmentForm';
 import { Appointments } from './screens/Appointments';
 import { CheckIn } from './screens/CheckIn';
 import { Complaint } from './screens/Complaint';
+import { Help } from './screens/Help';
 import { History } from './screens/History';
 import { Home } from './screens/Home';
 import { Report } from './screens/Report';
+import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 import type { Profile } from './types';
 
@@ -121,9 +123,15 @@ export function App() {
       case 'complaint':
         screen = <Complaint periodId={route.periodId} />;
         break;
-      default:
-        // Screens that aren't built yet fall back to Home.
-        screen = <Home />;
+      case 'help':
+        screen = <Help />;
+        break;
+      case 'settings':
+        screen = <Settings />;
+        break;
+      case 'profile-edit':
+        screen = <Welcome editing />;
+        break;
     }
   }
 

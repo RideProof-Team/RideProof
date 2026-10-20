@@ -34,7 +34,8 @@ export async function askNotificationPermission(): Promise<PermissionState> {
  */
 export async function showNotification(title: string, body: string, tag: string): Promise<boolean> {
   if (notificationPermission() !== 'granted') return false;
-  const options = { body, tag, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png' };
+  const icon = `${import.meta.env.BASE_URL}icons/icon-192.png`;
+  const options = { body, tag, icon, badge: icon };
   try {
     const registration = await navigator.serviceWorker?.getRegistration();
     if (registration) {

@@ -2,12 +2,16 @@
 // Welcome.tsx — the first screen. The user chooses rider or caregiver and
 // enters the basic information RideProof needs. Saving it creates the
 // profile, and the app moves on to the Home screen.
+//
+// The same form is reused from Settings ("Edit your information"): with
+// `editing` set, it starts filled in and returns to Settings when saved.
 // ---------------------------------------------------------------------------
 import { useRef, useState, type FormEvent } from 'react';
 import { useApp } from '../AppContext';
 import { Screen } from '../components/Screen';
 import { Disclaimer } from '../components/Disclaimer';
 import { ErrorSummary, TextField } from '../components/FormFields';
+import { navigate } from '../lib/router';
 import { listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
 import type { Profile, Role } from '../types';
@@ -22,9 +26,9 @@ const EMPTY_PROFILE: Profile = {
   healthPlanName: '',
 };
 
-export function Welcome() {
-  const { storage, setProfile } = useApp();
-  const [form, setForm] = useState<Profile>(EMPTY_PROFILE);
+export function Welcome({ editing = false }: { editing?: boolean }) {
+  const { storage, setProfile, profile } = useApp();
+  const [form, setForm] = useState<Profile>(editing && profile ? profile : EMPTY_PROFILE);
   const [errors, setErrors] = useState<ProfileErrors>({});
   const [saving, setSaving] = useState(false);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
@@ -56,13 +60,14 @@ export function Welcome() {
     };
     await storage.saveProfile(cleaned);
     setProfile(cleaned);
+    if (editing) navigate({ name: 'settings' });
   }
 
   const isCaregiver = form.role === 'caregiver';
 
   return (
-    <Screen title="Welcome to RideProof">
-      <p>Keep track of your medical rides, and prove it when rides go wrong.</p>
+    <Screen title={editing ? 'Your information' : 'Welcome to RideProof'}>
+      {!editing && <p>Keep track of your medical rides, and prove it when rides go wrong.</p>}
       <Disclaimer />
 
       {/* noValidate: we show our own friendlier error messages instead of the browser's. */}
@@ -159,8 +164,9 @@ export function Welcome() {
         </p>
 
         <button type="submit" className="button-primary" disabled={saving}>
-          {saving ? 'Saving…' : 'Save and continue'}
+          {saving ? 'Saving…' : editing ? 'Save changes' : 'Save and continue'}
         </button>
+        {editing && <a href="#/settings" className="button-secondary">Cancel</a>}
       </form>
     </Screen>
   );

@@ -27,7 +27,7 @@ export interface AppContextValue {
   storage: Storage;
   profile: Profile | undefined;
   today: string;
-  setProfile(profile: Profile): void;
+  setProfile(profile: Profile | undefined): void;
   toggleDemo(): void;
   refreshAll(): void;
   showToast(message: ToastMessage | null): void;
