@@ -6,7 +6,7 @@
 //      first time demo mode is used).
 //   4. Shows Welcome (no profile yet) or the current screen.
 // ---------------------------------------------------------------------------
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { AppContext, type AppContextValue, type ToastMessage } from './AppContext';
 import { BottomNav } from './components/BottomNav';
 import { Header } from './components/Header';
@@ -74,6 +74,13 @@ export function App() {
     navigate({ name: 'home' });
   }
 
+  // A normal "#main" link would change the address (which is how we pick
+  // screens), so instead we move focus to the main area ourselves.
+  function skipToMain(event: MouseEvent) {
+    event.preventDefault();
+    document.querySelector<HTMLElement>('main h1')?.focus();
+  }
+
   const refreshAll = useCallback(() => setDataVersion((v) => v + 1), []);
   // useCallback keeps this the same function between redraws, so the
   // toast's 8-second timer doesn't restart every time the app redraws.
@@ -137,6 +144,8 @@ export function App() {
 
   return (
     <AppContext.Provider value={contextValue}>
+      {/* Lets keyboard users jump past the header straight to the screen's content. */}
+      <a href="#main" className="skip-link" onClick={skipToMain}>Skip to main content</a>
       <Header />
       {toast && <Toast message={toast} onClose={closeToast} />}
       {/* The key makes React replay the fade-in each time the screen changes. */}

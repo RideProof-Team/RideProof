@@ -87,7 +87,7 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCou
               grid: { display: false },
               ticks: {
                 color: '#4a4a4a',
-                font: { size: 14 },
+                font: { size: 16 },
                 // Show just "Sep 28" under each bar to save space.
                 callback: (_value, index) => weeks[index]?.label,
                 maxRotation: 0,
@@ -97,9 +97,9 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, { weeks: WeekCou
             y: {
               stacked: true,
               beginAtZero: true,
-              ticks: { precision: 0, color: '#4a4a4a', font: { size: 14 } },
+              ticks: { precision: 0, color: '#4a4a4a', font: { size: 16 } },
               grid: { color: '#e5e7eb' },
-              title: { display: true, text: 'Rides', color: '#4a4a4a', font: { size: 14 } },
+              title: { display: true, text: 'Rides', color: '#4a4a4a', font: { size: 16 } },
             },
           },
         }}

@@ -19,8 +19,14 @@ export function Screen({ title, children }: { title: string; children: ReactNode
     window.scrollTo(0, 0);
   }, []);
 
+  // The browser tab title, e.g. "Report – RideProof". Screen readers
+  // announce it, and it helps people with many tabs open.
+  useEffect(() => {
+    document.title = title === 'RideProof' ? 'RideProof' : `${title} – RideProof`;
+  }, [title]);
+
   return (
-    <main className="screen">
+    <main className="screen" id="main">
       {/* tabIndex={-1} lets code focus the heading without adding it to the Tab order. */}
       <h1 tabIndex={-1} ref={headingRef}>{title}</h1>
       {children}

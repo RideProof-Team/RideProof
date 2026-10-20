@@ -89,6 +89,8 @@ export function Report() {
           {/* <details> is a built-in show/hide box that works with keyboards and screen readers. */}
           <details className="table-toggle">
             <summary>Show as a table</summary>
+            {/* tabIndex lets keyboard users scroll the table sideways if it's too wide. */}
+            <div className="table-scroll" tabIndex={0} role="region" aria-label="Rides by week table">
             <table className="data-table">
               <thead>
                 <tr><th scope="col">Week of</th><th scope="col">On time</th><th scope="col">Late</th><th scope="col">Never came</th></tr>
@@ -101,6 +103,7 @@ export function Report() {
                 ))}
               </tbody>
             </table>
+            </div>
           </details>
         </section>
       )}
