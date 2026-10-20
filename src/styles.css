@@ -802,3 +802,8 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
   font-weight: 600;
 }
 .update-banner .button-primary { width: auto; min-height: var(--tap-size); margin: 0; padding: 0.4rem 1rem; font-size: 1rem; }
+
+/* Directions / Call clinic side by side (they wrap on narrow screens). */
+.clinic-actions { display: flex; flex-wrap: wrap; gap: 0 0.5rem; }
+.clinic-actions a { flex: 1 1 7rem; padding-left: 0.5rem; padding-right: 0.5rem; white-space: nowrap; }
+.today-extras { margin-top: 0.5rem; }

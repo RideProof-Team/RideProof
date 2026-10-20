@@ -33,6 +33,7 @@ export const DEMO_APPOINTMENTS: Appointment[] = [
     time: '09:00',
     clinicName: 'Riverside Dialysis Center',
     clinicAddress: '100 Sample Street, Sampletown',
+    clinicPhone: '555-0142', // fake (555-01xx)
     type: 'dialysis',
     recurrence: { kind: 'weekly', weekdays: [1, 3, 5] },
     rideBooked: true, // a standing ride order

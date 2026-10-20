@@ -27,6 +27,7 @@ function blankAppointment(today: string): Appointment {
     time: '09:00',
     clinicName: '',
     clinicAddress: '',
+    clinicPhone: '',
     type: 'checkup',
     recurrence: { kind: 'none' },
     rideBooked: false,
@@ -100,6 +101,7 @@ export function AppointmentForm({ id }: { id?: string }) {
       ...appt,
       clinicName: appt.clinicName.trim(),
       clinicAddress: appt.clinicAddress.trim(),
+      clinicPhone: (appt.clinicPhone ?? '').trim(),
       // A confirmation number only makes sense if the ride is booked.
       confirmationNumber: appt.rideBooked ? appt.confirmationNumber.trim() : '',
     });
@@ -165,8 +167,17 @@ export function AppointmentForm({ id }: { id?: string }) {
         <TextField
           id="clinicAddress"
           label="Clinic address (optional)"
+          hint="Adds a Directions button."
           value={appt.clinicAddress}
           onChange={(v) => update('clinicAddress', v)}
+        />
+        <TextField
+          id="clinicPhone"
+          type="tel"
+          label="Clinic phone number (optional)"
+          hint="Adds a Call clinic button, handy when a ride is late."
+          value={appt.clinicPhone ?? ''}
+          onChange={(v) => update('clinicPhone', v)}
         />
 
         <fieldset className="choice-group">

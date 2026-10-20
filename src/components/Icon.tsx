@@ -3,7 +3,7 @@
 // never by color alone. Icons are always next to a text label, so they are
 // hidden from screen readers (aria-hidden) to avoid reading things twice.
 // ---------------------------------------------------------------------------
-export type IconName = 'check' | 'warning' | 'x' | 'clock' | 'calendar' | 'home' | 'list' | 'plus' | 'phone' | 'chart' | 'help' | 'download' | 'mail' | 'copy' | 'print';
+export type IconName = 'check' | 'warning' | 'x' | 'clock' | 'calendar' | 'home' | 'list' | 'plus' | 'phone' | 'chart' | 'help' | 'download' | 'mail' | 'copy' | 'print' | 'map' | 'search';
 
 // Each icon is a list of lines/shapes drawn on a 24x24 grid.
 const PATHS: Record<IconName, string> = {
@@ -22,6 +22,8 @@ const PATHS: Record<IconName, string> = {
   mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
   copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
   print: 'M7 9V3h10v6M7 17H4V9h16v8h-3M7 14h10v7H7z',
+  map: 'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 7a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5z',
+  search: 'M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM15.5 15.5L21 21',
 };
 
 export function Icon({ name, size = 24 }: { name: IconName; size?: number }) {

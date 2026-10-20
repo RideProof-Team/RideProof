@@ -9,6 +9,7 @@ import { useApp } from '../AppContext';
 import { BookingReminders } from '../components/BookingReminders';
 import { BookingStatus } from '../components/BookingStatus';
 import { CheckInNudge } from '../components/CheckInNudge';
+import { ClinicActions } from '../components/ClinicActions';
 import { GettingStarted } from '../components/GettingStarted';
 import { InstallCard } from '../components/PwaPrompts';
 import { SkipDayButton } from '../components/SkipDayButton';
@@ -100,13 +101,11 @@ export function Home() {
                     <strong>{formatTime(trip.appointment.time)}</strong> —{' '}
                     {APPOINTMENT_TYPE_LABELS[trip.appointment.type]} at {trip.appointment.clinicName}
                   </span>
-                  {log ? (
+                  {log && (
                     <span className={`badge badge-${rideSeverity(log)}`}>
                       <Icon name="check" size={20} />
                       Checked in: {SEVERITY_DISPLAY[rideSeverity(log)].label}
                     </span>
-                  ) : (
-                    <SkipDayButton appointment={trip.appointment} date={trip.date} onChange={reload} />
                   )}
                 </li>
               );
@@ -128,6 +127,13 @@ export function Home() {
           {notCheckedIn.length === 0 && (
             <a href="#/history" className="button-secondary">See ride history</a>
           )}
+          {/* Helpful extras go below the main button, so it stays easy to find. */}
+          {notCheckedIn.map((trip) => (
+            <div key={trip.appointment.id} className="today-extras">
+              <ClinicActions appointment={trip.appointment} />
+              <SkipDayButton appointment={trip.appointment} date={trip.date} onChange={reload} />
+            </div>
+          ))}
         </section>
       )}
 
@@ -143,6 +149,7 @@ export function Home() {
             {formatLongDate(nextTrip.date)} at {formatTime(nextTrip.appointment.time)}
           </p>
           {nextTrip.appointment.clinicAddress && <p className="card-detail">{nextTrip.appointment.clinicAddress}</p>}
+          <ClinicActions appointment={nextTrip.appointment} />
           <BookingStatus appointment={nextTrip.appointment} />
           {/* Skip these buttons if the reminder box above already shows them. */}
           {!nextTrip.appointment.rideBooked && !reminders.some((r) => r.appointment.id === nextTrip.appointment.id) && (
