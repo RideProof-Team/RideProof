@@ -21,13 +21,14 @@ export type Route =
   | { name: 'checkin'; appointmentId?: string; date?: string }
   | { name: 'history' }
   | { name: 'report' }
-  | { name: 'complaint' }
+  /** periodId: which report period the letter covers (default: past month). */
+  | { name: 'complaint'; periodId?: string }
   | { name: 'help' }
   | { name: 'settings' }
   | { name: 'profile-edit' };
 
 /** Simple screens whose address is just their name, e.g. "#/history". */
-const SIMPLE_ROUTES = ['home', 'appointments', 'history', 'report', 'complaint', 'help', 'settings'] as const;
+const SIMPLE_ROUTES = ['home', 'appointments', 'history', 'report', 'help', 'settings'] as const;
 
 /** Turn the text after "#" into a Route. Unknown addresses go Home. */
 export function parseRoute(hash: string): Route {
@@ -45,6 +46,7 @@ export function parseRoute(hash: string): Route {
     if (second && third) return { name: 'checkin', appointmentId: decodeURIComponent(second), date: third };
     return { name: 'checkin' };
   }
+  if (first === 'complaint') return second ? { name: 'complaint', periodId: second } : { name: 'complaint' };
   if (first === 'settings' && second === 'profile') return { name: 'profile-edit' };
   const simple = SIMPLE_ROUTES.find((name) => name === first);
   if (simple) return { name: simple };
@@ -62,10 +64,12 @@ export function routeToHash(route: Route): string {
       return route.appointmentId && route.date
         ? `#/checkin/${encodeURIComponent(route.appointmentId)}/${route.date}`
         : '#/checkin';
+    case 'complaint':
+      return route.periodId ? `#/complaint/${route.periodId}` : '#/complaint';
     case 'profile-edit':
       return '#/settings/profile';
     default:
-      // home, appointments, history, report, complaint, help, settings
+      // home, appointments, history, report, help, settings
       return `#/${route.name}`;
   }
 }

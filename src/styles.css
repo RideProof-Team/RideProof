@@ -455,3 +455,26 @@ textarea {
   cursor: pointer;
   text-align: left;
 }
+
+/* ---------- Report ---------- */
+.headline { font-size: 1.3rem; font-weight: 700; line-height: 1.35; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.75rem;
+  border: 2px solid #d0d7de;
+  border-top: 6px solid currentColor;
+  border-radius: var(--radius);
+}
+/* The number and label use normal text colors; the icon and top stripe carry the color. */
+.stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1.1; color: var(--color-text); }
+.stat-label { font-size: 1rem; font-weight: 600; color: var(--color-text); }
+.late-breakdown { color: var(--color-muted); }
+
+.chart-box { position: relative; height: 300px; }
+.table-toggle { margin: 0.75rem 0 1.5rem; }
+.table-toggle summary { min-height: var(--tap-size); display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--color-primary); }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 0.4rem; border-bottom: 1px solid #d0d7de; text-align: left; }

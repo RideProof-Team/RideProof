@@ -19,6 +19,7 @@ import { Appointments } from './screens/Appointments';
 import { CheckIn } from './screens/CheckIn';
 import { History } from './screens/History';
 import { Home } from './screens/Home';
+import { Report } from './screens/Report';
 import { Welcome } from './screens/Welcome';
 import type { Profile } from './types';
 
@@ -84,6 +85,9 @@ export function App() {
         break;
       case 'history':
         screen = <History />;
+        break;
+      case 'report':
+        screen = <Report />;
         break;
       default:
         // Screens that aren't built yet fall back to Home.

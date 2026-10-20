@@ -14,6 +14,7 @@ describe('router', () => {
       { name: 'history' },
       { name: 'report' },
       { name: 'complaint' },
+      { name: 'complaint', periodId: '2026-10' },
       { name: 'help' },
       { name: 'settings' },
       { name: 'profile-edit' },
