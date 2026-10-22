@@ -26,7 +26,7 @@ const ITEMS: NavItem[] = [
     matches: ['appointments', 'appointment-new', 'appointment-edit'],
   },
   { label: 'History', icon: 'list', route: { name: 'history' }, matches: ['history'] },
-  { label: 'Report', icon: 'chart', route: { name: 'report' }, matches: ['report', 'complaint', 'complaints', 'complaint-sent'] },
+  { label: 'Report', icon: 'chart', route: { name: 'report' }, matches: ['report', 'complaint', 'complaints', 'complaint-sent', 'care-team'] },
   { label: 'Help', icon: 'help', route: { name: 'help' }, matches: ['help', 'settings', 'profile-edit'] },
 ];
 

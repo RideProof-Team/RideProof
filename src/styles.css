@@ -962,3 +962,9 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
   .complaint-facts { grid-template-columns: 1fr; }
   .complaint-facts dd { margin-bottom: 0.4rem; }
 }
+
+/* ---------- Share with my care team ---------- */
+.care-summary h2 { margin-top: 0; }
+.care-summary h3 { margin: 1.25rem 0 0.4rem; }
+.care-item { margin: 0.4rem 0; padding-left: 1.1rem; position: relative; }
+.care-item::before { content: '•'; position: absolute; left: 0; }

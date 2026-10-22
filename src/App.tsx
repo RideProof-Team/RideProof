@@ -27,6 +27,7 @@ import { CheckIn } from './screens/CheckIn';
 import { Complaint } from './screens/Complaint';
 import { Complaints } from './screens/Complaints';
 import { CallScript } from './screens/CallScript';
+import { CareTeam } from './screens/CareTeam';
 import { ComplaintSent } from './screens/ComplaintSent';
 import { Help } from './screens/Help';
 import { History } from './screens/History';
@@ -190,6 +191,9 @@ export function App() {
         break;
       case 'complaint':
         screen = <Complaint key={route.followUpOf ?? 'letter'} periodId={route.periodId} followUpOf={route.followUpOf} />;
+        break;
+      case 'care-team':
+        screen = <CareTeam periodId={route.periodId} />;
         break;
       case 'complaints':
         screen = <Complaints id={route.id} />;

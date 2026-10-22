@@ -34,6 +34,8 @@ export type Route =
    * past month). followUpOf: write a FOLLOW-UP letter for that sent complaint.
    */
   | { name: 'complaint'; periodId?: string; followUpOf?: string }
+  /** "Share with my care team" summary for a report period. */
+  | { name: 'care-team'; periodId?: string }
   /** Complaints the rider sent. id: open that one's "Update" box. */
   | { name: 'complaints'; id?: string }
   /** "I sent this complaint" form. followUpOf: it was a follow-up letter. */
@@ -73,6 +75,7 @@ export function parseRoute(hash: string): Route {
     if (third === 'follow-up') return parts[3] === 'sent' ? { name: 'complaint-sent', followUpOf: id } : { name: 'complaint', followUpOf: id };
     return { name: 'complaints', id };
   }
+  if (first === 'care-team') return second ? { name: 'care-team', periodId: second } : { name: 'care-team' };
   if (first === 'complaint') return second ? { name: 'complaint', periodId: second } : { name: 'complaint' };
   if (first === 'settings' && second === 'profile') return { name: 'profile-edit' };
   const simple = SIMPLE_ROUTES.find((name) => name === first);
@@ -98,6 +101,8 @@ export function routeToHash(route: Route): string {
     case 'complaint':
       if (route.followUpOf) return `#/complaints/${encodeURIComponent(route.followUpOf)}/follow-up`;
       return route.periodId ? `#/complaint/${route.periodId}` : '#/complaint';
+    case 'care-team':
+      return route.periodId ? `#/care-team/${route.periodId}` : '#/care-team';
     case 'complaints':
       return route.id ? `#/complaints/${encodeURIComponent(route.id)}` : '#/complaints';
     case 'complaint-sent':

@@ -13,6 +13,7 @@ import { PdfWriter, pdfSafe } from './pdfWriter';
 import { computeStats, headline, logsInRange, type ReportPeriod } from './reportStats';
 import { timeLostHeadline, timeLostNotCounted } from './timeLost';
 import { stateName } from './stateRules';
+import type { SummaryLine } from './careTeamSummary';
 
 const FOOTER =
   'Created with RideConnect. Ride details were recorded by the rider or caregiver. ' +
@@ -177,4 +178,27 @@ export async function downloadLetterPdf(letter: string, today: string) {
   }
   pdf.addFooters('Created with RideConnect. RideConnect is not affiliated with any state, health plan, or ride company.');
   pdf.save(`RideConnect-complaint-letter-${today}.pdf`);
+}
+
+/**
+ * The "Share with my care team" summary as a one-page PDF. Uses the same
+ * PdfWriter as the report, with headings in bold.
+ */
+export function buildCareTeamPdf(lines: SummaryLine[]): PdfWriter {
+  const pdf = new PdfWriter();
+  for (const line of lines) {
+    if (line.kind === 'title') pdf.text(line.text, { size: 18, bold: true, gapAfter: 2 });
+    else if (line.kind === 'subtitle') pdf.text(line.text, { size: 11, italic: true, gapAfter: 10 });
+    else if (line.kind === 'heading') {
+      pdf.y += 6;
+      pdf.text(line.text, { size: 13, bold: true, gapAfter: 4 });
+    } else if (line.kind === 'item') pdf.text(`-  ${line.text}`, { size: 11, indent: 6, gapAfter: 4 });
+    else pdf.text(line.text, { size: 11, gapAfter: 6 });
+  }
+  pdf.addFooters(FOOTER);
+  return pdf;
+}
+
+export async function downloadCareTeamPdf(lines: SummaryLine[], today: string) {
+  buildCareTeamPdf(lines).save(`RideConnect-care-team-summary-${today}.pdf`);
 }

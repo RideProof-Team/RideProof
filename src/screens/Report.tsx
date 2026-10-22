@@ -3,7 +3,8 @@
 //   - a one-sentence headline ("5 of 13 rides had a problem...")
 //   - big number tiles: total, late, never came, missed appointments
 //   - a week-by-week chart
-//   - buttons to download a PDF report or create a complaint letter
+//   - buttons to download a PDF report, share a summary with the care
+//     team, or create a complaint letter
 // ---------------------------------------------------------------------------
 import type { Chart as ChartJS } from 'chart.js';
 import { useEffect, useRef, useState } from 'react';
@@ -152,6 +153,9 @@ export function Report() {
           <button type="button" className="button-primary" onClick={downloadPdf} disabled={pdfBusy}>
             {pdfBusy ? 'Making PDF…' : 'Download PDF report'}
           </button>
+          <a href={routeToHash({ name: 'care-team', periodId: period.id })} className="button-secondary">
+            <Icon name="mail" /> Share with my care team
+          </a>
           <a href={routeToHash({ name: 'complaint', periodId: period.id })} className="button-secondary">
             Create complaint letter
           </a>

@@ -26,6 +26,7 @@ const SHORTCUTS: { label: string; route: Route }[] = [
   { label: 'Ride check-in', route: { name: 'checkin' } },
   { label: 'History', route: { name: 'history' } },
   { label: 'Report', route: { name: 'report' } },
+  { label: 'Care team summary', route: { name: 'care-team' } },
   { label: 'Complaint preview', route: { name: 'complaint' } },
   { label: 'Complaints sent', route: { name: 'complaints' } },
 ];

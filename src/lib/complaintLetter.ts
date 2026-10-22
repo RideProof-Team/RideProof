@@ -13,7 +13,10 @@ import type { AppointmentType, ComplaintMethod, FailedBooking, Profile, RideLog,
 import { attemptsInRange, describeAttempt } from './bookingAttempts';
 import { daysSinceSent } from './complaints';
 import { addDays, formatDateInSentence, formatLongDate, formatTime, parseDate } from './dates';
-import { computeStats, logsInRange, plural, type ReportPeriod } from './reportStats';
+import { computeStats, hadProblem, logsInRange, plural, type ReportPeriod } from './reportStats';
+
+// Kept here too, for screens that already import it from this file.
+export { hadProblem };
 import type { StateRule } from './stateRules';
 import { timeLostLetterSentence } from './timeLost';
 
@@ -157,15 +160,6 @@ export function describeProblem(log: RideLog): string {
   return line;
 }
 
-/** True if a ride had any problem worth listing in the letter. */
-export function hadProblem(log: RideLog): boolean {
-  return (
-    log.pickupStatus !== 'on_time' ||
-    log.appointmentOutcome !== 'made_it' ||
-    log.returnRideStatus === 'late' ||
-    log.returnRideStatus === 'never_came'
-  );
-}
 
 export interface LetterInput {
   profile: Profile;

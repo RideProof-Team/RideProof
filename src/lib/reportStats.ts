@@ -10,6 +10,8 @@ import { totalWait, type WaitPrecision } from './timeLost';
 
 export interface RideStats {
   totalRides: number;
+  /** Rides with any problem (late, never came, missed, late or no ride home). */
+  problemRides: number;
   onTime: number;
   /** Pickups that were late (any amount). */
   latePickups: number;
@@ -38,6 +40,16 @@ export interface RideStats {
   lastDate: string | null;
 }
 
+/** True if a ride had any problem worth listing (in the letter, the care team summary...). */
+export function hadProblem(log: RideLog): boolean {
+  return (
+    log.pickupStatus !== 'on_time' ||
+    log.appointmentOutcome !== 'made_it' ||
+    log.returnRideStatus === 'late' ||
+    log.returnRideStatus === 'never_came'
+  );
+}
+
 /** Ride logs between two dates (both included), oldest first. */
 export function logsInRange(logs: RideLog[], from: string, to: string): RideLog[] {
   return logs
@@ -58,6 +70,7 @@ export function computeStats(logs: RideLog[], from: string, to: string, attempts
 
   return {
     totalRides: inRange.length,
+    problemRides: count(hadProblem),
     onTime: count((l) => l.pickupStatus === 'on_time'),
     latePickups: count((l) => l.pickupStatus === 'late'),
     late15: count((l) => l.pickupStatus === 'late' && l.minutesLate === 15),

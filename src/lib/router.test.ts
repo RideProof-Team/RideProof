@@ -23,6 +23,8 @@ describe('router', () => {
       { name: 'complaint', periodId: '2026-10' },
       { name: 'complaint', followUpOf: 'demo-complaint' },
       { name: 'complaints' },
+      { name: 'care-team' },
+      { name: 'care-team', periodId: '2026-10' },
       { name: 'complaints', id: 'abc-123' },
       { name: 'complaint-sent' },
       { name: 'complaint-sent', followUpOf: 'abc-123' },

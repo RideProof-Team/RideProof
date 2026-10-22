@@ -54,6 +54,7 @@ describe('computeStats', () => {
       // The late ride home has no minutes (an older-style check-in).
       untimedLate: 1,
       failedBookings: 0,
+      problemRides: 7, // every October ride except Oct 5
       failedBookingsByReason: { no_answer: 0, no_rides: 0, too_late: 0, other: 0 },
       firstDate: '2026-10-02',
       lastDate: '2026-10-23',
