@@ -67,6 +67,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
     };
     await storage.saveProfile(cleaned);
     setProfile(cleaned);
+    if (!editing) navigate({ name: 'home' });
     if (editing) {
       allowLeave();
       navigate({ name: 'settings' });

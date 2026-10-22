@@ -1,15 +1,201 @@
-.demo-tour { max-width: 1120px; margin: 24px auto 0; padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 30px; background: var(--color-surface); border: 1px solid var(--color-divider); border-left: 5px solid var(--color-primary); border-radius: var(--radius); }
-.demo-tour-progress { font-size: .78rem; font-weight: 700; margin: 0 0 8px; }
-.demo-tour h2 { font-family: var(--font-heading); font-size: 1.7rem; font-weight: 500; letter-spacing: -.035em; margin: 0 0 10px; }
-.demo-tour-copy > p:not(.demo-tour-progress) { margin: 8px 0 0; }
-.demo-tour-tip, .demo-tour-timing { color: var(--color-muted); font-size: .85rem; }
-.demo-tour-buttons { display: flex; gap: 10px; }
-.demo-tour-buttons button { margin-top: 0; }
+.demo-tour {
+  max-width: 1120px;
+  margin: 18px auto 0;
+  padding: 16px 18px 18px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-top: 5px solid var(--color-primary);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgb(23 62 50 / 10%);
+}
+
+.demo-tour-status,
+.demo-tour-body,
+.demo-tour-buttons,
+.demo-tour-countdown {
+  display: flex;
+  align-items: center;
+}
+
+.demo-tour-status {
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.demo-tour-mode,
+.demo-tour-progress-label,
+.demo-tour-detour {
+  margin: 0;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.demo-tour-mode { color: var(--color-primary); }
+.demo-tour-progress-label { margin-top: 3px; color: var(--color-muted); letter-spacing: .02em; }
+
+.demo-tour-progress {
+  width: min(210px, 34vw);
+  height: 7px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 99px;
+  accent-color: var(--color-primary);
+}
+
+.demo-tour-progress::-webkit-progress-bar { background: var(--color-divider); }
+.demo-tour-progress::-webkit-progress-value { background: var(--color-primary); }
+.demo-tour-progress::-moz-progress-bar { background: var(--color-primary); }
+
+.demo-tour-chapters {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(70px, 1fr));
+  gap: 5px;
+  margin: 14px 0 16px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.demo-tour-chapter {
+  counter-increment: tour-chapter;
+  min-width: 70px;
+  min-height: 43px;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--color-divider);
+  border-radius: calc(var(--radius) * .65);
+  color: var(--color-muted);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.demo-tour-chapters { counter-reset: tour-chapter; }
+.demo-tour-chapter::before {
+  content: counter(tour-chapter);
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: .64rem;
+}
+
+.demo-tour-chapter:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.demo-tour-chapter[aria-current='step'] {
+  color: var(--color-primary-text);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.demo-tour-body {
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.demo-tour-copy { max-width: 700px; }
+.demo-tour-detour { color: var(--color-warn); }
+
+.demo-tour h2 {
+  margin: 0 0 7px;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: 550;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+}
+
+.demo-tour-detour + h2 { margin-top: 5px; }
+.demo-tour-copy > p:not(.demo-tour-detour) { margin: 7px 0 0; line-height: 1.42; }
+
+.demo-tour-notice {
+  color: var(--color-muted);
+  font-size: .83rem;
+}
+
+.demo-tour-actions {
+  width: 270px;
+  flex: 0 0 270px;
+}
+
+.demo-tour-buttons { gap: 8px; }
+.demo-tour-buttons button { min-height: 44px; margin: 0; padding-block: .55rem; }
 .demo-tour button:disabled { opacity: .45; cursor: default; }
-.demo-tour-controls > .link-button { display: block; text-align: left; }
-.demo-tour-timing { margin: 8px 0 0; font-size: .75rem; }
-@media (max-width: 1168px) { .demo-tour { margin: 20px 24px 0; } }
-@media (max-width: 650px) {
-  .demo-tour { margin: 16px 20px 0; padding: 20px; grid-template-columns: 1fr; gap: 16px; }
-  .demo-tour-controls > .link-button { display: inline-block; margin-right: 16px; }
+
+.demo-tour-play {
+  min-height: 38px;
+  margin: 8px 0 0;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.demo-tour-exit { display: inline-block; margin: 8px 0 0 10px; font-size: .83rem; }
+
+.demo-tour-countdown {
+  gap: 9px;
+  margin-top: 9px;
+  color: var(--color-muted);
+  font-size: .72rem;
+  font-weight: 650;
+}
+
+.demo-tour-countdown progress {
+  width: 62px;
+  height: 5px;
+  accent-color: var(--color-primary);
+}
+
+.demo-tour-motion-note {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+/* The dock frames the live screen it is narrating without blocking interaction. */
+body:has(.demo-tour) main#main {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  outline-offset: 5px;
+}
+
+@media (max-width: 1168px) {
+  .demo-tour { margin-inline: 24px; }
+}
+
+@media (max-width: 760px) {
+  .demo-tour-body { display: block; }
+  .demo-tour-actions { width: auto; margin-top: 14px; }
+  .demo-tour-buttons { max-width: 290px; }
+  .demo-tour-chapters { grid-template-columns: repeat(8, 88px); }
+}
+
+@media (max-width: 520px) {
+  .demo-tour { margin: 12px 14px 0; padding: 14px; }
+  .demo-tour-status { align-items: flex-end; }
+  .demo-tour-progress { width: 88px; }
+  .demo-tour-chapter { min-height: 40px; }
+  .demo-tour-exit { margin-left: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-tour *,
+  body:has(.demo-tour) main#main { scroll-behavior: auto; transition: none; animation: none; }
 }

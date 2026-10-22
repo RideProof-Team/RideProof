@@ -15,6 +15,7 @@ import { routeToHash, type Route } from '../lib/router';
 interface ScreenProps {
   title: string;
   children: ReactNode;
+  className?: string;
   /**
    * Inner screens (like "Edit appointment") get a "‹ Back to ..." link at
    * the top. This matters on iPhone: an app installed on the Home Screen
@@ -23,7 +24,7 @@ interface ScreenProps {
   back?: { to: Route; label: string };
 }
 
-export function Screen({ title, children, back }: ScreenProps) {
+export function Screen({ title, children, back, className = '' }: ScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   // The empty [] means "run once, when this screen first appears".
@@ -39,7 +40,7 @@ export function Screen({ title, children, back }: ScreenProps) {
   }, [title]);
 
   return (
-    <main className="screen" id="main">
+    <main className={`screen ${className}`} id="main">
       {back && (
         <a href={routeToHash(back.to)} className="back-link">
           <span aria-hidden="true">‹</span> Back to {back.label}

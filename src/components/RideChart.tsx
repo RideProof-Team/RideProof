@@ -21,12 +21,13 @@ import { cssColor, useIsDark } from '../lib/theme';
 
 // Chart.js only includes the pieces you "register", which keeps the app smaller.
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.defaults.font.family = "'Trebuchet MS', 'Segoe UI', sans-serif";
 
 /** Status colors (green / amber / red), also used in the PDF report. */
 export const CHART_COLORS = {
-  onTime: '#0ca30c',
-  late: '#fab219',
-  noShow: '#d03b3b',
+  onTime: '#35684a',
+  late: '#c99a32',
+  noShow: '#ad4a42',
 };
 
 const reduceMotion =

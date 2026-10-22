@@ -7,8 +7,9 @@
 import { useRef } from 'react';
 import { useApp } from '../AppContext';
 import { DemoControls } from './DemoControls';
+import { Brand } from './Brand';
 
-export function Header() {
+export function Header({ onStartTour }: { onStartTour(): void }) {
   const { mode, toggleDemo } = useApp();
   const isDemo = mode === 'demo';
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -17,7 +18,9 @@ export function Header() {
     // <header> is a "landmark": screen readers let users jump straight to it.
     <header className="app-header">
       <div className="header-bar">
-        <span className="app-name">RideProof</span>
+        <Brand />
+        <a href="#/signin" className="device-access-link">Device access</a>
+        {isDemo && <button type="button" className="demo-button" onClick={onStartTour}>Restart tour</button>}
         <button
           type="button"
           className="demo-button"

@@ -73,7 +73,7 @@ export function Home() {
       : routeToHash({ name: 'checkin' });
 
   return (
-    <Screen title={title}>
+    <Screen title={title} className="screen-dashboard">
       <p className="today-line">Today is {formatLongDate(today, true)}</p>
 
       {mode === 'real' && <GettingStarted hasAppointments={appointments.length > 0} hasCheckIns={rideLogs.length > 0} />}

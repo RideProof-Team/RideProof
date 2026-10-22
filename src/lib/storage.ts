@@ -51,6 +51,10 @@ function getDb(mode: DataMode): Promise<IDBPDatabase<RideProofDB>> {
         database.createObjectStore('rideLogs', { keyPath: 'id' });
       },
     });
+    const opening = db;
+    void opening.catch(() => {
+      if (openDatabases.get(mode) === opening) openDatabases.delete(mode);
+    });
     openDatabases.set(mode, db);
   }
   return db;

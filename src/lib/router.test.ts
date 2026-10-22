@@ -5,6 +5,9 @@ import { validateAppointment } from './validateAppointment';
 describe('router', () => {
   it('turns routes into addresses and back again', () => {
     const routes: Route[] = [
+      { name: 'landing' },
+      { name: 'signin' },
+      { name: 'setup' },
       { name: 'home' },
       { name: 'appointments' },
       { name: 'appointment-new' },
@@ -24,8 +27,8 @@ describe('router', () => {
     }
   });
 
-  it('sends unknown or empty addresses to Home', () => {
-    expect(parseRoute('')).toEqual({ name: 'home' });
+  it('opens the landing page at the root and keeps unknown routes recoverable', () => {
+    expect(parseRoute('')).toEqual({ name: 'landing' });
     expect(parseRoute('#/nonsense')).toEqual({ name: 'home' });
   });
 });

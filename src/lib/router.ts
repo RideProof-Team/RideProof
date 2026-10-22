@@ -14,6 +14,9 @@ import { askConfirm, type ConfirmOptions } from './feedback';
  * which appointment to edit, so a Route is an object, not just a name.
  */
 export type Route =
+  | { name: 'landing' }
+  | { name: 'signin' }
+  | { name: 'setup' }
   | { name: 'home' }
   | { name: 'appointments' }
   | { name: 'appointment-new' }
@@ -29,13 +32,14 @@ export type Route =
   | { name: 'profile-edit' };
 
 /** Simple screens whose address is just their name, e.g. "#/history". */
-const SIMPLE_ROUTES = ['home', 'appointments', 'history', 'report', 'help', 'settings'] as const;
+const SIMPLE_ROUTES = ['landing', 'signin', 'setup', 'home', 'appointments', 'history', 'report', 'help', 'settings'] as const;
 
 /** Turn the text after "#" into a Route. Unknown addresses go Home. */
 export function parseRoute(hash: string): Route {
   // "#/appointments/abc" -> ["appointments", "abc"]
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   const [first, second, third] = parts;
+  if (!first) return { name: 'landing' };
 
   if (first === 'appointments') {
     if (second === 'new') return { name: 'appointment-new' };
@@ -95,6 +99,15 @@ let currentHash = typeof window === 'undefined' ? '' : window.location.hash;
 /** Turn the warning off right away, e.g. just before navigating after a save. */
 export function allowLeave() {
   leaveWarning = null;
+}
+
+/** Mode switches must ask before unmounting the form that owns this warning. */
+export async function confirmLeave(): Promise<boolean> {
+  const warning = leaveWarning;
+  if (!warning) return true;
+  if (!(await askConfirm(warning))) return false;
+  if (leaveWarning === warning) allowLeave();
+  return true;
 }
 
 export function useLeaveWarning(active: boolean, options: ConfirmOptions) {

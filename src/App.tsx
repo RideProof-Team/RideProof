@@ -6,11 +6,12 @@
 //      first time demo mode is used).
 //   4. Shows Welcome (no profile yet) or the current screen.
 // ---------------------------------------------------------------------------
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { AppContext, type AppContextValue, type ToastMessage } from './AppContext';
 import { BottomNav } from './components/BottomNav';
 import { FeedbackHost } from './components/FeedbackHost';
 import { Header } from './components/Header';
+import { DemoTour } from './components/DemoTour';
 import { UpdateBanner } from './components/PwaPrompts';
 import { Screen } from './components/Screen';
 import { Toast } from './components/Toast';
@@ -18,7 +19,7 @@ import { getToday } from './lib/clock';
 import { seedDemoIfEmpty } from './lib/demoData';
 import { requestPersistentStorage } from './lib/persist';
 import { loadDemoFlag, saveDemoFlag } from './lib/demoFlag';
-import { navigate, routeToHash, useRoute } from './lib/router';
+import { confirmLeave, navigate, routeToHash, useRoute } from './lib/router';
 import { createStorage, type DataMode } from './lib/storage';
 import { AppointmentForm } from './screens/AppointmentForm';
 import { Appointments } from './screens/Appointments';
@@ -30,6 +31,7 @@ import { Home } from './screens/Home';
 import { Report } from './screens/Report';
 import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
+import { Landing, SignIn } from './screens/PublicPages';
 import type { Profile } from './types';
 
 export function App() {
@@ -38,11 +40,43 @@ export function App() {
   const storage = useMemo(() => createStorage(mode), [mode]);
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   // Goes up by one whenever all data should be reloaded (e.g. "Reset demo").
   const [dataVersion, setDataVersion] = useState(0);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourRun, setTourRun] = useState(0);
+  const [tourAutoPlay, setTourAutoPlay] = useState(true);
+  const switchingMode = useRef(false);
   const route = useRoute();
   const today = getToday(mode);
+  const isPublic = route.name === 'landing' || route.name === 'signin';
+  useEffect(() => {
+    if ((isPublic || route.name === 'setup') && mode === 'demo') {
+      saveDemoFlag(false);
+      setMode('real');
+      setTourOpen(false);
+    }
+  }, [route.name]);
+  async function changeMode(next: DataMode, autoPlay = true) {
+    if (switchingMode.current) return;
+    switchingMode.current = true;
+    try {
+      if (!(await confirmLeave())) return;
+      setToast(null);
+      setTourOpen(next === 'demo');
+      setTourAutoPlay(autoPlay);
+      setTourRun(run => run + 1);
+      saveDemoFlag(next === 'demo');
+      setMode(next);
+      navigate({ name: 'home' });
+    } finally {
+      switchingMode.current = false;
+    }
+  }
+  function openDemo(autoPlay = true) {
+    return changeMode('demo', autoPlay);
+  }
   // A short text version of the screen we're on, e.g. "demo#/home-0".
   // When it changes, the screen is redrawn from scratch (and reloads its data).
   const screenKey = `${mode}${routeToHash(route)}${profile ? '' : '-setup'}-${dataVersion}`;
@@ -53,6 +87,7 @@ export function App() {
     // stops the old (wrong-mode) result from being shown.
     let cancelled = false;
     setLoading(true);
+    setLoadError(null);
     setProfile(undefined);
     // In demo mode, make sure the demo story exists first.
     const ready = storage.mode === 'demo' ? seedDemoIfEmpty(storage) : Promise.resolve();
@@ -61,6 +96,11 @@ export function App() {
       .then((loaded) => {
         if (cancelled) return;
         setProfile(loaded);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError('We couldn’t open your records on this device. Check that browser storage is allowed, then try again.');
         setLoading(false);
       });
     return () => {
@@ -74,12 +114,7 @@ export function App() {
   }, [mode, profile]);
 
   function toggleDemo() {
-    const next: DataMode = mode === 'demo' ? 'real' : 'demo';
-    saveDemoFlag(next === 'demo');
-    setToast(null);
-    setMode(next);
-    // Start on Home in the new mode (or Welcome, if there's no profile there).
-    navigate({ name: 'home' });
+    void changeMode(mode === 'demo' ? 'real' : 'demo');
   }
 
   // A normal "#main" link would change the address (which is how we pick
@@ -107,12 +142,19 @@ export function App() {
 
   // Pick the screen to show.
   let screen;
-  if (loading) {
+  if (route.name === 'landing') {
+    screen = <Landing onDemo={openDemo} />;
+  } else if (route.name === 'signin') {
+    screen = <SignIn profile={mode === 'real' ? profile : undefined} loading={loading || mode !== 'real'} error={mode === 'real' ? loadError : null} onRetry={refreshAll} onContinue={() => navigate({ name: 'home' })} onDemo={() => openDemo()} />;
+  } else if (loadError) {
+    screen = <Screen title="Your records couldn’t be opened"><p role="alert">{loadError}</p><button className="button-primary" onClick={refreshAll}>Try again</button></Screen>;
+  } else if (loading) {
     screen = <Screen title="RideProof"><p>Loading…</p></Screen>;
   } else if (!profile) {
     screen = <Welcome />;
   } else {
     switch (route.name) {
+      case 'setup':
       case 'home':
         screen = <Home />;
         break;
@@ -154,15 +196,16 @@ export function App() {
     <AppContext.Provider value={contextValue}>
       {/* Lets keyboard users jump past the header straight to the screen's content. */}
       <a href="#main" className="skip-link" onClick={skipToMain}>Skip to main content</a>
-      <Header />
-      <UpdateBanner />
+      {!isPublic && <Header onStartTour={() => openDemo()} />}
+      {!isPublic && <UpdateBanner />}
       {toast && <Toast message={toast} onClose={closeToast} />}
+      {tourOpen && mode === 'demo' && profile && !loading && !isPublic && <DemoTour key={tourRun} route={route} autoPlay={tourAutoPlay} onClose={() => setTourOpen(false)} />}
       {/* The key makes React replay the fade-in each time the screen changes. */}
       <div className="screen-transition" key={screenKey}>
         {screen}
       </div>
       {/* The bottom menu only makes sense once setup is done. */}
-      {profile && !loading && <BottomNav current={route} />}
+      {profile && !loading && !isPublic && <BottomNav current={route} />}
       <FeedbackHost />
     </AppContext.Provider>
   );

@@ -19,18 +19,18 @@
   --color-bg: #ffffff;
   --color-surface: #f2f5f8;
   --color-border: #6b7280;
-  --color-primary: #0b4f8a;        /* dark blue: 8.6:1 contrast on white */
+  --color-primary: #20523e;
   --color-primary-text: #ffffff;
   --color-focus: #ffbf47;          /* bright outline when using a keyboard */
   --color-error: #b3261e;
-  --color-demo: #6b3fa0;           /* purple so demo mode is obvious */
+  --color-demo: #755400;
   --color-divider: #d0d7de;
   --color-hover: #eef3f8;
   --color-pressed: #dbe5ef;
   --color-snackbar-bg: #1f2933;
   --color-snackbar-text: #ffffff;
   --color-snackbar-action: #ffd166;
-  --color-header-bg: #0b4f8a;      /* the blue top bar (same in light and dark) */
+  --color-header-bg: #173e32;
   --color-header-text: #ffffff;
   --color-danger-solid: #b3261e;   /* red button with white text */
   --color-warn-divider: #e2c780;

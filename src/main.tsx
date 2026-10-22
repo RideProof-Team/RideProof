@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
+import './app-theme.css';
 
 import { startPwa } from './lib/pwa';
 import { applyTheme, loadTheme } from './lib/theme';

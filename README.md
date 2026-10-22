@@ -43,7 +43,7 @@ You need [Node.js](https://nodejs.org/) version 20 or newer.
 ```bash
 npm install        # download the libraries (first time only)
 npm run dev        # start the app at http://localhost:5173
-npm test           # run the 97 automated tests
+npm test           # run the automated tests
 npm run build      # build the final app into the dist/ folder
 npm run preview    # try the built app (including offline mode) at http://localhost:4173
 ```
@@ -56,11 +56,13 @@ npm run preview    # try the built app (including offline mode) at http://localh
 
 ---
 
-## Demo mode (for the pitch video)
+## Demo mode (for the pitch)
 
-Tap **Demo** in the top-right corner of any screen, including the Welcome screen. No setup needed.
+From the landing page, choose **Watch the auto-demo** for a hands-free walkthrough or **Take a guided tour** to move at your own pace. Inside the app, **Demo** and **Restart tour** open the same fictional story. No setup is needed.
 
-- A purple banner appears: **"Demo mode — sample data."** The button changes to **Exit demo**.
+- A clearly labeled banner appears: **"Demo mode — sample data."** The button changes to **Exit demo**.
+- The walkthrough visits Today, Schedule, Check-in, History, Report, Complaint, Help, and Settings. It shows a countdown, chapter controls, pause/resume, and Back/Next controls.
+- Touching, typing, or scrolling in the app pauses autoplay so the screen never changes while someone is exploring it. The tour never answers forms, places calls, downloads files, or sends a complaint.
 - The app pretends today is **Friday, October 30, 2026** (`DEMO_TODAY` in `src/lib/clock.ts`), so dates and reminders look the same every time you record.
 - **Demo data is stored in a completely separate database**, so turning demo mode on or off never changes your own data.
 
