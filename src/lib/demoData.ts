@@ -24,6 +24,7 @@
 // ---------------------------------------------------------------------------
 import type { ActiveWait, Appointment, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
 import { DEMO_TODAY, nowMoment, resetDemoClock } from './clock';
+import { getLanguage } from './i18n';
 import type { Storage } from './storage';
 import { waitId } from './waitTimer';
 
@@ -174,13 +175,36 @@ export function demoWaits(now: Date): ActiveWait[] {
   ];
 }
 
+/**
+ * The notes Maria "typed" are records, not app text, so t() doesn't change
+ * them. When the demo is started (or reset) in Spanish, the story is written
+ * with Spanish notes instead, so a Spanish demo reads naturally.
+ */
+export const DEMO_NOTES_ES: Record<string, string> = {
+  'Called the ride company twice. No driver came. Missed dialysis.':
+    'Llamé dos veces a la compañía de transporte. No vino nadie. Rosa perdió la diálisis.',
+  'Driver came over an hour late. Treatment was cut short.':
+    'El conductor llegó con más de una hora de retraso. Tuvieron que acortar el tratamiento.',
+  'Waited 2 hours for ride home. A neighbor finally gave a ride.':
+    'Esperó 2 horas el viaje de regreso. Al final la llevó un vecino.',
+  'No driver came. Paid for a taxi to get there.': 'No vino nadie. Pagamos un taxi para llegar.',
+  'Sent the letter to member services. They said to expect an answer within 10 business days.':
+    'Envié la carta a servicios para miembros. Dijeron que responderían en 10 días hábiles.',
+  'On hold for 25 minutes, then the call dropped.': 'En espera 25 minutos y luego se cortó la llamada.',
+};
+
+/** The note in the demo's language (Spanish if the app is in Spanish). */
+function demoNote(note: string): string {
+  return getLanguage() === 'es' ? (DEMO_NOTES_ES[note] ?? note) : note;
+}
+
 async function writeDemoData(storage: Storage) {
   requireDemo(storage);
   await storage.saveProfile(DEMO_PROFILE);
   for (const appointment of DEMO_APPOINTMENTS) await storage.saveAppointment(appointment);
-  for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog(log);
-  for (const complaint of DEMO_COMPLAINTS) await storage.saveComplaint(complaint);
-  for (const attempt of DEMO_BOOKING_ATTEMPTS) await storage.saveBookingAttempt(attempt);
+  for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog({ ...log, notes: demoNote(log.notes) });
+  for (const complaint of DEMO_COMPLAINTS) await storage.saveComplaint({ ...complaint, notes: demoNote(complaint.notes) });
+  for (const attempt of DEMO_BOOKING_ATTEMPTS) await storage.saveBookingAttempt({ ...attempt, details: demoNote(attempt.details) });
   // Start the simulated clock at noon, then add the running wait timer.
   resetDemoClock();
   for (const wait of demoWaits(nowMoment('demo'))) await storage.saveWait(wait);

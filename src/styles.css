@@ -991,6 +991,8 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
     white-space: nowrap;
   }
 }
-/* Long one-word Spanish tour chapter names ("Configuración") break with a
-   hyphen instead of spilling out of their small buttons. */
-.demo-tour-chapter:lang(es) { hyphens: auto; overflow-wrap: anywhere; }
+/* Spanish tour chapter names are longer ("Configuración"). Instead of
+   breaking words in the middle, each button grows to fit its name, and the
+   chapter row scrolls sideways (it already does on narrow phones). */
+.demo-tour-chapters:lang(es) { grid-template-columns: repeat(8, max-content); }
+.demo-tour-chapter:lang(es) { white-space: nowrap; }

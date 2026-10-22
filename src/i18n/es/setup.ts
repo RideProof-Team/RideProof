@@ -69,8 +69,8 @@ export const ES_SETUP: Record<string, string> = {
   'Light': 'Claro',
   'Dark': 'Oscuro',
   'Animations': 'Animaciones',
-  'On': 'Sí',
-  'Off': 'No',
+  'On': 'Activadas',
+  'Off': 'Desactivadas',
   'Your phone is set to reduce motion, so animations are already off.':
     'Su teléfono está configurado para reducir el movimiento, así que las animaciones ya están desactivadas.',
   'Turn animations off if moving things on screen are distracting or make you feel dizzy.':

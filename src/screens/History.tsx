@@ -64,10 +64,10 @@ export function History() {
     ...calls.map((attempt): HistoryItem => ({ kind: 'call', date: attempt.attemptedOn, attempt })),
   ].sort((a, b) => b.date.localeCompare(a.date));
 
-  // Group into months: { "October 2026": [...], "September 2026": [...] }
+  // Group into months, keyed by "2026-10" (the heading shows "October 2026").
   const months = new Map<string, HistoryItem[]>();
   for (const item of items) {
-    const month = formatMonthYear(item.date);
+    const month = item.date.slice(0, 7);
     if (!months.has(month)) months.set(month, []);
     months.get(month)!.push(item);
   }
@@ -141,8 +141,9 @@ export function History() {
       )}
 
       {[...months.entries()].map(([month, monthItems]) => (
+        // The id has no spaces ("month-2026-10"), so aria-labelledby can find it.
         <section key={month} aria-labelledby={`month-${month}`}>
-          <h2 id={`month-${month}`}>{month}</h2>
+          <h2 id={`month-${month}`}>{formatMonthYear(`${month}-01`)}</h2>
           <ul className="card-list">
             {monthItems.map((item) =>
               item.kind === 'ride'

@@ -187,3 +187,24 @@ describe('labels in Spanish', () => {
     expect(severityReason(log('2026-10-02', { pickupStatus: 'late', minutesLate: 15 }))).toBe('Late pickup');
   });
 });
+
+describe('the demo story in Spanish', () => {
+  it('writes the demo notes in Spanish when the demo starts in Spanish, and in English otherwise', async () => {
+    const { createStorage } = await import('./storage');
+    const { resetDemo, DEMO_NOTES_ES, DEMO_RIDE_LOGS } = await import('./demoData');
+    const demo = createStorage('demo');
+    const english = DEMO_RIDE_LOGS.find((l) => l.rideDate === '2026-10-21')!.notes;
+
+    applyLanguage('es');
+    await resetDemo(demo);
+    const spanish = (await demo.listRideLogs()).find((l) => l.rideDate === '2026-10-21')!.notes;
+    expect(spanish).toBe(DEMO_NOTES_ES[english]);
+    expect((await demo.listBookingAttempts())[0].details).toBe('En espera 25 minutos y luego se cortó la llamada.');
+
+    applyLanguage('en');
+    await resetDemo(demo);
+    expect((await demo.listRideLogs()).find((l) => l.rideDate === '2026-10-21')!.notes).toBe(english);
+    // Every note in the story has a Spanish version.
+    for (const log of DEMO_RIDE_LOGS) if (log.notes) expect(DEMO_NOTES_ES[log.notes]).toBeTruthy();
+  });
+});

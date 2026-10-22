@@ -61,6 +61,9 @@ it('writes the call script in Spanish, and can switch just the script to English
   expect(script().lang).toBe('es');
   // (Dates come from lib/dates.ts, so they follow the script's language.)
   expect(script().textContent).toContain('jueves, 5 de noviembre de 2099');
+  // The whole script is Spanish, not just the date.
+  expect(script().textContent).not.toContain('Please pick me up');
+  expect(script().textContent).not.toMatch(/\b(the|and|my|ride)\b/i);
 
   const select = container.querySelector<HTMLSelectElement>('#script-language')!;
   expect(select.value).toBe('es');

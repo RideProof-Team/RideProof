@@ -31,7 +31,7 @@
 .rp-public .rp-caption { font-size: .75rem; color: var(--rp-muted); }
 .rp-hero-copy > .rp-caption { margin-top: 15px; }
 .rp-record-wrap { position: relative; background: var(--rp-green); padding: 30px 30px 14px; border: 1px solid #c3d0c0; border-radius: 10px; box-shadow: 10px 10px 0 #f0d777; }
-.rp-record-wrap::before { content: 'TRIP LOG'; position: absolute; top: 0; right: 26px; transform: translateY(-50%); background: var(--rp-yellow); color: var(--rp-ink); padding: 5px 10px; border: 1px solid #c7a536; font: 700 10px Consolas, monospace; letter-spacing: .08em; }
+.rp-record-wrap::before { content: var(--rp-trip-log, 'TRIP LOG'); position: absolute; top: 0; right: 26px; transform: translateY(-50%); background: var(--rp-yellow); color: var(--rp-ink); padding: 5px 10px; border: 1px solid #c7a536; font: 700 10px Consolas, monospace; letter-spacing: .08em; }
 .rp-record { background: var(--rp-white); border: 1px solid #aebdaf; border-top: 6px solid var(--rp-ink); border-radius: 4px; box-shadow: 0 7px 0 #c5d2c2; padding: 25px; }
 .rp-record-top { display: flex; justify-content: space-between; gap: 10px; font: 11px Consolas, monospace; letter-spacing: .07em; }
 .rp-record h2 { font-size: 2.05rem; line-height: 1.08; margin: 24px 0 18px; }
@@ -172,3 +172,6 @@
     transform: none;
   }
 }
+
+/* The little yellow tag is drawn by CSS, so its Spanish text lives here. */
+.rp-public:lang(es) { --rp-trip-log: 'REGISTRO DE VIAJE'; }

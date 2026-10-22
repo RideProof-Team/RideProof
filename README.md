@@ -37,6 +37,7 @@ Riders (often seniors, people with disabilities, or dialysis patients) or their 
 - **Delete all my data** any time.
 
 **Made for everyone**
+- **English and Español.** Every screen, message, letter, call script, care team summary, and PDF is in both languages. Tap **Español / English** at the top of any screen, or choose in Settings. It starts in Spanish if the phone is set to Spanish. Letters, scripts, summaries, and PDFs each have their own **"Language of this document"** choice, so a rider can use the app in Spanish and still send an English letter.
 - Large text that grows with the phone's text-size setting, big buttons, high contrast, screen-reader support, and **dark mode**.
 - Gentle animations that can be turned off (and are off automatically if the phone asks for reduced motion).
 - Installs on a phone's home screen, **works offline**, and offers updates when a new version is published.
@@ -69,7 +70,7 @@ When a medical ride fails, a patient may report it by phone, but they rarely hav
 | **Complaint letter** | A formal letter written from the logs, editable before sending, with Copy, Email, Download PDF, and Print. Shows who to send it to based on the state rules file, and ends with **I sent this complaint**. |
 | **Complaints you sent** | Each complaint with its status (Waiting for an answer / Got an answer / Problem fixed / Not fixed), the follow-up reminder date, notes, and next steps, including a **follow-up letter**. |
 | **Help** | What to do when a ride (or ride home) doesn't come, the state's rules, and how to install the app. |
-| **Settings** | Edit your information (including optional mobility needs and pickup address for the call script), the booking reminder window, Light / Dark / Match my phone appearance, **Animations On / Off**, notifications, **Back up / Restore**, **Delete all my data**, and privacy info. |
+| **Settings** | **Language (English / Español)**, edit your information (including optional mobility needs and pickup address for the call script), the booking reminder window, Light / Dark / Match my phone appearance, **Animations On / Off**, notifications, **Back up / Restore**, **Delete all my data**, and privacy info. |
 
 It's also a **Progressive Web App**: it can be installed on a phone's home screen (with an Install button on Android), works with no internet connection, and shows "A new version is ready" when you publish an update.
 
@@ -84,7 +85,7 @@ You need [Node.js](https://nodejs.org/) version 20 or newer.
 ```bash
 npm install        # download the libraries (first time only)
 npm run dev        # start the app at http://localhost:5173
-npm test           # run the 210 automated tests
+npm test           # run the 262 automated tests
 npm run build      # build the final app into the dist/ folder
 npm run preview    # try the built app (including offline mode) at http://localhost:4173
 ```
@@ -108,6 +109,8 @@ From the landing page, choose **Watch the auto-demo** for a hands-free walkthrou
 - **Demo data is stored in a completely separate database**, so turning demo mode on or off never changes your own data.
 
 **The demo story (all fake):** Rosa, 72, goes to dialysis every Mon/Wed/Fri at 9:00 AM at "Riverside Dialysis Center." Her granddaughter Maria uses RideConnect in caregiver mode. The ride company is "Sample Ride Co." (555-0100). Over the past month, 13 rides were logged: 5 late pickups (15, 30, and 60+ minutes), 2 rides that never came, a missed dialysis session on October 14, a ride home that never came ("Waited 2 hours for ride home"), and a ride home 30 minutes late: **at least 3 hours spent waiting**. On October 16, Maria emailed a complaint to Sample Health Plan (reference DEMO-C-1016); 14 days later there's still no answer, so Home asks **"Did you hear back?"**. Today Rosa has finished dialysis and has been **waiting 10 minutes for her ride home** (the ride timer is running). There's also a cardiology appointment on Tuesday whose ride isn't booked: Maria called on Thursday but **couldn't get through** (on hold 25 minutes, then the call dropped), so a **"Book today"** reminder shows on Home with that failed call.
+
+**In Spanish:** tap **Español** at the top of the landing page before starting the demo. The whole tour, the app, and Rosa's notes are in Spanish.
 
 **Demo controls:** tap the "Demo mode" banner to open:
 - shortcuts to **Home, Ride timer, Booking call script, Ride check-in, History, Report, Care team summary, Complaint preview, Complaints sent**;
@@ -192,11 +195,15 @@ src/
     theme.ts / motion.ts  Light/Dark and Animations On/Off settings
     pwa.ts                Install and update handling
     feedback.ts           askConfirm() and showSnackbar() for any screen to use
+    i18n.ts               English / Spanish: t(), tn(), tx(), msg(), withLanguage()
+  i18n/
+    es/                   The Spanish text, one file per part of the app
+    GLOSSARY.md           The Spanish words and tone to use everywhere
   sw-template.js        The service worker (offline support)
 vite.config.ts          Build settings + a small plugin that writes the offline file list
 ```
 
-**Tests** (`npm test`, 210 tests in 22 files) cover the tricky logic: business-day deadlines and holidays, the rider's own booking window, recurring appointment dates and skipped days, report statistics and time lost, the ride timer (prompts, reload survival, filling in the check-in), the complaint and follow-up letters' wording, the 14-day follow-up reminder and status changes, the booking call script and failed calls, the care team summary (it must match `computeStats`), the check-in question order, History filters, backup files (including older versions), **database upgrades from every older version without losing data**, the call screen never marking a ride booked unless the rider says so, state selection, the demo tour, the public pages, the motion rules, and that demo data never mixes with real data.
+**Tests** (`npm test`, 262 tests in 26 files) cover the tricky logic: **every message in the code has a Spanish version with the same blanks**, the Spanish letters, script, summary, and PDFs, Spanish dates and times, business-day deadlines and holidays, the rider's own booking window, recurring appointment dates and skipped days, report statistics and time lost, the ride timer (prompts, reload survival, filling in the check-in), the complaint and follow-up letters' wording, the 14-day follow-up reminder and status changes, the booking call script and failed calls, the care team summary (it must match `computeStats`), the check-in question order, History filters, backup files (including older versions), **database upgrades from every older version without losing data**, the call screen never marking a ride booked unless the rider says so, state selection, the demo tour, the public pages, the motion rules, and that demo data never mixes with real data.
 
 ## Accessibility
 
@@ -210,6 +217,7 @@ Many RideConnect users are elderly or disabled, so accessibility was a requireme
 - The ride timer is marked as a timer for screen readers, so they don't read out every second, and the 15- and 30-minute prompts are announced when they appear.
 - The chart has a legend, a text summary for screen readers, and a "Show as a table" option.
 - Gentle, short animations explain what happened (questions slide like pages, the "Saved" check mark draws itself, numbers count up, chart bars grow in). They turn off automatically for people who set "reduce motion" on their phone, and anyone can turn them off in **Settings → Animations**. All animation styles live in one file, `src/motion.css`, behind one on/off rule.
+- **Spanish for screen readers:** the page's `lang` is set to `es` in Spanish, so screen readers switch to a Spanish voice, and a document written in the other language (an English letter in the Spanish app) is marked with its own `lang`.
 - Plain language and as few steps as possible: one tap per check-in question, plus one-tap "I booked this ride" and "Call the ride company."
 
 ## Privacy
@@ -231,7 +239,9 @@ Many RideConnect users are elderly or disabled, so accessibility was a requireme
 - **Complaint contacts exist only for 3 placeholder states.** Riders elsewhere are told to check their state Medicaid website.
 - "Sign in" opens the record saved in this browser; there are no online accounts, so records don't sync between devices (use Back up / Restore).
 - The ride timer measures one wait per leg of each trip; it doesn't track the driver's location.
-- Ideas: Spanish and other languages, more than one rider per caregiver, verified rules for all 50 states.
+- The demo story's notes are written in Spanish when the demo starts (or is reset) in Spanish. Switching language in the middle of the demo changes the app, not notes that were already "typed"; tap **Reset demo** to rewrite them.
+- The Spanish was written carefully but has not yet been reviewed by a professional translator or by Spanish-speaking riders. That review should happen before real use.
+- Ideas: more languages (the same system works for any language), more than one rider per caregiver, verified rules for all 50 states.
 
 ---
 
@@ -314,6 +324,10 @@ These are the hardest problems we solved, written so they can be adapted for the
 ### 19. Never claiming a ride is booked
 **Problem:** A booking reminder that disappears too early is dangerous: if the app assumed a call worked, a rider could miss dialysis.
 **Solution:** Only one action, the rider tapping **"Yes, it's booked"**, marks a ride booked. "Not yet" changes nothing, and "Couldn't book" saves a dated evidence record while the ride stays "not booked" and the reminder stays on Home. A test renders the real call screen, picks "couldn't book", and checks the appointment is still unbooked. The script also never saves the *suggested* pickup time as if the ride company had given it.
+
+### 20. Two languages without missing a word
+**Problem:** RideConnect has about 1,000 pieces of text, and many are built from parts ("5 of 13 rides", "Rosa's next appointment", "on October 14 and October 21, 2026"). Translating word by word gives broken Spanish, and it's easy to miss one message and leave English in the middle of a Spanish screen.
+**Solution:** Every message goes through one function, `t()`, and the English text itself is the lookup key, so the code stays readable. Sentences are translated **whole**, with blanks for the parts that change (`'{done} of {total} rides had a problem'`), so Spanish can use its own word order and verb forms ("tuvo" for 1, "tuvieron" for more). Lists, dates, and times follow each language's rules ("A, B y C"; "viernes, 30 de octubre"; "9:00 a. m."). A test reads **every source file**, finds every message, and fails if any is missing Spanish or has different blanks, so nothing slips through. A browser scan of every screen in Spanish found no leftover English, and every screen still passes the accessibility audit. Letters can be written in a different language from the app, because a Spanish-speaking rider may need to send an English complaint.
 
 ---
 
