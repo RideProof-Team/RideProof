@@ -32,11 +32,12 @@ import {
   RETURN_LABELS,
 } from '../lib/labels';
 import { tripsBetween } from '../lib/recurrence';
+import { prefillFromWaits } from '../lib/waitTimer';
 import { askConfirm, showSnackbar } from '../lib/feedback';
 import { allowLeave, navigate, routeToHash, useLeaveWarning } from '../lib/router';
 import { newId } from '../lib/storage';
 import { useRideData } from '../lib/useRideData';
-import type { AppointmentType, Profile, RideLog } from '../types';
+import type { ActiveWait, AppointmentType, Profile, RideLog } from '../types';
 
 /** The details of the trip being checked in on. */
 interface TripInfo {
@@ -55,7 +56,10 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
   const { data } = useRideData();
 
   if (!data || !profile) return <Screen title={TITLE} back={BACK}><p>Loading…</p></Screen>;
-  const { appointments, rideLogs } = data;
+  const { appointments, rideLogs, waits } = data;
+  // Finished "Where's my ride?" timers for a trip: they fill in the answers.
+  const timersFor = (id: string, tripDate: string) =>
+    waits.filter((w) => w.appointmentId === id && w.tripDate === tripDate && w.finishedAt);
 
   // --- A specific trip was named in the address ---
   if (appointmentId && date) {
@@ -79,7 +83,16 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
       date,
     };
     // key: start the questions fresh if the trip changes.
-    return <Questions key={`${appointmentId}-${date}`} trip={trip} existing={existing} profile={profile} />;
+    return (
+      <Questions
+        key={`${appointmentId}-${date}`}
+        trip={trip}
+        existing={existing}
+        profile={profile}
+        timers={timersFor(appointmentId, date)}
+        isToday={date === today}
+      />
+    );
   }
 
   // --- No trip named: use today's ---
@@ -93,7 +106,15 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
       time: t.appointment.time,
       date: t.date,
     };
-    return <Questions trip={trip} existing={findLog(rideLogs, t.appointment.id, t.date)} profile={profile} />;
+    return (
+      <Questions
+        trip={trip}
+        existing={findLog(rideLogs, t.appointment.id, t.date)}
+        profile={profile}
+        timers={timersFor(t.appointment.id, t.date)}
+        isToday
+      />
+    );
   }
 
   // Zero or several trips today: let the user choose.
@@ -139,10 +160,23 @@ interface Option<T> {
   tone: 'good' | 'late' | 'problem' | 'neutral';
 }
 
-function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: RideLog; profile: Profile }) {
+interface QuestionsProps {
+  trip: TripInfo;
+  existing?: RideLog;
+  profile: Profile;
+  /** Finished wait timers for this trip. */
+  timers: ActiveWait[];
+  isToday: boolean;
+}
+
+function Questions({ trip, existing, profile, timers, isToday }: QuestionsProps) {
   const { storage, mode, refreshAll } = useApp();
+  // Answers from the wait timer(s), laid over any earlier check-in. The
+  // rider sees them already chosen and can still change any of them.
+  const prefill = prefillFromWaits(timers);
+  const startingAnswers: Answers = { ...(existing ? answersFromLog(existing) : { notes: '' }), ...prefill };
   // If this trip was already logged, start with the old answers so they can be changed.
-  const [answers, setAnswers] = useState<Answers>(() => (existing ? answersFromLog(existing) : { notes: '' }));
+  const [answers, setAnswers] = useState<Answers>(startingAnswers);
   const [step, setStep] = useState<Step>('pickup');
   // Which way the questions slide: forward (from the right) or back (from the left).
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
@@ -153,7 +187,9 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   const firstRender = useRef(true);
 
   // Warn before leaving a check-in that was started but not saved.
-  const original = existing ? JSON.stringify(answersFromLog(existing)) : JSON.stringify({ notes: '' });
+  // Compared with what the screen started with (including timer answers,
+  // which are already saved in the timer, so leaving doesn't lose them).
+  const original = JSON.stringify(startingAnswers);
   useLeaveWarning(!saved && JSON.stringify(answers) !== original, {
     title: 'Leave without saving?',
     message: 'This check-in is not saved yet. Your answers will be lost.',
@@ -203,6 +239,14 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
     }
   }
 
+  const hasPickupTimer = timers.some((t) => t.leg === 'pickup');
+
+  function notHomeYet() {
+    allowLeave();
+    navigate({ name: 'home' });
+    showSnackbar('Your pickup time is saved. When you\'re waiting to go home, tap "I\'m waiting for my ride home".');
+  }
+
   async function save() {
     const log = buildRideLog(answers, {
       id: existing?.id ?? newId(),
@@ -214,6 +258,8 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       recordedAt: existing?.recordedAt ?? nowTimestamp(mode),
     });
     await storage.saveRideLog(log);
+    // The timers' minutes are now part of the ride log, so clear them.
+    for (const timer of timers) await storage.deleteWait(timer.id);
     allowLeave();
     setSaved(log);
   }
@@ -336,6 +382,18 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
           ]}
         />
       );
+      // Came from the pickup timer and still at the clinic? Nothing is lost
+      // by stopping here: the pickup timer's result stays saved for later.
+      if (isToday && hasPickupTimer && !answers.returnRideStatus) {
+        content = (
+          <>
+            {content}
+            <button type="button" className="link-button" onClick={notHomeYet}>
+              I'm not home yet — finish this later
+            </button>
+          </>
+        );
+      }
       break;
     case 'returnHowLate':
       question = 'How late was the ride home?';
@@ -394,6 +452,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   return (
     <Screen title={TITLE} back={BACK}>
       {tripLine}
+      {timers.length > 0 && <TimerNote timers={timers} />}
       {/* key={step}: a new question is a new "page", so its slide-in animation plays. */}
       <div key={step} className={direction === 'back' ? 'step-back' : 'step-forward'}>
         <p className="step-count">Question {steps.indexOf(step) + 1} of {steps.length}</p>
@@ -463,5 +522,29 @@ function SavedCheck() {
       <circle cx="28" cy="28" r="26" />
       <path d="M17 29l7 7 15-16" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/** "From your ride timer: the driver came 23 minutes late." */
+function TimerNote({ timers }: { timers: ActiveWait[] }) {
+  return (
+    <div className="timer-note">
+      <Icon name="clock" />
+      <div>
+        <p><strong>From your ride timer</strong> (already chosen below; you can change them):</p>
+        <ul>
+          {timers.map((t) => (
+            <li key={t.id}>
+              {t.leg === 'pickup' ? 'Pickup' : 'Ride home'}:{' '}
+              {t.result === 'never_came'
+                ? `never came (you waited ${t.finalMinutesLate} minutes)`
+                : t.finalMinutesLate
+                  ? `${t.finalMinutesLate} minutes late`
+                  : 'on time'}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

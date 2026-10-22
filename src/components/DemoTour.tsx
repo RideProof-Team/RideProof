@@ -28,6 +28,13 @@ const STEPS: TourStep[] = [
     notice: 'Open an appointment if you want to inspect it. The tour pauses before it can move you away.',
   },
   {
+    route: { name: 'wait' },
+    chapter: 'Ride timer',
+    title: 'Measure the wait while it happens',
+    description: 'Rosa is done with dialysis and waiting for her ride home. The timer keeps counting even if the phone locks, and suggests calling the ride company at 15 and 30 minutes.',
+    notice: 'This sample timer runs on a simulated clock. Demo controls can jump it ahead 15 minutes.',
+  },
+  {
     route: { name: 'checkin' },
     chapter: 'Check-in',
     title: 'Turn a difficult ride into a clear record',

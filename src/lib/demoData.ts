@@ -9,14 +9,18 @@
 //   - 1 ride home that never came ("Waited 2 hours for ride home")
 //   - 1 ride home about 30 minutes late
 //   - at least 3 hours spent waiting in total (see timeLost.ts)
+// Right now (noon on the simulated demo clock), Rosa is done with dialysis
+// and has been waiting 10 minutes for her ride home (the wait timer).
 // "Today" in demo mode is DEMO_TODAY (Friday, Oct 30, 2026): there's a
 // dialysis appointment to check in on, and a cardiology appointment on
 // Tuesday whose ride isn't booked yet, so a booking reminder shows.
 //
 // The demo data is only ever written to the DEMO database (see storage.ts).
 // ---------------------------------------------------------------------------
-import type { Appointment, Profile, RideLog } from '../types';
+import type { ActiveWait, Appointment, Profile, RideLog } from '../types';
+import { DEMO_TODAY, nowMoment, resetDemoClock } from './clock';
 import type { Storage } from './storage';
+import { waitId } from './waitTimer';
 
 export const DEMO_PROFILE: Profile = {
   role: 'caregiver',
@@ -115,11 +119,34 @@ function requireDemo(storage: Storage) {
 }
 
 /** Write the starting demo story into demo storage. */
+/**
+ * Today (Friday, noon on the simulated demo clock): Rosa finished dialysis
+ * and has been waiting 10 minutes for her ride home. Built fresh each time,
+ * because "10 minutes ago" depends on when the demo clock started.
+ */
+export function demoWaits(now: Date): ActiveWait[] {
+  return [
+    {
+      id: waitId('demo-dialysis', DEMO_TODAY, 'return'),
+      appointmentId: 'demo-dialysis',
+      tripDate: DEMO_TODAY,
+      leg: 'return',
+      scheduledTime: null,
+      scheduledIsEstimate: false,
+      startedAt: new Date(now.getTime() - 10 * 60_000).toISOString(),
+      promptsShown: [],
+    },
+  ];
+}
+
 async function writeDemoData(storage: Storage) {
   requireDemo(storage);
   await storage.saveProfile(DEMO_PROFILE);
   for (const appointment of DEMO_APPOINTMENTS) await storage.saveAppointment(appointment);
   for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog(log);
+  // Start the simulated clock at noon, then add the running wait timer.
+  resetDemoClock();
+  for (const wait of demoWaits(nowMoment('demo'))) await storage.saveWait(wait);
 }
 
 /** The first time demo mode is turned on, fill the demo database. */

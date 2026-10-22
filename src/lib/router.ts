@@ -24,6 +24,8 @@ export type Route =
   /** No appointmentId/date = "today's ride". */
   | { name: 'checkin'; appointmentId?: string; date?: string }
   | { name: 'history' }
+  /** The "Where's my ride?" waiting screen. No id = the timer that's running. */
+  | { name: 'wait'; id?: string }
   | { name: 'report' }
   /** periodId: which report period the letter covers (default: past month). */
   | { name: 'complaint'; periodId?: string }
@@ -51,6 +53,7 @@ export function parseRoute(hash: string): Route {
     if (second && third) return { name: 'checkin', appointmentId: decodeURIComponent(second), date: third };
     return { name: 'checkin' };
   }
+  if (first === 'wait') return second ? { name: 'wait', id: decodeURIComponent(second) } : { name: 'wait' };
   if (first === 'complaint') return second ? { name: 'complaint', periodId: second } : { name: 'complaint' };
   if (first === 'settings' && second === 'profile') return { name: 'profile-edit' };
   const simple = SIMPLE_ROUTES.find((name) => name === first);
@@ -69,6 +72,8 @@ export function routeToHash(route: Route): string {
       return route.appointmentId && route.date
         ? `#/checkin/${encodeURIComponent(route.appointmentId)}/${route.date}`
         : '#/checkin';
+    case 'wait':
+      return route.id ? `#/wait/${encodeURIComponent(route.id)}` : '#/wait';
     case 'complaint':
       return route.periodId ? `#/complaint/${route.periodId}` : '#/complaint';
     case 'profile-edit':

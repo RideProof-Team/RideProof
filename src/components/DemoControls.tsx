@@ -2,13 +2,17 @@
 // DemoControls.tsx — the panel that opens from the demo banner.
 //   - Shortcuts straight to the screens shown in the pitch video
 //   - "Simulate reminder": show the booking reminder notification now
+//   - "Jump ahead 15 minutes": move the simulated demo clock forward, so
+//     the ride timer shows what happens when a ride is 15 / 30 minutes late
 //   - "Reset demo": put the sample story back to how it started
 // It uses the built-in <dialog> element, which handles focus, the Escape
 // key, and screen readers for us.
 // ---------------------------------------------------------------------------
 import type { RefObject } from 'react';
 import { useApp } from '../AppContext';
+import { jumpDemoClock } from '../lib/clock';
 import { resetDemo } from '../lib/demoData';
+import { showSnackbar } from '../lib/feedback';
 import { askNotificationPermission, notificationPermission, showNotification } from '../lib/notifications';
 import { bookingReminders, reminderText } from '../lib/reminders';
 import { navigate, type Route } from '../lib/router';
@@ -17,6 +21,7 @@ import { getStateRule } from '../lib/stateRules';
 
 const SHORTCUTS: { label: string; route: Route }[] = [
   { label: 'Home', route: { name: 'home' } },
+  { label: 'Ride timer', route: { name: 'wait' } },
   { label: 'Ride check-in', route: { name: 'checkin' } },
   { label: 'History', route: { name: 'history' } },
   { label: 'Report', route: { name: 'report' } },
@@ -52,6 +57,12 @@ export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogEle
     await showNotification(title, body, 'demo-reminder');
   }
 
+  function jumpAhead() {
+    close();
+    jumpDemoClock(15);
+    showSnackbar('Demo clock moved ahead 15 minutes.');
+  }
+
   async function reset() {
     close();
     await resetDemo(storage);
@@ -76,6 +87,9 @@ export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogEle
       <div className="button-stack">
         <button type="button" className="button-secondary" onClick={simulateReminder}>
           Simulate reminder
+        </button>
+        <button type="button" className="button-secondary" onClick={jumpAhead}>
+          Ride timer: jump ahead 15 minutes
         </button>
         <button type="button" className="button-danger" onClick={reset}>
           Reset demo

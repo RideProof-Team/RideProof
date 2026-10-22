@@ -41,3 +41,66 @@ export function nowTimestamp(mode: DataMode): string {
   }
   return now.toISOString();
 }
+
+// ---------------------------------------------------------------------------
+// The exact moment "now", used by the "Where's my ride?" wait timers.
+//
+// Real mode: the real clock.
+// Demo mode: a SIMULATED clock. It starts at noon on DEMO_TODAY when the
+// demo is set up, then runs forward in real time, so the timer visibly
+// ticks. "Jump ahead 15 minutes" (Demo controls) moves it forward, so a
+// pitch video can show what happens at 15 and 30 minutes late without
+// waiting. The clock's starting point is saved, so it survives reloads.
+// ---------------------------------------------------------------------------
+const DEMO_CLOCK_KEY = 'rideproof-demo-clock';
+
+interface DemoClock {
+  /** The real moment (milliseconds) the simulated clock was set to noon. */
+  anchorMs: number;
+  /** Extra minutes added by "Jump ahead". */
+  jumpMinutes: number;
+}
+
+/** Noon on DEMO_TODAY, local time. */
+function demoStartMs(): number {
+  const [year, month, day] = DEMO_TODAY.split('-').map(Number);
+  const [hours, minutes] = DEMO_NOW_TIME.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes).getTime();
+}
+
+function loadDemoClock(): DemoClock {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DEMO_CLOCK_KEY) ?? 'null');
+    if (saved && typeof saved.anchorMs === 'number' && typeof saved.jumpMinutes === 'number') return saved;
+  } catch {
+    // fall through and start a new clock
+  }
+  return resetDemoClock();
+}
+
+function saveDemoClock(clock: DemoClock) {
+  try {
+    localStorage.setItem(DEMO_CLOCK_KEY, JSON.stringify(clock));
+  } catch {
+    // The demo clock just won't survive a reload.
+  }
+}
+
+/** Set the simulated demo clock back to noon (used when the demo is set up or reset). */
+export function resetDemoClock(): DemoClock {
+  const clock = { anchorMs: Date.now(), jumpMinutes: 0 };
+  saveDemoClock(clock);
+  return clock;
+}
+
+/** "Jump ahead 15 minutes" in Demo controls. */
+export function jumpDemoClock(minutes: number) {
+  const clock = loadDemoClock();
+  saveDemoClock({ ...clock, jumpMinutes: clock.jumpMinutes + minutes });
+}
+
+export function nowMoment(mode: DataMode): Date {
+  if (mode === 'real') return new Date();
+  const clock = loadDemoClock();
+  return new Date(demoStartMs() + (Date.now() - clock.anchorMs) + clock.jumpMinutes * 60_000);
+}

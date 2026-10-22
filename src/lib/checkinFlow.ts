@@ -32,6 +32,9 @@ export interface Answers {
   /** Optional "HH:MM" times for extra evidence. */
   scheduledPickup?: string;
   actualPickup?: string;
+  /** Exact minutes measured by the wait timer (not typed by the rider). */
+  pickupWaitMinutes?: number;
+  returnWaitMinutes?: number;
 }
 
 /** Which steps apply, given the answers. "How late?" only appears if that ride was late. */
@@ -69,6 +72,8 @@ export function answersFromLog(log: RideLog): Answers {
     // counts as "no changes".
     ...(log.scheduledPickup ? { scheduledPickup: log.scheduledPickup } : {}),
     ...(log.actualPickup ? { actualPickup: log.actualPickup } : {}),
+    ...(log.pickupWaitMinutes !== undefined ? { pickupWaitMinutes: log.pickupWaitMinutes } : {}),
+    ...(log.returnWaitMinutes !== undefined ? { returnWaitMinutes: log.returnWaitMinutes } : {}),
   };
 }
 
@@ -101,6 +106,14 @@ export function buildRideLog(answers: Answers, details: LogDetails): RideLog {
     scheduledPickup: answers.scheduledPickup || undefined,
     // There's no "driver came at" time if the driver never came.
     actualPickup: answers.pickupStatus === 'never_came' ? undefined : answers.actualPickup || undefined,
+    // Timer minutes only make sense if the ride was late or never came. If
+    // the rider changed the answer to "on time", drop them.
+    ...(answers.pickupWaitMinutes !== undefined && answers.pickupStatus !== 'on_time'
+      ? { pickupWaitMinutes: answers.pickupWaitMinutes }
+      : {}),
+    ...(answers.returnWaitMinutes !== undefined && (answers.returnRideStatus === 'late' || answers.returnRideStatus === 'never_came')
+      ? { returnWaitMinutes: answers.returnWaitMinutes }
+      : {}),
   };
 }
 

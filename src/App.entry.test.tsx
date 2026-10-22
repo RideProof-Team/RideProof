@@ -37,7 +37,7 @@ it('opens the demo from the landing page and returns to real device access', asy
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)); });
     expect(container.querySelector('main')?.textContent).toBe('demo:Rosa');
   });
-  expect(container.querySelector('[aria-label="Guided demo"]')?.textContent).toContain('Stop 1 of 8');
+  expect(container.querySelector('[aria-label="Guided demo"]')?.textContent).toContain('Stop 1 of 9');
   const tourButton = (label: string) => Array.from(container.querySelectorAll('button')).find(button => button.textContent === label)!;
   await act(async () => tourButton('Pause').click());
   expect(tourButton('Resume')).toBeTruthy();

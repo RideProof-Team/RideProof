@@ -27,6 +27,8 @@ import { CheckIn } from './screens/CheckIn';
 import { Complaint } from './screens/Complaint';
 import { Help } from './screens/Help';
 import { History } from './screens/History';
+import { Wait } from './screens/Wait';
+import { WaitWatcher } from './components/WaitWatcher';
 import { Home } from './screens/Home';
 import { Report } from './screens/Report';
 import { Settings } from './screens/Settings';
@@ -174,6 +176,9 @@ export function App() {
       case 'history':
         screen = <History />;
         break;
+      case 'wait':
+        screen = <Wait key={route.id ?? 'running'} id={route.id} />;
+        break;
       case 'report':
         screen = <Report />;
         break;
@@ -208,6 +213,7 @@ export function App() {
       {/* The bottom menu only makes sense once setup is done. */}
       {profile && !loading && !isPublic && <BottomNav current={route} />}
       <FeedbackHost />
+      {profile && !loading && !isPublic && <WaitWatcher onWaitScreen={route.name === 'wait'} />}
     </AppContext.Provider>
   );
 }

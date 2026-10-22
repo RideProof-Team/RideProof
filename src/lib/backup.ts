@@ -10,6 +10,10 @@
 // The file is JSON: plain text that both people and programs can read.
 // When loading, we check every field carefully, because the file came
 // from outside the app and could be damaged or not a RideConnect file at all.
+//
+// Not included on purpose: running "Where's my ride?" timers. A timer
+// restored on another phone days later would show a meaningless wait. When
+// a wait ends, its minutes are saved in the ride log, which IS backed up.
 // ---------------------------------------------------------------------------
 import type { Appointment, Profile, RideLog } from '../types';
 import { isValidRiderBookingWindow } from './bookingWindow';
@@ -86,6 +90,10 @@ function readAppointment(v: unknown): Appointment {
   ) {
     throw new BackupError('An appointment in this file is damaged.');
   }
+  // Added later (optional): the pickup time the ride company gave.
+  if (v.pickupTime !== undefined && v.pickupTime !== '' && !TIME.test(text(v.pickupTime))) {
+    throw new BackupError(`The pickup time for the appointment at ${text(v.clinicName) || 'a clinic'} is damaged. It must look like 08:15.`);
+  }
   const rule = v.recurrence;
   const weekdays = Array.isArray(rule.weekdays) ? rule.weekdays.filter((d) => oneOf(d, [0, 1, 2, 3, 4, 5, 6] as const)) : [];
   return {
@@ -95,6 +103,7 @@ function readAppointment(v: unknown): Appointment {
     clinicName: text(v.clinicName),
     clinicAddress: text(v.clinicAddress),
     clinicPhone: text(v.clinicPhone),
+    ...(TIME.test(text(v.pickupTime)) ? { pickupTime: text(v.pickupTime) } : {}),
     type: v.type,
     recurrence: rule.kind === 'weekly' ? { kind: 'weekly', weekdays } : { kind: 'none' },
     rideBooked: v.rideBooked === true,

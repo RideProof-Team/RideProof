@@ -896,3 +896,50 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 }
 .time-lost-main { margin: 0; font-size: 1.3rem; font-weight: 800; color: var(--color-text); }
 .time-lost-note { margin: 0.25rem 0 0; font-size: 1rem; color: var(--color-text); }
+
+/* ---------- "Where's my ride?" waiting screen ---------- */
+.wait-timer-box {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: center;
+}
+.wait-timer-label { margin: 0; font-weight: 700; }
+/* Big, clear numbers. "tabular-nums" keeps the digits from jiggling as they change. */
+.wait-timer {
+  margin: 0.25rem 0;
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.wait-detail { margin: 0.25rem 0; }
+.wait-prompt {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 3px solid var(--color-warn);
+  border-radius: var(--radius);
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+.wait-prompt p { margin: 0.2rem 0; color: var(--color-text); }
+.wait-prompt .wait-prompt-title { font-weight: 800; }
+.button-tall { min-height: 56px; }
+.demo-note {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+}
+.timer-status { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; margin: 0.25rem 0; }
+.trip-timers { display: flex; flex-direction: column; }
+.trip-timers .button-primary, .trip-timers .button-secondary { margin-top: 0.5rem; }
+.timer-note { display: flex; gap: 0.5rem; padding: 0.5rem 0.75rem; margin: 0.5rem 0; border-left: 6px solid var(--color-primary); background: var(--color-surface); border-radius: var(--radius); }
+.timer-note p, .timer-note ul { margin: 0.2rem 0; }
+.timer-note ul { padding-left: 1.2rem; }

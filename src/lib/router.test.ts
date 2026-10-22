@@ -15,6 +15,8 @@ describe('router', () => {
       { name: 'checkin' },
       { name: 'checkin', appointmentId: 'abc', date: '2026-10-30' },
       { name: 'history' },
+      { name: 'wait' },
+      { name: 'wait', id: 'demo-dialysis|2026-10-30|return' },
       { name: 'report' },
       { name: 'complaint' },
       { name: 'complaint', periodId: '2026-10' },

@@ -234,6 +234,15 @@ export function AppointmentForm({ id }: { id?: string }) {
           onChange={(v) => update('time', v)}
         />
 
+        <TextField
+          id="pickupTime"
+          type="time"
+          label="Pickup time (optional)"
+          hint="The time the ride company said the driver will come. If you leave it empty, RideConnect assumes 1 hour before the appointment."
+          value={appt.pickupTime ?? ''}
+          onChange={(v) => update('pickupTime', v || undefined)}
+        />
+
         <fieldset className="choice-group">
           <legend>Is the ride booked?</legend>
           {repeats && (

@@ -56,6 +56,11 @@ export interface Appointment {
   clinicAddress: string;
   /** Optional: the clinic's phone number, for tap-to-call. */
   clinicPhone?: string;
+  /**
+   * Optional "HH:MM": the pickup time the ride company gave. If missing,
+   * RideConnect estimates 1 hour before the appointment.
+   */
+  pickupTime?: string;
   type: AppointmentType;
   recurrence: RecurrenceRule;
   rideBooked: boolean;
@@ -113,4 +118,38 @@ export interface RideLog {
    */
   pickupWaitMinutes?: number;
   returnWaitMinutes?: number;
+}
+
+// ---------------------------------------------------------------------------
+// "Where's my ride?" wait timers
+// ---------------------------------------------------------------------------
+
+/** Which part of the trip: the ride TO the appointment, or the ride home. */
+export type WaitLeg = 'pickup' | 'return';
+
+/**
+ * A running (or just-finished) wait timer. We store WHEN it started, never
+ * a running count, so the timer is still right after the phone locks, the
+ * app closes, or the page reloads: elapsed time = now − startedAt.
+ */
+export interface ActiveWait {
+  /** "<appointment id>|<date>|<leg>": one timer per leg of each trip. */
+  id: string;
+  appointmentId: string;
+  /** "YYYY-MM-DD" of the trip. */
+  tripDate: string;
+  leg: WaitLeg;
+  /** Pickup leg: the scheduled (or estimated) pickup time "HH:MM". Ride home: null. */
+  scheduledTime: string | null;
+  /** True if scheduledTime was estimated (1 hour before the appointment). */
+  scheduledIsEstimate: boolean;
+  /** The exact moment the rider tapped "I'm waiting" (ISO format). */
+  startedAt: string;
+  /** Which "it's been 15 / 30 minutes" prompts were already shown. */
+  promptsShown: number[];
+  /** Set when the wait ends: the ride came, or the rider gave up. */
+  finishedAt?: string;
+  result?: 'arrived' | 'never_came';
+  /** Minutes late when it ended (pickup: past the pickup time; ride home: since the rider started waiting). */
+  finalMinutesLate?: number;
 }

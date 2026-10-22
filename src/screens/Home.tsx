@@ -30,6 +30,8 @@ import { effectiveBookingWindow } from '../lib/bookingWindow';
 import { getStateRule } from '../lib/stateRules';
 import type { Appointment } from '../types';
 import { useRideData } from '../lib/useRideData';
+import { useNow } from '../lib/useNow';
+import { TripTimers } from '../components/TripTimers';
 
 /** How many appointments to list under "Coming up". */
 const COMING_UP_COUNT = 4;
@@ -37,10 +39,12 @@ const COMING_UP_COUNT = 4;
 export function Home() {
   const { profile, today, storage, mode } = useApp();
   const { data, reload } = useRideData();
+  // Redraw every 30 seconds, so the timer buttons appear on time.
+  const now = useNow(30_000);
   if (!profile) return null;
   const title = profile.role === 'caregiver' ? `${profile.riderFirstName}'s rides` : `Hi, ${profile.riderFirstName}`;
   if (!data) return <Screen title={title}><p>Loading…</p></Screen>;
-  const { appointments, rideLogs } = data;
+  const { appointments, rideLogs, waits } = data;
 
   const trips = upcomingTrips(appointments, today);
   const todaysTrips = trips.filter((t) => t.date === today);
@@ -111,6 +115,7 @@ export function Home() {
                       Checked in: {SEVERITY_DISPLAY[rideSeverity(log)].label}
                     </span>
                   )}
+                  <TripTimers trip={trip} log={log} waits={waits} now={now} />
                 </li>
               );
             })}
