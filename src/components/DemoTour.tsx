@@ -63,6 +63,13 @@ const STEPS: TourStep[] = [
     notice: 'Nothing is sent automatically. A draft remains a draft until the person using RideConnect decides otherwise.',
   },
   {
+    route: { name: 'complaints' },
+    chapter: 'Follow-up',
+    title: 'Keep track after the complaint is sent',
+    description: 'Maria emailed a complaint to Rosa’s health plan on October 16. Two weeks later there is still no answer, so RideConnect asks “Did you hear back?” and offers a follow-up letter that mentions the reference number and every problem since.',
+    notice: 'Try “Update status or notes” and choose Not fixed to see the next steps. Reset demo puts the complaint back.',
+  },
+  {
     route: { name: 'help' },
     chapter: 'Help',
     title: 'Know what to do when a ride does not arrive',

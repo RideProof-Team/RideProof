@@ -4,6 +4,7 @@
 //   - When is my next appointment, and is the ride booked?
 //   - What's coming up after that?
 //   - Is a ride booking deadline coming up? -> reminder with Call button
+//   - Was a complaint sent 14+ days ago with no answer? -> "Did you hear back?"
 // ---------------------------------------------------------------------------
 import { useApp } from '../AppContext';
 import { BookingReminders } from '../components/BookingReminders';
@@ -32,6 +33,8 @@ import type { Appointment } from '../types';
 import { useRideData } from '../lib/useRideData';
 import { useNow } from '../lib/useNow';
 import { TripTimers } from '../components/TripTimers';
+import { ComplaintFollowUps } from '../components/ComplaintFollowUps';
+import { dueFollowUps } from '../lib/complaints';
 
 /** How many appointments to list under "Coming up". */
 const COMING_UP_COUNT = 4;
@@ -44,7 +47,7 @@ export function Home() {
   if (!profile) return null;
   const title = profile.role === 'caregiver' ? `${profile.riderFirstName}'s rides` : `Hi, ${profile.riderFirstName}`;
   if (!data) return <Screen title={title}><p>Loading…</p></Screen>;
-  const { appointments, rideLogs, waits } = data;
+  const { appointments, rideLogs, waits, complaints } = data;
 
   const trips = upcomingTrips(appointments, today);
   const todaysTrips = trips.filter((t) => t.date === today);
@@ -147,6 +150,7 @@ export function Home() {
       )}
 
       <BookingReminders reminders={reminders} onBooked={(r) => markBooked(r.appointment)} />
+      <ComplaintFollowUps due={dueFollowUps(complaints, today)} onChange={reload} />
       {remindersOff && (
         <section className="card card-info" aria-labelledby="reminders-off-heading">
           <h2 id="reminders-off-heading">

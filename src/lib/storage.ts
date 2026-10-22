@@ -12,7 +12,7 @@
 // change, delete, or mix with the user's real data.
 // ---------------------------------------------------------------------------
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { ActiveWait, Appointment, Profile, RideLog } from '../types';
+import type { ActiveWait, Appointment, Profile, RideLog, SentComplaint } from '../types';
 
 export type DataMode = 'real' | 'demo';
 
@@ -26,7 +26,8 @@ export const DB_NAMES: Record<DataMode, string> = {
 // step to upgrade() below. Version history:
 //   1: profile, appointments, rideLogs
 //   2: + waits (the "Where's my ride?" timers)
-export const DB_VERSION = 2;
+//   3: + complaints (complaints the rider sent, for the follow-up tracker)
+export const DB_VERSION = 3;
 
 // The profile is stored under this one fixed key, since there's only one.
 const PROFILE_KEY = 'profile';
@@ -37,6 +38,7 @@ interface RideConnectDB extends DBSchema {
   appointments: { key: string; value: Appointment };
   rideLogs: { key: string; value: RideLog };
   waits: { key: string; value: ActiveWait };
+  complaints: { key: string; value: SentComplaint };
 }
 
 // Opening a database takes time, so we remember the open connection for
@@ -51,7 +53,7 @@ function getDb(mode: DataMode): Promise<IDBPDatabase<RideConnectDB>> {
       // DB_VERSION is higher than the version saved on the phone.
       // `oldVersion` says what the phone has (0 = nothing yet). Each step only
       // ADDS what's missing, so a phone on version 1 keeps every profile,
-      // appointment, and ride log, and just gains the new "waits" box.
+      // appointment, and ride log, and just gains the new boxes.
       upgrade(database, oldVersion) {
         if (oldVersion < 1) {
           database.createObjectStore('profile');
@@ -60,6 +62,9 @@ function getDb(mode: DataMode): Promise<IDBPDatabase<RideConnectDB>> {
         }
         if (oldVersion < 2) {
           database.createObjectStore('waits', { keyPath: 'id' });
+        }
+        if (oldVersion < 3) {
+          database.createObjectStore('complaints', { keyPath: 'id' });
         }
       },
       // Another tab (for example, a newer version of RideConnect) needs to
@@ -94,6 +99,9 @@ export interface Storage {
   listWaits(): Promise<ActiveWait[]>;
   saveWait(wait: ActiveWait): Promise<void>;
   deleteWait(id: string): Promise<void>;
+  listComplaints(): Promise<SentComplaint[]>;
+  saveComplaint(complaint: SentComplaint): Promise<void>;
+  deleteComplaint(id: string): Promise<void>;
   /** Erase everything in THIS mode's database only. */
   clearAll(): Promise<void>;
 }
@@ -144,15 +152,26 @@ export function createStorage(mode: DataMode): Storage {
       await (await getDb(mode)).delete('waits', id);
     },
 
+    async listComplaints() {
+      return (await getDb(mode)).getAll('complaints');
+    },
+    async saveComplaint(complaint) {
+      await (await getDb(mode)).put('complaints', complaint);
+    },
+    async deleteComplaint(id) {
+      await (await getDb(mode)).delete('complaints', id);
+    },
+
     async clearAll() {
       const db = await getDb(mode);
       // A transaction groups changes so they all succeed or all fail.
-      const tx = db.transaction(['profile', 'appointments', 'rideLogs', 'waits'], 'readwrite');
+      const tx = db.transaction(['profile', 'appointments', 'rideLogs', 'waits', 'complaints'], 'readwrite');
       await Promise.all([
         tx.objectStore('profile').clear(),
         tx.objectStore('appointments').clear(),
         tx.objectStore('rideLogs').clear(),
         tx.objectStore('waits').clear(),
+        tx.objectStore('complaints').clear(),
         tx.done,
       ]);
     },

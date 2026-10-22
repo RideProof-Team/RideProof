@@ -25,6 +25,8 @@ import { AppointmentForm } from './screens/AppointmentForm';
 import { Appointments } from './screens/Appointments';
 import { CheckIn } from './screens/CheckIn';
 import { Complaint } from './screens/Complaint';
+import { Complaints } from './screens/Complaints';
+import { ComplaintSent } from './screens/ComplaintSent';
 import { Help } from './screens/Help';
 import { History } from './screens/History';
 import { Wait } from './screens/Wait';
@@ -183,7 +185,13 @@ export function App() {
         screen = <Report />;
         break;
       case 'complaint':
-        screen = <Complaint periodId={route.periodId} />;
+        screen = <Complaint key={route.followUpOf ?? 'letter'} periodId={route.periodId} followUpOf={route.followUpOf} />;
+        break;
+      case 'complaints':
+        screen = <Complaints id={route.id} />;
+        break;
+      case 'complaint-sent':
+        screen = <ComplaintSent key={route.followUpOf ?? 'new'} followUpOf={route.followUpOf} />;
         break;
       case 'help':
         screen = <Help />;

@@ -196,7 +196,7 @@ describe('database upgrade from version 1 to 2', () => {
       expect(await storage.listWaits()).toHaveLength(1);
       await storage.clearAll();
     }
-    expect(DB_VERSION).toBe(2);
+    expect(DB_VERSION).toBeGreaterThanOrEqual(2);
   });
 });
 

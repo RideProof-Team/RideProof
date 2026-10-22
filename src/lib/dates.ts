@@ -51,6 +51,11 @@ export function formatLongDate(text: string, withYear = false): string {
   });
 }
 
+/** "2026-10-16" -> "October 16, 2026" (no weekday: reads better inside a sentence). */
+export function formatDateInSentence(text: string): string {
+  return parseDate(text).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 /** "2026-10-30" -> "Oct 30" (short, for lists). */
 export function formatShortDate(text: string): string {
   return parseDate(text).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

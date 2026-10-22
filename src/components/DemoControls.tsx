@@ -26,6 +26,7 @@ const SHORTCUTS: { label: string; route: Route }[] = [
   { label: 'History', route: { name: 'history' } },
   { label: 'Report', route: { name: 'report' } },
   { label: 'Complaint preview', route: { name: 'complaint' } },
+  { label: 'Complaints sent', route: { name: 'complaints' } },
 ];
 
 export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogElement | null> }) {

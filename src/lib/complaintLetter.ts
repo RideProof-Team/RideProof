@@ -9,8 +9,9 @@
 // "1 time" vs "5 times", one missed date vs several, dates in different
 // years, and so on. Each of those is its own small function below.
 // ---------------------------------------------------------------------------
-import type { AppointmentType, Profile, RideLog } from '../types';
-import { formatLongDate, formatTime, parseDate } from './dates';
+import type { AppointmentType, ComplaintMethod, Profile, RideLog, SentComplaint } from '../types';
+import { daysSinceSent } from './complaints';
+import { addDays, formatDateInSentence, formatLongDate, formatTime, parseDate } from './dates';
 import { computeStats, logsInRange, plural, type ReportPeriod } from './reportStats';
 import type { StateRule } from './stateRules';
 import { timeLostLetterSentence } from './timeLost';
@@ -221,10 +222,13 @@ export function buildComplaintLetter({ profile, logs, period, today, stateRule }
   lines.push('');
   lines.push('I kept a record of each ride with its date. I can share the full record if needed.');
   lines.push('');
-  lines.push('Sincerely,');
-  lines.push('');
-  lines.push(profile.riderFirstName);
-  lines.push('[Your full name, Medicaid ID number, and phone number]');
+  lines.push(...signOff(profile));
+  return lines.join('\n');
+}
+
+/** "Sincerely," and the name, plus who helped (caregiver mode). */
+function signOff(profile: Profile): string[] {
+  const lines = ['Sincerely,', '', profile.riderFirstName, '[Your full name, Medicaid ID number, and phone number]'];
   if (profile.role === 'caregiver') {
     lines.push('');
     lines.push(
@@ -233,5 +237,107 @@ export function buildComplaintLetter({ profile, logs, period, today, stateRule }
         : 'This letter was prepared with help from my caregiver.',
     );
   }
+  return lines;
+}
+
+// ---------------------------------------------------------------------------
+// The follow-up letter: for when a complaint wasn't answered or the problem
+// wasn't fixed. It points back to the first complaint (its date and
+// reference number) and lists the NEW problems logged since that day.
+// ---------------------------------------------------------------------------
+
+/** "sent a complaint to X by email", "mailed a complaint to X", ... */
+export function sentPhrase(method: ComplaintMethod, to: string): string {
+  switch (method) {
+    case 'email':
+      return `sent a complaint to ${to} by email`;
+    case 'mail':
+      return `mailed a complaint to ${to}`;
+    case 'phone':
+      return `made a complaint to ${to} by phone`;
+    case 'online_form':
+      return `sent a complaint to ${to} through their online form`;
+  }
+}
+
+export interface FollowUpInput {
+  profile: Profile;
+  logs: RideLog[];
+  /** The complaint this letter follows up on. */
+  complaint: SentComplaint;
+  today: string;
+}
+
+export function buildFollowUpLetter({ profile, logs, complaint, today }: FollowUpInput): string {
+  // "Since then" = from the day after the complaint was sent, up to today.
+  // Counted with computeStats, like every other number in the app.
+  const from = addDays(complaint.sentDate, 1);
+  const inRange = logsInRange(logs, from, today);
+  const stats = computeStats(logs, from, today);
+  const problems = inRange.filter(hadProblem);
+  const sentOn = formatDateInSentence(complaint.sentDate);
+  const reference = complaint.referenceNumber ? ` (reference number ${complaint.referenceNumber})` : '';
+  const plan = profile.healthPlanName ? ` enrolled in ${profile.healthPlanName}` : '';
+  const days = daysSinceSent(complaint, today);
+
+  const lines: string[] = [];
+  lines.push(formatLongDate(today, true));
+  lines.push('');
+  lines.push(`To: ${complaint.sentTo}`);
+  lines.push(`Re: Follow-up to my complaint of ${sentOn}${reference} about Medicaid non-emergency medical transportation (NEMT)`);
+  lines.push('');
+  lines.push('To whom it may concern:');
+  lines.push('');
+  lines.push(
+    `My name is ${profile.riderFirstName}. I am a Medicaid member${plan}, and I depend on ${profile.rideCompanyName} ` +
+      'for rides to my medical appointments.',
+  );
+  lines.push('');
+
+  const statusSentence =
+    complaint.status === 'waiting'
+      ? `As of today, ${days} ${days === 1 ? 'day' : 'days'} later, I have not received an answer.`
+      : complaint.status === 'answered'
+        ? 'I received an answer, but I am still waiting for the problems to be fixed.'
+        : complaint.status === 'fixed'
+          ? 'I was told the problems were fixed, but new problems have happened since then.'
+          : 'The problems I reported have not been fixed.';
+  lines.push(
+    `On ${sentOn}, I ${sentPhrase(complaint.method, complaint.sentTo)} about repeated problems with these rides` +
+      `${complaint.referenceNumber ? `. The reference number is ${complaint.referenceNumber}` : ''}. ${statusSentence}`,
+  );
+  lines.push('');
+
+  if (problems.length > 0) {
+    lines.push(
+      ['Since my complaint, the problems have continued.', summarySentence(inRange), ...extraSentences(inRange), timeLostLetterSentence(stats)]
+        .filter(Boolean)
+        .join(' '),
+    );
+    lines.push('');
+    lines.push(
+      `Since ${sentOn}, I logged ${plural(stats.totalRides, 'ride', 'rides')}, and ` +
+        `${plural(problems.length, 'ride', 'rides')} had a problem. Here is my record of each new one:`,
+    );
+    lines.push('');
+    for (const log of problems) lines.push(`- ${formatLongDate(log.rideDate, true)}: ${describeProblem(log)}`);
+  } else {
+    lines.push(
+      stats.totalRides > 0
+        ? `I have not logged any new ride problems since ${sentOn}, but my original complaint still needs an answer.`
+        : `I have not logged any rides since ${sentOn}, but my original complaint still needs an answer.`,
+    );
+  }
+  lines.push('');
+  lines.push('I am asking you to:');
+  lines.push(`1. Respond in writing to my complaint of ${sentOn}${reference}.`);
+  if (problems.length > 0) lines.push('2. Investigate the new incidents listed above.');
+  lines.push(`${problems.length > 0 ? 3 : 2}. Tell me what will be done to make sure my rides arrive on time.`);
+  lines.push('');
+  lines.push(
+    'If this is not resolved, I plan to contact my state Medicaid office. I kept a dated record of each ride and can share it if needed.',
+  );
+  lines.push('');
+  lines.push(...signOff(profile));
   return lines.join('\n');
 }

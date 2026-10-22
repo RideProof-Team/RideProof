@@ -12,7 +12,7 @@ import { useApp } from '../AppContext';
 import { Icon, type IconName } from '../components/Icon';
 import { RideChart } from '../components/RideChart';
 import { Screen } from '../components/Screen';
-import { computeStats, findPeriod, headline, reportPeriods, weeklyCounts } from '../lib/reportStats';
+import { computeStats, findPeriod, headline, plural, reportPeriods, weeklyCounts } from '../lib/reportStats';
 import { timeLostHeadline, timeLostNotCounted } from '../lib/timeLost';
 import { markReportViewed } from '../lib/onboarding';
 import { routeToHash } from '../lib/router';
@@ -36,6 +36,7 @@ export function Report() {
   const period = findPeriod(periods, periodId);
   const stats = computeStats(data.rideLogs, period.from, period.to);
   const weeks = weeklyCounts(data.rideLogs, period.from, period.to);
+  const waiting = data.complaints.filter((c) => c.status === 'waiting').length;
 
   async function downloadPdf() {
     setPdfBusy(true);
@@ -140,6 +141,19 @@ export function Report() {
           </a>
         </div>
       )}
+
+      <section className="card" aria-labelledby="complaints-heading">
+        <h2 id="complaints-heading">Complaints you sent</h2>
+        <p>
+          {data.complaints.length === 0
+            ? 'After you send a complaint, record it here and RideConnect will remind you to follow up.'
+            : `${plural(data.complaints.length, 'complaint', 'complaints')} recorded` +
+              (waiting > 0 ? `, ${waiting} still waiting for an answer.` : '.')}
+        </p>
+        <a href={routeToHash({ name: 'complaints' })} className="button-secondary">
+          <Icon name="mail" /> {data.complaints.length === 0 ? 'Record a complaint I sent' : 'See my complaints'}
+        </a>
+      </section>
     </Screen>
   );
 }

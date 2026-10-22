@@ -14,14 +14,21 @@
 // Not included on purpose: running "Where's my ride?" timers. A timer
 // restored on another phone days later would show a meaningless wait. When
 // a wait ends, its minutes are saved in the ride log, which IS backed up.
+//
+// Version history of the file:
+//   1: profile, appointments, rideLogs
+//   2: + complaints (the complaint follow-up tracker). A version 1 file
+//      still loads; it just has no complaints.
 // ---------------------------------------------------------------------------
-import type { Appointment, Profile, RideLog } from '../types';
+import type { Appointment, Profile, RideLog, SentComplaint } from '../types';
+import { COMPLAINT_METHODS, COMPLAINT_STATUSES } from './complaints';
+import { formatDateInSentence } from './dates';
 import { isValidRiderBookingWindow } from './bookingWindow';
 import type { Storage } from './storage';
 
 // Keep the original identifier so backups created before the rename still import.
 export const BACKUP_FORMAT = 'rideproof-backup';
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 
 export interface BackupFile {
   format: typeof BACKUP_FORMAT;
@@ -30,6 +37,7 @@ export interface BackupFile {
   profile: Profile;
   appointments: Appointment[];
   rideLogs: RideLog[];
+  complaints: SentComplaint[];
 }
 
 /** A problem with a backup file, explained in plain language. */
@@ -45,6 +53,7 @@ export async function createBackup(storage: Storage, exportedAt: string): Promis
     profile,
     appointments: await storage.listAppointments(),
     rideLogs: await storage.listRideLogs(),
+    complaints: await storage.listComplaints(),
   };
 }
 
@@ -152,6 +161,35 @@ function readRideLog(v: unknown): RideLog {
   };
 }
 
+function readComplaint(v: unknown): SentComplaint {
+  if (!isObject(v) || !text(v.id) || !DATE.test(text(v.sentDate))) {
+    throw new BackupError('A complaint record in this file is damaged.');
+  }
+  const when = `The complaint sent on ${formatDateInSentence(text(v.sentDate))}`;
+  if (!text(v.sentTo).trim()) throw new BackupError(`${when} is missing who it was sent to.`);
+  if (!oneOf(v.method, COMPLAINT_METHODS)) {
+    throw new BackupError(`${when} has a damaged "how it was sent" answer. It must be email, mail, phone call, or online form.`);
+  }
+  if (!oneOf(v.status, COMPLAINT_STATUSES)) {
+    throw new BackupError(`${when} has a damaged status. It must be Waiting, Got an answer, Problem fixed, or Not fixed.`);
+  }
+  for (const field of ['statusChangedOn', 'remindOn'] as const) {
+    if (v[field] !== undefined && !DATE.test(text(v[field]))) throw new BackupError(`${when} has a damaged date.`);
+  }
+  return {
+    id: text(v.id),
+    sentDate: text(v.sentDate),
+    sentTo: text(v.sentTo).trim(),
+    method: v.method,
+    referenceNumber: text(v.referenceNumber),
+    status: v.status,
+    notes: text(v.notes),
+    ...(DATE.test(text(v.statusChangedOn)) ? { statusChangedOn: text(v.statusChangedOn) } : {}),
+    ...(DATE.test(text(v.remindOn)) ? { remindOn: text(v.remindOn) } : {}),
+    ...(text(v.followUpOf) ? { followUpOf: text(v.followUpOf) } : {}),
+  };
+}
+
 /** A measured wait: a whole number of minutes, from 0 up to one day. */
 function isWaitMinutes(value: unknown): value is number {
   return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 24 * 60;
@@ -174,6 +212,10 @@ export function parseBackup(fileText: string): BackupFile {
   if (!Array.isArray(data.appointments) || !Array.isArray(data.rideLogs)) {
     throw new BackupError('This backup file is damaged.');
   }
+  // Complaints were added in version 2. Older files don't have them: start with none.
+  if (data.complaints !== undefined && !Array.isArray(data.complaints)) {
+    throw new BackupError('The complaints in this backup file are damaged.');
+  }
   return {
     format: BACKUP_FORMAT,
     version: data.version,
@@ -181,6 +223,7 @@ export function parseBackup(fileText: string): BackupFile {
     profile: readProfile(data.profile),
     appointments: data.appointments.map(readAppointment),
     rideLogs: data.rideLogs.map(readRideLog),
+    complaints: Array.isArray(data.complaints) ? data.complaints.map(readComplaint) : [],
   };
 }
 
@@ -191,6 +234,7 @@ export async function restoreBackup(storage: Storage, backup: BackupFile) {
   await storage.saveProfile(backup.profile);
   for (const appointment of backup.appointments) await storage.saveAppointment(appointment);
   for (const log of backup.rideLogs) await storage.saveRideLog(log);
+  for (const complaint of backup.complaints) await storage.saveComplaint(complaint);
 }
 
 // ----- Remembering when the last backup was made -----

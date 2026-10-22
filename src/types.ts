@@ -153,3 +153,37 @@ export interface ActiveWait {
   /** Minutes late when it ended (pickup: past the pickup time; ride home: since the rider started waiting). */
   finalMinutesLate?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Complaints the rider sent (the follow-up tracker)
+// ---------------------------------------------------------------------------
+
+/** How the complaint was sent. */
+export type ComplaintMethod = 'email' | 'mail' | 'phone' | 'online_form';
+
+/** Where things stand with a complaint. */
+export type ComplaintStatus = 'waiting' | 'answered' | 'fixed' | 'not_fixed';
+
+/** A complaint the rider says they sent ("I sent this complaint"). */
+export interface SentComplaint {
+  id: string;
+  /** "YYYY-MM-DD": the day it was sent. */
+  sentDate: string;
+  /** Who it went to: a contact name from the state rules, or a name the rider typed. */
+  sentTo: string;
+  method: ComplaintMethod;
+  /** Optional reference / case number they were given. */
+  referenceNumber: string;
+  status: ComplaintStatus;
+  /** "YYYY-MM-DD" the status was last changed. */
+  statusChangedOn?: string;
+  /** Anything the rider wants to remember ("Talked to Sam, said 10 days"). */
+  notes: string;
+  /**
+   * "YYYY-MM-DD": when to show the "Did you hear back?" reminder. Missing
+   * means the usual 14 days after sentDate. "Remind me later" moves it.
+   */
+  remindOn?: string;
+  /** If this is a follow-up letter: the id of the complaint it follows up on. */
+  followUpOf?: string;
+}

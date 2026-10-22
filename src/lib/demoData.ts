@@ -11,13 +11,15 @@
 //   - at least 3 hours spent waiting in total (see timeLost.ts)
 // Right now (noon on the simulated demo clock), Rosa is done with dialysis
 // and has been waiting 10 minutes for her ride home (the wait timer).
+// On Oct 16 Maria emailed a complaint to Rosa's health plan. Two weeks
+// later there's still no answer, so Home asks "Did you hear back?".
 // "Today" in demo mode is DEMO_TODAY (Friday, Oct 30, 2026): there's a
 // dialysis appointment to check in on, and a cardiology appointment on
 // Tuesday whose ride isn't booked yet, so a booking reminder shows.
 //
 // The demo data is only ever written to the DEMO database (see storage.ts).
 // ---------------------------------------------------------------------------
-import type { ActiveWait, Appointment, Profile, RideLog } from '../types';
+import type { ActiveWait, Appointment, Profile, RideLog, SentComplaint } from '../types';
 import { DEMO_TODAY, nowMoment, resetDemoClock } from './clock';
 import type { Storage } from './storage';
 import { waitId } from './waitTimer';
@@ -111,6 +113,19 @@ export const DEMO_RIDE_LOGS: RideLog[] = [
   ride('2026-10-28', {}),
 ];
 
+/** The complaint Maria sent on Oct 16. 14 days later (demo "today") it's still waiting. */
+export const DEMO_COMPLAINTS: SentComplaint[] = [
+  {
+    id: 'demo-complaint',
+    sentDate: '2026-10-16',
+    sentTo: 'Sample Health Plan',
+    method: 'email',
+    referenceNumber: 'DEMO-C-1016', // fake
+    status: 'waiting',
+    notes: 'Sent the letter to member services. They said to expect an answer within 10 business days.',
+  },
+];
+
 /** Refuse to touch anything except the demo database. */
 function requireDemo(storage: Storage) {
   if (storage.mode !== 'demo') {
@@ -144,6 +159,7 @@ async function writeDemoData(storage: Storage) {
   await storage.saveProfile(DEMO_PROFILE);
   for (const appointment of DEMO_APPOINTMENTS) await storage.saveAppointment(appointment);
   for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog(log);
+  for (const complaint of DEMO_COMPLAINTS) await storage.saveComplaint(complaint);
   // Start the simulated clock at noon, then add the running wait timer.
   resetDemoClock();
   for (const wait of demoWaits(nowMoment('demo'))) await storage.saveWait(wait);
