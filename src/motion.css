@@ -1,0 +1,122 @@
+/* ---------------------------------------------------------------------------
+   motion.css — the small animations inside screens, plus the master
+   "Animations: Off" switch. (Screen and card entrances live in
+   app-theme.css; landing-page motion lives in screens/public.css.)
+
+   Rules we follow:
+     - Short (mostly 150–300ms) and gentle: things fade and slide a little,
+       nothing spins, flashes, or loops forever.
+     - Animations help explain what happened ("this question replaced that
+       one", "your ride was saved"); they're never needed to understand it.
+     - Everything switches off when the phone is set to "reduce motion",
+       or when the user picks "Animations: Off" in Settings (data-motion="off").
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Every rule starts with :root:not([data-motion='off']), meaning "only if
+     the user hasn't turned animations off in Settings". (It's written out on
+     each rule because older iPhones can't read rules nested inside rules.) */
+
+  /* Screen and Home-card entrances are in app-theme.css. This file adds the
+     smaller moments inside screens. */
+
+  /* ---------- Check-in: questions slide like pages ----------
+     Going forward, the new question comes in from the right;
+     "Previous question" brings it back in from the left. */
+  :root:not([data-motion='off']) .screen > .step-forward { animation: slide-from-right 240ms ease-out both; }
+  :root:not([data-motion='off']) .screen > .step-back { animation: slide-from-left 240ms ease-out both; }
+
+  /* The answer you tap "pops" briefly before the next question appears,
+     so you can see your tap was counted. */
+  :root:not([data-motion='off']) .answer-button.just-picked { animation: pick-pop 200ms ease-out; }
+
+  /* "Saved": the circle grows, then the check mark draws itself. */
+  :root:not([data-motion='off']) .saved-check circle { animation: grow-in 300ms ease-out both; transform-origin: center; }
+  :root:not([data-motion='off']) .saved-check path {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    animation: draw 350ms 200ms ease-out forwards;
+  }
+
+  /* ---------- Attention, but only briefly ----------
+     "Due today" pulses twice, then stops (never loops forever). */
+  :root:not([data-motion='off']) .badge-attention { animation: pulse 900ms ease-in-out 2; }
+
+  /* Getting started: a finished step's tick pops in. */
+  :root:not([data-motion='off']) .start-steps li.done .start-mark { animation: pick-pop 300ms ease-out; }
+
+  /* ---------- Pop-ups ---------- */
+  :root:not([data-motion='off']) dialog[open] { animation: dialog-in 200ms ease-out; }
+  :root:not([data-motion='off']) dialog[open]::backdrop { animation: fade-in 200ms ease-out; }
+  :root:not([data-motion='off']) .snackbar { animation: rise-in 220ms ease-out; }
+  :root:not([data-motion='off']) .toast { animation: toast-in 300ms ease-out; }
+  :root:not([data-motion='off']) .update-banner { animation: rise-in 300ms ease-out; }
+
+  /* ---------- Bottom menu: the highlight bar slides to the tapped tab ---------- */
+  :root:not([data-motion='off']) .nav-indicator { transition: transform 250ms ease-out; }
+
+  /* ---------- Buttons: a tiny "push in" when pressed ---------- */
+  :root:not([data-motion='off']) .button-primary, :root:not([data-motion='off']) .button-secondary, :root:not([data-motion='off']) .button-danger, :root:not([data-motion='off']) .button-danger-solid, :root:not([data-motion='off']) .answer-button {
+    transition: transform 80ms ease-out, filter 80ms, background-color 80ms;
+  }
+  :root:not([data-motion='off']) .button-primary:active:not(:disabled), :root:not([data-motion='off']) .button-secondary:active, :root:not([data-motion='off']) .button-danger:active, 
+  :root:not([data-motion='off']) .button-danger-solid:active, :root:not([data-motion='off']) .answer-button:active { transform: scale(0.98); }
+
+  /* Show-as-table and pickup-time sections open smoothly. */
+  :root:not([data-motion='off']) details[open] > *:not(summary) { animation: fade-in 200ms ease-out; }
+}
+
+/* ---------- The movements themselves ("keyframes") ---------- */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-from-right {
+  from { opacity: 0; transform: translateX(32px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-from-left {
+  from { opacity: 0; transform: translateX(-32px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pick-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes grow-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes toast-in {
+  from { transform: translate(-50%, -120%); }
+  to { transform: translate(-50%, 0); }
+}
+
+/* ---------- The master "Animations: Off" switch ----------
+   Settings > Animations: Off stops EVERY animation in the app, including
+   the ones in other style files. "!important" lets this one rule win over
+   all the others. */
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after,
+:root[data-motion='off'] *::backdrop {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

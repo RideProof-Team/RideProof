@@ -140,7 +140,7 @@ Many RideConnect users are elderly or disabled, so accessibility was a requireme
 - Proper labels, headings, and landmarks for screen readers. Focus moves to each new screen's heading and each new check-in question.
 - High contrast colors (WCAG AA or better). An automated **axe-core** audit of every screen found **0 issues**.
 - The chart has a legend, a text summary for screen readers, and a "Show as a table" option.
-- Animations turn off for people who set "reduce motion" on their phone.
+- Gentle, short animations explain what happened (questions slide like pages, the "Saved" check mark draws itself, numbers count up, chart bars grow in). They turn off automatically for people who set "reduce motion" on their phone, and anyone can turn them off in **Settings → Animations**. All animation styles live in one file, `src/motion.css`, behind one on/off rule.
 - Plain language and as few steps as possible: one tap per check-in question, plus one-tap "I booked this ride" and "Call the ride company."
 
 ## Privacy

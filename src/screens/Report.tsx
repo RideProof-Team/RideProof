@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 import type { Chart as ChartJS } from 'chart.js';
 import { useEffect, useRef, useState } from 'react';
+import { motionAllowed } from '../lib/motion';
 import { useApp } from '../AppContext';
 import { Icon, type IconName } from '../components/Icon';
 import { RideChart } from '../components/RideChart';
@@ -134,11 +135,43 @@ export function Report() {
 }
 
 function StatTile({ label, value, icon, tone }: { label: string; value: number; icon: IconName; tone: string }) {
+  const shown = useCountUp(value);
   return (
     <div className={`stat-tile tone-${tone}`}>
       <Icon name={icon} size={28} />
-      <span className="stat-value">{value}</span>
+      {/* Screen readers get the final number right away; the counting
+          animation is for eyes only (aria-hidden). */}
+      <span className="stat-value" aria-hidden="true">{shown}</span>
+      <span className="visually-hidden">{value}</span>
       <span className="stat-label">{label}</span>
     </div>
   );
+}
+
+/**
+ * Counts from 0 up to `target` over about half a second, so the numbers
+ * feel like they're being added up. With animations off, shows the number
+ * straight away.
+ */
+function useCountUp(target: number, durationMs = 600): number {
+  const [shown, setShown] = useState(() => (motionAllowed() ? 0 : target));
+  useEffect(() => {
+    if (!motionAllowed() || target === 0) {
+      setShown(target);
+      return;
+    }
+    const start = performance.now();
+    let frame = 0;
+    // requestAnimationFrame runs our code right before the screen redraws,
+    // about 60 times a second, which makes the counting smooth.
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - (1 - progress) ** 3; // fast at first, then slows down
+      setShown(Math.round(eased * target));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target, durationMs]);
+  return shown;
 }

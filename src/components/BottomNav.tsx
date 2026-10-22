@@ -31,9 +31,19 @@ const ITEMS: NavItem[] = [
 ];
 
 export function BottomNav({ current }: { current: Route }) {
+  const activeIndex = ITEMS.findIndex((item) => item.matches.includes(current.name));
   return (
     <nav className="bottom-nav" aria-label="Main menu">
       <ul>
+        {/* The blue bar above the current tab. Moving it with "transform"
+            lets motion.css slide it smoothly from tab to tab. */}
+        {activeIndex >= 0 && (
+          <span
+            className="nav-indicator"
+            aria-hidden="true"
+            style={{ width: `${100 / ITEMS.length}%`, transform: `translateX(${activeIndex * 100}%)` }}
+          />
+        )}
         {ITEMS.map((item) => {
           const active = item.matches.includes(current.name);
           return (

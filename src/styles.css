@@ -165,16 +165,7 @@ h1[tabindex='-1']:focus { outline: none; }
   padding: 1rem 1rem 7rem;
 }
 
-/* Simple fade-and-slide when moving between screens. */
-.screen-transition { animation: screen-in 200ms ease-out; }
-@keyframes screen-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
-}
-/* People who get motion sickness can turn off animations in their phone settings. */
-@media (prefers-reduced-motion: reduce) {
-  .screen-transition { animation: none; }
-}
+/* All animations live in motion.css, so they can be turned off in one place. */
 
 /* ---------- Forms ---------- */
 .field { margin-bottom: 1.25rem; }
@@ -355,6 +346,7 @@ h1[tabindex='-1']:focus { outline: none; }
   padding-bottom: env(safe-area-inset-bottom);
 }
 .bottom-nav ul {
+  position: relative;
   display: flex;
   max-width: 600px;
   margin: 0 auto;
@@ -377,8 +369,16 @@ h1[tabindex='-1']:focus { outline: none; }
 /* The current screen is shown with color AND a bar on top AND bold text. */
 .bottom-nav a[aria-current='page'] {
   color: var(--color-primary);
-  box-shadow: inset 0 4px 0 var(--color-primary);
   font-weight: 800;
+}
+/* The bar on top of the current tab (with color AND bold text, never color alone). */
+.nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: 0 0 4px 4px;
 }
 
 /* ---------- Text blocks ---------- */
@@ -490,6 +490,8 @@ textarea {
 }
 
 .done-box { display: flex; align-items: center; gap: 0.75rem; color: var(--color-good); }
+/* The "Saved" check: a pale green circle with a green check mark. */
+.saved-check circle { fill: var(--color-good-bg); }
 .done-box h2 { margin: 0.5rem 0; font-size: 1.6rem; }
 .done-box h2:focus { outline: none; }
 
@@ -603,13 +605,7 @@ textarea {
   background: var(--color-toast-bg);
   color: var(--color-text);
   box-shadow: 0 8px 30px rgb(0 0 0 / 0.3);
-  animation: toast-in 300ms ease-out;
 }
-@keyframes toast-in {
-  from { transform: translate(-50%, -120%); }
-  to { transform: translate(-50%, 0); }
-}
-@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 .toast-app { display: flex; align-items: center; gap: 0.4rem; font-size: 1rem; color: var(--color-muted); }
 .toast-app img { border-radius: 5px; }
 .toast-title { margin: 0.25rem 0 0; font-weight: 700; }
@@ -691,10 +687,8 @@ textarea {
   color: var(--color-snackbar-text);
   box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
   pointer-events: auto;
-  animation: snackbar-in 200ms ease-out;
 }
 .snackbar span { flex: 1; font-weight: 600; }
-@keyframes snackbar-in { from { opacity: 0; transform: translateY(12px); } }
 .snackbar-action,
 .snackbar-close {
   min-width: var(--tap-size);
@@ -724,14 +718,6 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .button-secondary:active, .button-danger:active, .answer-button:active, .card-link:active,
 .chip:active, .choice-card:active, .bottom-nav a:active, .link-button:active,
 .snackbar-action:active, .demo-banner:active { background-color: var(--color-pressed); }
-/* A tiny "push in" — skipped for people who turn off motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .button-primary, .button-secondary, .button-danger, .button-danger-solid, .answer-button {
-    transition: transform 80ms ease-out, filter 80ms, background-color 80ms;
-  }
-  .button-primary:active:not(:disabled), .button-secondary:active, .button-danger:active,
-  .button-danger-solid:active, .answer-button:active { transform: scale(0.98); }
-}
 
 /* ---------- Very large text ----------
    In a media query, "em" is based on the user's text-size setting, not the
@@ -748,6 +734,9 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
   .header-bar { flex-wrap: wrap; }
   .bottom-nav ul { display: grid; grid-template-columns: 1fr; }
   .bottom-nav a { flex-direction: row; gap: 0.5rem; padding: 0.5rem; }
+  /* Tabs are stacked here, so mark the current one with a side bar instead. */
+  .nav-indicator { display: none; }
+  .bottom-nav a[aria-current='page'] { box-shadow: inset 6px 0 0 var(--color-primary); }
   /* Side-by-side layouts become one column. */
   .stat-grid { grid-template-columns: 1fr; }
   .ride-details { display: block; }
