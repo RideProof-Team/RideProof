@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateProfile } from './validateProfile';
-import { listStates } from './stateRules';
+import { getStateRule, listStates } from './stateRules';
 import type { Profile } from '../types';
 
 const good: Profile = {
@@ -35,18 +35,29 @@ describe('validateProfile', () => {
     expect(validateProfile({ ...good, state: 'ZZ' }).state).toBeDefined();
   });
 
+  it('accepts a valid state even when detailed Medicaid rules are not available yet', () => {
+    expect(validateProfile({ ...good, state: 'AK' }).state).toBeUndefined();
+  });
+
   it('rejects a phone number that is too short', () => {
     expect(validateProfile({ ...good, rideCompanyPhone: '555' }).rideCompanyPhone).toBeDefined();
   });
 });
 
 describe('state rules file', () => {
-  it('has 3 example states, all marked as placeholders', () => {
+  it('offers all 50 states and Washington, DC in alphabetical order', () => {
     const states = listStates();
-    expect(states).toHaveLength(3);
-    for (const state of states) {
-      expect(state.isPlaceholder).toBe(true);
-      expect(state.bookingWindowBusinessDays).toBeGreaterThan(0);
+    expect(states).toHaveLength(51);
+    expect(states[0]).toEqual({ code: 'AL', name: 'Alabama' });
+    expect(states.at(-1)).toEqual({ code: 'WY', name: 'Wyoming' });
+    expect(states).toContainEqual({ code: 'DC', name: 'Washington, DC' });
+  });
+
+  it('keeps the existing detailed example rules available', () => {
+    for (const code of ['CA', 'TX', 'WA']) {
+      const rule = getStateRule(code);
+      expect(rule?.isPlaceholder).toBe(true);
+      expect(rule?.bookingWindowBusinessDays).toBeGreaterThan(0);
     }
   });
 });
