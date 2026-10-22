@@ -162,7 +162,11 @@ function RideCard({ log }: { log: RideLog }) {
         <dt>Appointment</dt>
         <dd>{OUTCOME_LABELS[log.appointmentOutcome]}</dd>
         <dt>Ride home</dt>
-        <dd>{RETURN_LABELS[log.returnRideStatus]}</dd>
+        <dd>
+          {log.returnRideStatus === 'late' && log.returnMinutesLate
+            ? `Late (${MINUTES_LATE_SHORT[log.returnMinutesLate]})`
+            : RETURN_LABELS[log.returnRideStatus]}
+        </dd>
         {log.notes && (
           <>
             <dt>Notes</dt>

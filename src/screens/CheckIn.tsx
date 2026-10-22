@@ -337,6 +337,22 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
         />
       );
       break;
+    case 'returnHowLate':
+      question = 'How late was the ride home?';
+      content = (
+        <Options
+          picked={picked}
+          selected={answers.returnMinutesLate}
+          onPick={(v) => answer({ returnMinutesLate: v })}
+          options={([15, 30, 60] as const).map((m) => ({
+            value: m,
+            label: MINUTES_LATE_LABELS[m],
+            icon: 'clock',
+            tone: 'late',
+          }))}
+        />
+      );
+      break;
     case 'notes':
       question = 'Anything else to note?';
       content = (

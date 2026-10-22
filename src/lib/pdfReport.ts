@@ -10,6 +10,7 @@ import { APPOINTMENT_TYPE_LABELS, MINUTES_LATE_SHORT, OUTCOME_LABELS, PICKUP_LAB
 import { pickupTimesText } from './complaintLetter';
 import { PdfWriter, pdfSafe } from './pdfWriter';
 import { computeStats, headline, logsInRange, type ReportPeriod } from './reportStats';
+import { timeLostHeadline, timeLostNotCounted } from './timeLost';
 import { stateName } from './stateRules';
 
 const FOOTER =
@@ -25,7 +26,12 @@ interface ReportInput {
   chartImage: { dataUrl: string; width: number; height: number } | null;
 }
 
-export async function downloadReportPdf({ profile, logs, period, today, chartImage }: ReportInput) {
+export async function downloadReportPdf(input: ReportInput) {
+  buildReportPdf(input).save(`RideConnect-report-${input.period.from}-to-${input.period.to}.pdf`);
+}
+
+/** Make the report PDF (without saving it), so tests can check what's in it. */
+export function buildReportPdf({ profile, logs, period, today, chartImage }: ReportInput): PdfWriter {
   const pdf = new PdfWriter();
   const stats = computeStats(logs, period.from, period.to);
   const rides = logsInRange(logs, period.from, period.to);
@@ -46,6 +52,11 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
   // ----- Summary numbers -----
   pdf.text('Summary', { size: 14, bold: true });
   pdf.text(headline(stats), { bold: true });
+  // Time lost: the same sentence the Report screen shows.
+  if (timeLostHeadline(stats)) {
+    pdf.text(`${timeLostHeadline(stats)}.`, { bold: true, gapAfter: 2 });
+    if (timeLostNotCounted(stats)) pdf.text(timeLostNotCounted(stats), { size: 10, italic: true });
+  }
   const summaryRows: [string, number][] = [
     ['Total rides logged', stats.totalRides],
     ['Picked up on time', stats.onTime],
@@ -109,7 +120,9 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
       `${APPOINTMENT_TYPE_LABELS[ride.appointmentType]}, ${ride.clinicName}`,
       [pickup, pickupTimesText(ride)].filter(Boolean).join(' '),
       OUTCOME_LABELS[ride.appointmentOutcome],
-      RETURN_LABELS[ride.returnRideStatus],
+      ride.returnRideStatus === 'late' && ride.returnMinutesLate
+        ? `Late (${MINUTES_LATE_SHORT[ride.returnMinutesLate]})`
+        : RETURN_LABELS[ride.returnRideStatus],
     ];
     pdf.doc.setFont('helvetica', 'normal');
     pdf.doc.setFontSize(10);
@@ -134,7 +147,7 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
   }
 
   pdf.addFooters(FOOTER);
-  pdf.save(`RideConnect-report-${period.from}-to-${period.to}.pdf`);
+  return pdf;
 }
 
 /** Save the (possibly edited) complaint letter as a PDF. */

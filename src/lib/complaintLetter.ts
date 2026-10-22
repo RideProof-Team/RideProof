@@ -13,6 +13,7 @@ import type { AppointmentType, Profile, RideLog } from '../types';
 import { formatLongDate, formatTime, parseDate } from './dates';
 import { computeStats, logsInRange, plural, type ReportPeriod } from './reportStats';
 import type { StateRule } from './stateRules';
+import { timeLostLetterSentence } from './timeLost';
 
 /** "October 14" or "October 14, 2026". */
 function monthDay(date: string, withYear: boolean): string {
@@ -138,7 +139,15 @@ export function describeProblem(log: RideLog): string {
   if (log.appointmentOutcome === 'missed') parts.push(`I missed my ${TYPE_WORDS[log.appointmentType]} appointment`);
   if (log.appointmentOutcome === 'late') parts.push('I arrived late to my appointment');
   if (log.returnRideStatus === 'never_came') parts.push('My ride home never came');
-  if (log.returnRideStatus === 'late') parts.push('My ride home was late');
+  if (log.returnRideStatus === 'late') {
+    parts.push(
+      log.returnMinutesLate === 60
+        ? 'My ride home was an hour or more late'
+        : log.returnMinutesLate
+          ? `My ride home was about ${log.returnMinutesLate} minutes late`
+          : 'My ride home was late',
+    );
+  }
   let line = parts.join('. ') + '.';
   const times = pickupTimesText(log);
   if (times) line += ` Pickup was ${times.charAt(0).toLowerCase()}${times.slice(1)}`;
@@ -186,7 +195,9 @@ export function buildComplaintLetter({ profile, logs, period, today, stateRule }
       'for rides to my medical appointments. I am writing to file a formal complaint about repeated problems with these rides.',
   );
   lines.push('');
-  lines.push([summarySentence(inRange), ...extraSentences(inRange)].filter(Boolean).join(' '));
+  lines.push(
+    [summarySentence(inRange), ...extraSentences(inRange), timeLostLetterSentence(stats)].filter(Boolean).join(' '),
+  );
   lines.push('');
   lines.push(
     `In total, I logged ${plural(stats.totalRides, 'ride', 'rides')} during this time, and ` +

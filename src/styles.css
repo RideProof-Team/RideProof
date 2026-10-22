@@ -880,3 +880,19 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .time-details { margin: 0.75rem 0; }
 .time-details summary { min-height: var(--tap-size); display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--color-primary); }
 .time-details .field { margin: 0.5rem 0 0.75rem; }
+
+/* "At least 3 hours spent waiting" on the Report screen. */
+.time-lost {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-warn);
+  border-left-width: 8px;
+  border-radius: var(--radius);
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+.time-lost-main { margin: 0; font-size: 1.3rem; font-weight: 800; color: var(--color-text); }
+.time-lost-note { margin: 0.25rem 0 0; font-size: 1rem; color: var(--color-text); }

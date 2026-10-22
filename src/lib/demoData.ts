@@ -7,6 +7,8 @@
 //   - 5 late pickups (15, 30, and 60+ minutes)
 //   - 2 rides that never came (one made her miss dialysis on Oct 14)
 //   - 1 ride home that never came ("Waited 2 hours for ride home")
+//   - 1 ride home about 30 minutes late
+//   - at least 3 hours spent waiting in total (see timeLost.ts)
 // "Today" in demo mode is DEMO_TODAY (Friday, Oct 30, 2026): there's a
 // dialysis appointment to check in on, and a cardiology appointment on
 // Tuesday whose ride isn't booked yet, so a booking reminder shows.
@@ -100,7 +102,8 @@ export const DEMO_RIDE_LOGS: RideLog[] = [
     notes: 'No driver came. Paid for a taxi to get there.',
   }),
   ride('2026-10-23', { pickupStatus: 'late', minutesLate: 30, appointmentOutcome: 'late' }),
-  ride('2026-10-26', {}),
+  // The ride home was about 30 minutes late (shows up in "time spent waiting").
+  ride('2026-10-26', { returnRideStatus: 'late', returnMinutesLate: 30 }),
   ride('2026-10-28', {}),
 ];
 

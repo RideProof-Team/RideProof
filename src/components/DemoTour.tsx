@@ -45,7 +45,7 @@ const STEPS: TourStep[] = [
     route: { name: 'report' },
     chapter: 'Report',
     title: 'See whether one bad ride is becoming a pattern',
-    description: 'Counts, a weekly chart, and an accessible data table summarize what the saved sample rides show over time.',
+    description: 'Counts, the total time spent waiting, a weekly chart, and an accessible data table summarize what the saved sample rides show over time.',
     notice: 'Exports only happen when you choose them. The automatic tour does not download anything.',
   },
   {

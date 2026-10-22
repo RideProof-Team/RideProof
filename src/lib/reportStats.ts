@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 import type { RideLog } from '../types';
 import { addDays, formatShortDate, parseDate, toDateString, weekdayOf } from './dates';
+import { totalWait, type WaitPrecision } from './timeLost';
 
 export interface RideStats {
   totalRides: number;
@@ -20,6 +21,14 @@ export interface RideStats {
   /** Rides home that never came (rider was stranded). */
   strandedReturns: number;
   lateReturns: number;
+  /** Minutes spent waiting for late (or timed never-came) rides. See timeLost.ts. */
+  waitMinutes: number;
+  /** 'at_least' if an "hour or more" answer was counted as 60. */
+  waitPrecision: WaitPrecision;
+  /** Rides that never came with no measured wait (not in waitMinutes). */
+  untimedNeverCame: number;
+  /** Late rides home with no minutes recorded (older check-ins). */
+  untimedLate: number;
   /** First and last ride dates in the period (null if no rides). */
   firstDate: string | null;
   lastDate: string | null;
@@ -48,6 +57,7 @@ export function computeStats(logs: RideLog[], from: string, to: string): RideSta
     missedAppointments: count((l) => l.appointmentOutcome === 'missed'),
     strandedReturns: count((l) => l.returnRideStatus === 'never_came'),
     lateReturns: count((l) => l.returnRideStatus === 'late'),
+    ...totalWait(inRange),
     firstDate: inRange[0]?.rideDate ?? null,
     lastDate: inRange[inRange.length - 1]?.rideDate ?? null,
   };

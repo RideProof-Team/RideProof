@@ -113,6 +113,16 @@ function readRideLog(v: unknown): RideLog {
   ) {
     throw new BackupError('A ride record in this file is damaged.');
   }
+  // Fields added later. Older backups don't have them (that's fine), but if
+  // they're present they must make sense.
+  if (v.returnMinutesLate !== undefined && v.returnMinutesLate !== null && !oneOf(v.returnMinutesLate, [15, 30, 60] as const)) {
+    throw new BackupError(`The ride record for ${text(v.rideDate)} has a damaged "how late was the ride home" answer.`);
+  }
+  for (const field of ['pickupWaitMinutes', 'returnWaitMinutes'] as const) {
+    if (v[field] !== undefined && !isWaitMinutes(v[field])) {
+      throw new BackupError(`The ride record for ${text(v.rideDate)} has a damaged wait time. It must be a whole number of minutes.`);
+    }
+  }
   return {
     id: text(v.id),
     appointmentId: text(v.appointmentId),
@@ -127,7 +137,15 @@ function readRideLog(v: unknown): RideLog {
     recordedAt: text(v.recordedAt),
     scheduledPickup: TIME.test(text(v.scheduledPickup)) ? text(v.scheduledPickup) : undefined,
     actualPickup: TIME.test(text(v.actualPickup)) ? text(v.actualPickup) : undefined,
+    returnMinutesLate: oneOf(v.returnMinutesLate, [15, 30, 60] as const) ? v.returnMinutesLate : null,
+    ...(isWaitMinutes(v.pickupWaitMinutes) ? { pickupWaitMinutes: v.pickupWaitMinutes } : {}),
+    ...(isWaitMinutes(v.returnWaitMinutes) ? { returnWaitMinutes: v.returnWaitMinutes } : {}),
   };
+}
+
+/** A measured wait: a whole number of minutes, from 0 up to one day. */
+function isWaitMinutes(value: unknown): value is number {
+  return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 24 * 60;
 }
 
 /** Read the text of a backup file. Throws a BackupError if it isn't valid. */

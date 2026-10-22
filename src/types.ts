@@ -99,4 +99,18 @@ export interface RideLog {
   /** Optional evidence: when pickup was scheduled, and when the driver came ("HH:MM"). */
   scheduledPickup?: string;
   actualPickup?: string;
+  /**
+   * How late the ride home was (only when returnRideStatus is 'late').
+   * Optional: check-ins saved before this question existed don't have it.
+   */
+  returnMinutesLate?: MinutesLate | null;
+  /**
+   * EXACT minutes waited, measured by the "Where's my ride?" timer:
+   *   pickupWaitMinutes: minutes past the scheduled pickup time (if the ride
+   *     never came, how long the rider waited before giving up).
+   *   returnWaitMinutes: minutes waited for the ride home.
+   * When present, these are used instead of the 15 / 30 / 60+ choices.
+   */
+  pickupWaitMinutes?: number;
+  returnWaitMinutes?: number;
 }

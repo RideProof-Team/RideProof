@@ -13,6 +13,7 @@ import { Icon, type IconName } from '../components/Icon';
 import { RideChart } from '../components/RideChart';
 import { Screen } from '../components/Screen';
 import { computeStats, findPeriod, headline, reportPeriods, weeklyCounts } from '../lib/reportStats';
+import { timeLostHeadline, timeLostNotCounted } from '../lib/timeLost';
 import { markReportViewed } from '../lib/onboarding';
 import { routeToHash } from '../lib/router';
 import { useRideData } from '../lib/useRideData';
@@ -67,6 +68,15 @@ export function Report() {
       </div>
 
       <p className="headline">{headline(stats)}</p>
+      {timeLostHeadline(stats) && (
+        <div className="time-lost">
+          <Icon name="clock" size={32} />
+          <div>
+            <p className="time-lost-main">{timeLostHeadline(stats)}</p>
+            {timeLostNotCounted(stats) && <p className="time-lost-note">{timeLostNotCounted(stats)}</p>}
+          </div>
+        </div>
+      )}
 
       <div className="stat-grid">
         <StatTile label="Total rides" value={stats.totalRides} icon="list" tone="neutral" />
