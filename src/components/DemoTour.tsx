@@ -34,10 +34,12 @@ export function DemoTour({ route, onClose }: { route: Route; onClose(): void }) 
     const pauseHidden = () => { if (document.hidden) setPlaying(false); };
     document.addEventListener('pointerdown', pauseOutside);
     document.addEventListener('keydown', pauseOutside);
+    document.addEventListener('wheel', pauseOutside, { passive: true });
     document.addEventListener('visibilitychange', pauseHidden);
     return () => {
       document.removeEventListener('pointerdown', pauseOutside);
       document.removeEventListener('keydown', pauseOutside);
+      document.removeEventListener('wheel', pauseOutside);
       document.removeEventListener('visibilitychange', pauseHidden);
     };
   }, []);
