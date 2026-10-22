@@ -22,6 +22,32 @@ export interface StateRule {
   complaintContacts: ComplaintContact[];
 }
 
+export interface StateOption {
+  code: string;
+  name: string;
+}
+
+// State selection is intentionally separate from the smaller set of detailed
+// Medicaid rules. A rider can use RideConnect anywhere in the United States;
+// screens that need state-specific rules already handle an unavailable rule.
+const stateNames: Record<string, string> = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', DC: 'Washington, DC', FL: 'Florida',
+  GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana',
+  IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine',
+  MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+  MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire',
+  NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota',
+  OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island',
+  SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah',
+  VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin',
+  WY: 'Wyoming',
+};
+
+const allStates: StateOption[] = Object.entries(stateNames)
+  .map(([code, name]) => ({ code, name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
 // Turn the JSON object { WA: {...}, CA: {...} } into a list of StateRule,
 // sorted alphabetically by state name for the dropdown on the setup screen.
 const allRules: StateRule[] = Object.entries(rawRules.states)
@@ -34,8 +60,12 @@ const allRules: StateRule[] = Object.entries(rawRules.states)
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
-export function listStates(): StateRule[] {
-  return allRules;
+export function listStates(): StateOption[] {
+  return allStates;
+}
+
+export function isStateCode(code: string): boolean {
+  return Object.hasOwn(stateNames, code);
 }
 
 /** Look up one state's rules. Returns undefined if we don't have that state. */
