@@ -49,9 +49,9 @@ describe('DemoTour', () => {
   it('shows a compact chapter rail and advances the automatic demo after a visible countdown', async () => {
     await render();
 
-    expect(container.textContent).toContain('Stop 1 of 8');
+    expect(container.textContent).toContain('Stop 1 of 10');
     expect(container.textContent).toContain('Next stop in 15 seconds');
-    expect(container.querySelectorAll('.demo-tour-chapter')).toHaveLength(8);
+    expect(container.querySelectorAll('.demo-tour-chapter')).toHaveLength(10);
     expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('1');
 
     await act(async () => vi.advanceTimersByTime(15000));

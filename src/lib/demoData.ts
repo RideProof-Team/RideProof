@@ -7,14 +7,26 @@
 //   - 5 late pickups (15, 30, and 60+ minutes)
 //   - 2 rides that never came (one made her miss dialysis on Oct 14)
 //   - 1 ride home that never came ("Waited 2 hours for ride home")
+//   - 1 ride home about 30 minutes late
+//   - at least 3 hours spent waiting in total (see timeLost.ts)
+// Right now (noon on the simulated demo clock), Rosa is done with dialysis
+// and has been waiting 10 minutes for her ride home (the wait timer).
+// On Oct 16 Maria emailed a complaint to Rosa's health plan. Two weeks
+// later there's still no answer, so Home asks "Did you hear back?".
+// On Oct 29 Maria called to book Tuesday's cardiology ride but couldn't
+// get through (on hold, then the call dropped). It's saved as evidence,
+// and the ride still shows as NOT booked.
 // "Today" in demo mode is DEMO_TODAY (Friday, Oct 30, 2026): there's a
 // dialysis appointment to check in on, and a cardiology appointment on
 // Tuesday whose ride isn't booked yet, so a booking reminder shows.
 //
 // The demo data is only ever written to the DEMO database (see storage.ts).
 // ---------------------------------------------------------------------------
-import type { Appointment, Profile, RideLog } from '../types';
+import type { ActiveWait, Appointment, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
+import { DEMO_TODAY, nowMoment, resetDemoClock } from './clock';
+import { getLanguage } from './i18n';
 import type { Storage } from './storage';
+import { waitId } from './waitTimer';
 
 export const DEMO_PROFILE: Profile = {
   role: 'caregiver',
@@ -24,6 +36,8 @@ export const DEMO_PROFILE: Profile = {
   rideCompanyName: 'Sample Ride Co.',
   rideCompanyPhone: '555-0100', // 555-01xx numbers are reserved for fiction
   healthPlanName: 'Sample Health Plan',
+  mobilityNeeds: 'walker',
+  homeAddress: '300 Sample Lane, Sampletown', // fake
 };
 
 export const DEMO_APPOINTMENTS: Appointment[] = [
@@ -100,8 +114,37 @@ export const DEMO_RIDE_LOGS: RideLog[] = [
     notes: 'No driver came. Paid for a taxi to get there.',
   }),
   ride('2026-10-23', { pickupStatus: 'late', minutesLate: 30, appointmentOutcome: 'late' }),
-  ride('2026-10-26', {}),
+  // The ride home was about 30 minutes late (shows up in "time spent waiting").
+  ride('2026-10-26', { returnRideStatus: 'late', returnMinutesLate: 30 }),
   ride('2026-10-28', {}),
+];
+
+/** The complaint Maria sent on Oct 16. 14 days later (demo "today") it's still waiting. */
+export const DEMO_COMPLAINTS: SentComplaint[] = [
+  {
+    id: 'demo-complaint',
+    sentDate: '2026-10-16',
+    sentTo: 'Sample Health Plan',
+    method: 'email',
+    referenceNumber: 'DEMO-C-1016', // fake
+    status: 'waiting',
+    notes: 'Sent the letter to member services. They said to expect an answer within 10 business days.',
+  },
+];
+
+/** Maria's call on Thursday to book Tuesday's cardiology ride didn't get through. */
+export const DEMO_BOOKING_ATTEMPTS: FailedBooking[] = [
+  {
+    id: 'demo-booking-call',
+    appointmentId: 'demo-cardiology',
+    tripDate: '2026-11-03',
+    clinicName: 'Sample Heart Clinic (cardiology)',
+    appointmentType: 'specialist',
+    attemptedOn: '2026-10-29',
+    recordedAt: '2026-10-29T17:45:00.000Z',
+    reason: 'no_answer',
+    details: 'On hold for 25 minutes, then the call dropped.',
+  },
 ];
 
 /** Refuse to touch anything except the demo database. */
@@ -112,11 +155,59 @@ function requireDemo(storage: Storage) {
 }
 
 /** Write the starting demo story into demo storage. */
+/**
+ * Today (Friday, noon on the simulated demo clock): Rosa finished dialysis
+ * and has been waiting 10 minutes for her ride home. Built fresh each time,
+ * because "10 minutes ago" depends on when the demo clock started.
+ */
+export function demoWaits(now: Date): ActiveWait[] {
+  return [
+    {
+      id: waitId('demo-dialysis', DEMO_TODAY, 'return'),
+      appointmentId: 'demo-dialysis',
+      tripDate: DEMO_TODAY,
+      leg: 'return',
+      scheduledTime: null,
+      scheduledIsEstimate: false,
+      startedAt: new Date(now.getTime() - 10 * 60_000).toISOString(),
+      promptsShown: [],
+    },
+  ];
+}
+
+/**
+ * The notes Maria "typed" are records, not app text, so t() doesn't change
+ * them. When the demo is started (or reset) in Spanish, the story is written
+ * with Spanish notes instead, so a Spanish demo reads naturally.
+ */
+export const DEMO_NOTES_ES: Record<string, string> = {
+  'Called the ride company twice. No driver came. Missed dialysis.':
+    'Llamé dos veces a la compañía de transporte. No vino nadie. Rosa perdió la diálisis.',
+  'Driver came over an hour late. Treatment was cut short.':
+    'El conductor llegó con más de una hora de retraso. Tuvieron que acortar el tratamiento.',
+  'Waited 2 hours for ride home. A neighbor finally gave a ride.':
+    'Esperó 2 horas el viaje de regreso. Al final la llevó un vecino.',
+  'No driver came. Paid for a taxi to get there.': 'No vino nadie. Pagamos un taxi para llegar.',
+  'Sent the letter to member services. They said to expect an answer within 10 business days.':
+    'Envié la carta a servicios para miembros. Dijeron que responderían en 10 días hábiles.',
+  'On hold for 25 minutes, then the call dropped.': 'En espera 25 minutos y luego se cortó la llamada.',
+};
+
+/** The note in the demo's language (Spanish if the app is in Spanish). */
+function demoNote(note: string): string {
+  return getLanguage() === 'es' ? (DEMO_NOTES_ES[note] ?? note) : note;
+}
+
 async function writeDemoData(storage: Storage) {
   requireDemo(storage);
   await storage.saveProfile(DEMO_PROFILE);
   for (const appointment of DEMO_APPOINTMENTS) await storage.saveAppointment(appointment);
-  for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog(log);
+  for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog({ ...log, notes: demoNote(log.notes) });
+  for (const complaint of DEMO_COMPLAINTS) await storage.saveComplaint({ ...complaint, notes: demoNote(complaint.notes) });
+  for (const attempt of DEMO_BOOKING_ATTEMPTS) await storage.saveBookingAttempt({ ...attempt, details: demoNote(attempt.details) });
+  // Start the simulated clock at noon, then add the running wait timer.
+  resetDemoClock();
+  for (const wait of demoWaits(nowMoment('demo'))) await storage.saveWait(wait);
 }
 
 /** The first time demo mode is turned on, fill the demo database. */

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// useRideData.ts — a React hook that loads appointments AND ride logs from
+// useRideData.ts — a React hook that loads appointments, ride logs, timers, and complaints from
 // storage. Most screens need both, so it's written once here.
 //
 // Returns `data` (undefined while still loading) and a reload() function
@@ -8,17 +8,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../AppContext';
 import type { Storage } from './storage';
-import type { Appointment, RideLog } from '../types';
+import type { ActiveWait, Appointment, FailedBooking, RideLog, SentComplaint } from '../types';
 
 export interface RideData {
   appointments: Appointment[];
   rideLogs: RideLog[];
+  /** "Where's my ride?" timers (running or just finished). */
+  waits: ActiveWait[];
+  /** Complaints the rider sent (the follow-up tracker). */
+  complaints: SentComplaint[];
+  /** Calls to book a ride that didn't work (evidence). */
+  bookingAttempts: FailedBooking[];
 }
 
 async function loadAll(storage: Storage): Promise<RideData> {
   // Promise.all runs both loads at the same time instead of one after another.
-  const [appointments, rideLogs] = await Promise.all([storage.listAppointments(), storage.listRideLogs()]);
-  return { appointments, rideLogs };
+  const [appointments, rideLogs, waits, complaints, bookingAttempts] = await Promise.all([
+    storage.listAppointments(),
+    storage.listRideLogs(),
+    storage.listWaits(),
+    storage.listComplaints(),
+    storage.listBookingAttempts(),
+  ]);
+  return { appointments, rideLogs, waits, complaints, bookingAttempts };
 }
 
 export function useRideData() {

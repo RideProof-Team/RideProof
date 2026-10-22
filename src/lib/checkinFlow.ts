@@ -2,7 +2,8 @@
 // checkinFlow.ts — the order of questions in the ride check-in.
 //
 // The check-in asks ONE question per screen, with big buttons:
-//   pickup -> how late (only if late) -> appointment outcome -> ride home -> notes
+//   pickup -> how late (only if late) -> appointment outcome -> ride home
+//   -> how late was the ride home (only if late) -> notes
 // This file decides which question comes next, so the screen itself
 // stays simple. It has no screen code, so it's easy to test.
 // ---------------------------------------------------------------------------
@@ -18,7 +19,7 @@ import type {
 import { addDays } from './dates';
 import { tripsBetween, type Trip } from './recurrence';
 
-export type Step = 'pickup' | 'howLate' | 'outcome' | 'returnRide' | 'notes';
+export type Step = 'pickup' | 'howLate' | 'outcome' | 'returnRide' | 'returnHowLate' | 'notes';
 
 /** The answers so far. Questions not answered yet are undefined. */
 export interface Answers {
@@ -26,17 +27,23 @@ export interface Answers {
   minutesLate?: MinutesLate;
   appointmentOutcome?: AppointmentOutcome;
   returnRideStatus?: ReturnRideStatus;
+  returnMinutesLate?: MinutesLate;
   notes: string;
   /** Optional "HH:MM" times for extra evidence. */
   scheduledPickup?: string;
   actualPickup?: string;
+  /** Exact minutes measured by the wait timer (not typed by the rider). */
+  pickupWaitMinutes?: number;
+  returnWaitMinutes?: number;
 }
 
-/** Which steps apply, given the answers. "How late?" only appears if the ride was late. */
+/** Which steps apply, given the answers. "How late?" only appears if that ride was late. */
 export function stepsFor(answers: Answers): Step[] {
   const steps: Step[] = ['pickup'];
   if (answers.pickupStatus === 'late') steps.push('howLate');
-  steps.push('outcome', 'returnRide', 'notes');
+  steps.push('outcome', 'returnRide');
+  if (answers.returnRideStatus === 'late') steps.push('returnHowLate');
+  steps.push('notes');
   return steps;
 }
 
@@ -59,11 +66,14 @@ export function answersFromLog(log: RideLog): Answers {
     minutesLate: log.minutesLate ?? undefined,
     appointmentOutcome: log.appointmentOutcome,
     returnRideStatus: log.returnRideStatus,
+    ...(log.returnMinutesLate ? { returnMinutesLate: log.returnMinutesLate } : {}),
     notes: log.notes,
     // Only include times that were actually saved, so an untouched edit
     // counts as "no changes".
     ...(log.scheduledPickup ? { scheduledPickup: log.scheduledPickup } : {}),
     ...(log.actualPickup ? { actualPickup: log.actualPickup } : {}),
+    ...(log.pickupWaitMinutes !== undefined ? { pickupWaitMinutes: log.pickupWaitMinutes } : {}),
+    ...(log.returnWaitMinutes !== undefined ? { returnWaitMinutes: log.returnWaitMinutes } : {}),
   };
 }
 
@@ -90,10 +100,20 @@ export function buildRideLog(answers: Answers, details: LogDetails): RideLog {
     minutesLate: isLate ? answers.minutesLate ?? null : null,
     appointmentOutcome: answers.appointmentOutcome,
     returnRideStatus: answers.returnRideStatus,
+    // Same idea as minutesLate: only kept if the ride home was late.
+    returnMinutesLate: answers.returnRideStatus === 'late' ? answers.returnMinutesLate ?? null : null,
     notes: answers.notes.trim(),
     scheduledPickup: answers.scheduledPickup || undefined,
     // There's no "driver came at" time if the driver never came.
     actualPickup: answers.pickupStatus === 'never_came' ? undefined : answers.actualPickup || undefined,
+    // Timer minutes only make sense if the ride was late or never came. If
+    // the rider changed the answer to "on time", drop them.
+    ...(answers.pickupWaitMinutes !== undefined && answers.pickupStatus !== 'on_time'
+      ? { pickupWaitMinutes: answers.pickupWaitMinutes }
+      : {}),
+    ...(answers.returnWaitMinutes !== undefined && (answers.returnRideStatus === 'late' || answers.returnRideStatus === 'never_came')
+      ? { returnWaitMinutes: answers.returnWaitMinutes }
+      : {}),
   };
 }
 

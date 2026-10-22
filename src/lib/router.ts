@@ -24,9 +24,22 @@ export type Route =
   /** No appointmentId/date = "today's ride". */
   | { name: 'checkin'; appointmentId?: string; date?: string }
   | { name: 'history' }
+  /** "Call to book": what to say, then "Did you get it booked?" for one trip. */
+  | { name: 'call'; appointmentId: string; date: string }
+  /** The "Where's my ride?" waiting screen. No id = the timer that's running. */
+  | { name: 'wait'; id?: string }
   | { name: 'report' }
-  /** periodId: which report period the letter covers (default: past month). */
-  | { name: 'complaint'; periodId?: string }
+  /**
+   * The complaint letter. periodId: which report period it covers (default:
+   * past month). followUpOf: write a FOLLOW-UP letter for that sent complaint.
+   */
+  | { name: 'complaint'; periodId?: string; followUpOf?: string }
+  /** "Share with my care team" summary for a report period. */
+  | { name: 'care-team'; periodId?: string }
+  /** Complaints the rider sent. id: open that one's "Update" box. */
+  | { name: 'complaints'; id?: string }
+  /** "I sent this complaint" form. followUpOf: it was a follow-up letter. */
+  | { name: 'complaint-sent'; followUpOf?: string }
   | { name: 'help' }
   | { name: 'settings' }
   | { name: 'profile-edit' };
@@ -51,6 +64,18 @@ export function parseRoute(hash: string): Route {
     if (second && third) return { name: 'checkin', appointmentId: decodeURIComponent(second), date: third };
     return { name: 'checkin' };
   }
+  if (first === 'call' && second && third) return { name: 'call', appointmentId: decodeURIComponent(second), date: third };
+  if (first === 'wait') return second ? { name: 'wait', id: decodeURIComponent(second) } : { name: 'wait' };
+  if (first === 'complaints') {
+    // "#/complaints/new", "#/complaints/<id>", "#/complaints/<id>/follow-up",
+    // "#/complaints/<id>/follow-up/sent"
+    if (second === 'new') return { name: 'complaint-sent' };
+    if (!second) return { name: 'complaints' };
+    const id = decodeURIComponent(second);
+    if (third === 'follow-up') return parts[3] === 'sent' ? { name: 'complaint-sent', followUpOf: id } : { name: 'complaint', followUpOf: id };
+    return { name: 'complaints', id };
+  }
+  if (first === 'care-team') return second ? { name: 'care-team', periodId: second } : { name: 'care-team' };
   if (first === 'complaint') return second ? { name: 'complaint', periodId: second } : { name: 'complaint' };
   if (first === 'settings' && second === 'profile') return { name: 'profile-edit' };
   const simple = SIMPLE_ROUTES.find((name) => name === first);
@@ -69,8 +94,19 @@ export function routeToHash(route: Route): string {
       return route.appointmentId && route.date
         ? `#/checkin/${encodeURIComponent(route.appointmentId)}/${route.date}`
         : '#/checkin';
+    case 'call':
+      return `#/call/${encodeURIComponent(route.appointmentId)}/${route.date}`;
+    case 'wait':
+      return route.id ? `#/wait/${encodeURIComponent(route.id)}` : '#/wait';
     case 'complaint':
+      if (route.followUpOf) return `#/complaints/${encodeURIComponent(route.followUpOf)}/follow-up`;
       return route.periodId ? `#/complaint/${route.periodId}` : '#/complaint';
+    case 'care-team':
+      return route.periodId ? `#/care-team/${route.periodId}` : '#/care-team';
+    case 'complaints':
+      return route.id ? `#/complaints/${encodeURIComponent(route.id)}` : '#/complaints';
+    case 'complaint-sent':
+      return route.followUpOf ? `#/complaints/${encodeURIComponent(route.followUpOf)}/follow-up/sent` : '#/complaints/new';
     case 'profile-edit':
       return '#/settings/profile';
     default:

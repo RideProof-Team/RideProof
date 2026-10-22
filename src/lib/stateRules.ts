@@ -72,3 +72,8 @@ export function isStateCode(code: string): boolean {
 export function getStateRule(code: string): StateRule | undefined {
   return allRules.find((rule) => rule.code === code);
 }
+
+/** A state's full name ("Alaska"), for any of the 50 states and DC. */
+export function stateName(code: string): string {
+  return stateNames[code] ?? code;
+}

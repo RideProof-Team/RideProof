@@ -7,6 +7,7 @@
 // Measurements are in "points": 72 points = 1 inch.
 // ---------------------------------------------------------------------------
 import { jsPDF } from 'jspdf';
+import { t } from './i18n';
 
 /**
  * jsPDF's built-in fonts only know basic Western characters. Swap fancy
@@ -73,7 +74,7 @@ export class PdfWriter {
       this.doc.setTextColor(90);
       const lines: string[] = this.doc.splitTextToSize(pdfSafe(footer), this.contentWidth - 60);
       this.doc.text(lines, this.margin, this.pageHeight - this.margin + 4);
-      this.doc.text(`Page ${page} of ${pages}`, this.pageWidth - this.margin, this.pageHeight - this.margin + 4, {
+      this.doc.text(t('Page {page} of {pages}', { page, pages }), this.pageWidth - this.margin, this.pageHeight - this.margin + 4, {
         align: 'right',
       });
       this.doc.setTextColor(0);

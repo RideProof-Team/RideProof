@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 import { useEffect, useRef, type ReactNode } from 'react';
 import { routeToHash, type Route } from '../lib/router';
+import { t } from '../lib/i18n';
 
 interface ScreenProps {
   title: string;
@@ -43,7 +44,7 @@ export function Screen({ title, children, back, className = '' }: ScreenProps) {
     <main className={`screen ${className}`} id="main">
       {back && (
         <a href={routeToHash(back.to)} className="back-link">
-          <span aria-hidden="true">‹</span> Back to {back.label}
+          <span aria-hidden="true">‹</span> {t('Back to {label}', { label: back.label })}
         </a>
       )}
       {/* tabIndex={-1} lets code focus the heading without adding it to the Tab order. */}

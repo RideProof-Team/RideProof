@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { applyUpdate, installApp, usePwa } from '../lib/pwa';
 import { Icon } from './Icon';
+import { t } from '../lib/i18n';
 
 const INSTALL_DISMISSED_KEY = 'rideproof-install-dismissed';
 
@@ -13,9 +14,9 @@ export function UpdateBanner() {
   if (!updateReady) return null;
   return (
     <div className="update-banner" role="status">
-      <span>A new version of RideConnect is ready.</span>
+      <span>{t('A new version of RideConnect is ready.')}</span>
       <button type="button" className="button-primary" onClick={applyUpdate}>
-        Update now
+        {t('Update now')}
       </button>
     </div>
   );
@@ -44,12 +45,12 @@ export function InstallCard() {
 
   return (
     <section className="card card-info" aria-labelledby="install-heading">
-      <h2 id="install-heading">Put RideConnect on your home screen</h2>
-      <p>It opens like a regular app and works without internet.</p>
+      <h2 id="install-heading">{t('Put RideConnect on your home screen')}</h2>
+      <p>{t('It opens like a regular app and works without internet.')}</p>
       <button type="button" className="button-primary" onClick={installApp}>
-        <Icon name="download" /> Install RideConnect
+        <Icon name="download" /> {t('Install RideConnect')}
       </button>
-      <button type="button" className="link-button" onClick={notNow}>Not now</button>
+      <button type="button" className="link-button" onClick={notNow}>{t('Not now')}</button>
     </section>
   );
 }
@@ -60,7 +61,7 @@ export function InstallButton() {
   if (!canInstall) return null;
   return (
     <button type="button" className="button-primary" onClick={installApp}>
-      <Icon name="download" /> Install RideConnect now
+      <Icon name="download" /> {t('Install RideConnect now')}
     </button>
   );
 }

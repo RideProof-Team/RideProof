@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { hideIntro, introHidden, reportViewed } from '../lib/onboarding';
+import { t } from '../lib/i18n';
 import { routeToHash } from '../lib/router';
 import { Icon } from './Icon';
 
@@ -19,20 +20,23 @@ export function GettingStarted({ hasAppointments, hasCheckIns }: Props) {
   const steps = [
     {
       done: hasAppointments,
-      title: 'Add your appointments',
-      detail: 'Include repeating ones, like dialysis. RideConnect will remind you when to book each ride.',
-      link: { href: routeToHash({ name: 'appointment-new' }), label: 'Add an appointment' },
+      id: 'appointments',
+      title: t('Add your appointments'),
+      detail: t('Include repeating ones, like dialysis. RideConnect will remind you when to book each ride.'),
+      link: { href: routeToHash({ name: 'appointment-new' }), label: t('Add an appointment') },
     },
     {
       done: hasCheckIns,
-      title: 'Check in after each ride',
-      detail: 'Tap "Check in on today\'s ride" on this screen. It takes about a minute.',
+      id: 'checkin',
+      title: t('Check in after each ride'),
+      detail: t('Tap "Check in on today\'s ride" on this screen. It takes about a minute.'),
     },
     {
       done: reportViewed(),
-      title: 'See your report',
-      detail: 'When rides go wrong, the report and complaint letter show the pattern.',
-      link: { href: routeToHash({ name: 'report' }), label: 'Open the report' },
+      id: 'report',
+      title: t('See your report'),
+      detail: t('When rides go wrong, the report and complaint letter show the pattern.'),
+      link: { href: routeToHash({ name: 'report' }), label: t('Open the report') },
     },
   ];
   if (hidden || steps.every((s) => s.done)) return null;
@@ -40,17 +44,17 @@ export function GettingStarted({ hasAppointments, hasCheckIns }: Props) {
 
   return (
     <section className="card card-info" aria-labelledby="start-heading">
-      <h2 id="start-heading">Getting started</h2>
+      <h2 id="start-heading">{t('Getting started')}</h2>
       <ol className="start-steps">
         {steps.map((step, i) => (
-          <li key={step.title} className={step.done ? 'done' : undefined}>
+          <li key={step.id} className={step.done ? 'done' : undefined}>
             <span className="start-mark" aria-hidden="true">
               {step.done ? <Icon name="check" size={20} /> : i + 1}
             </span>
             <div>
               <p className="start-title">
                 {step.title}
-                {step.done && <span className="visually-hidden"> (done)</span>}
+                {step.done && <span className="visually-hidden"> {t('(done)')}</span>}
               </p>
               {/* Only the next step shows its details, to keep it short. */}
               {i === next && (
@@ -71,7 +75,7 @@ export function GettingStarted({ hasAppointments, hasCheckIns }: Props) {
           setHidden(true);
         }}
       >
-        Hide this
+        {t('Hide this')}
       </button>
     </section>
   );

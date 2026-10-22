@@ -3,6 +3,7 @@
 // Writing them once means every form in the app is accessible the same way.
 // ---------------------------------------------------------------------------
 import { forwardRef } from 'react';
+import { t } from '../lib/i18n';
 
 interface TextFieldProps {
   id: string;
@@ -47,7 +48,7 @@ export const ErrorSummary = forwardRef<HTMLDivElement, { errors: string[] }>(
     if (errors.length === 0) return null;
     return (
       <div className="error-summary" role="alert" tabIndex={-1} ref={ref}>
-        <p><strong>Please fix these:</strong></p>
+        <p><strong>{t('Please fix these:')}</strong></p>
         <ul>
           {errors.map((message) => <li key={message}>{message}</li>)}
         </ul>

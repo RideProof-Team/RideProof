@@ -880,3 +880,119 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .time-details { margin: 0.75rem 0; }
 .time-details summary { min-height: var(--tap-size); display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--color-primary); }
 .time-details .field { margin: 0.5rem 0 0.75rem; }
+
+/* "At least 3 hours spent waiting" on the Report screen. */
+.time-lost {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-warn);
+  border-left-width: 8px;
+  border-radius: var(--radius);
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+.time-lost-main { margin: 0; font-size: 1.3rem; font-weight: 800; color: var(--color-text); }
+.time-lost-note { margin: 0.25rem 0 0; font-size: 1rem; color: var(--color-text); }
+
+/* ---------- "Where's my ride?" waiting screen ---------- */
+.wait-timer-box {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 3px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: center;
+}
+.wait-timer-label { margin: 0; font-weight: 700; }
+/* Big, clear numbers. "tabular-nums" keeps the digits from jiggling as they change. */
+.wait-timer {
+  margin: 0.25rem 0;
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.wait-detail { margin: 0.25rem 0; }
+.wait-prompt {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 3px solid var(--color-warn);
+  border-radius: var(--radius);
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+.wait-prompt p { margin: 0.2rem 0; color: var(--color-text); }
+.wait-prompt .wait-prompt-title { font-weight: 800; }
+.button-tall { min-height: 56px; }
+.demo-note {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+}
+.timer-status { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; margin: 0.25rem 0; }
+.trip-timers { display: flex; flex-direction: column; }
+.trip-timers .button-primary, .trip-timers .button-secondary { margin-top: 0.5rem; }
+.timer-note { display: flex; gap: 0.5rem; padding: 0.5rem 0.75rem; margin: 0.5rem 0; border-left: 6px solid var(--color-primary); background: var(--color-surface); border-radius: var(--radius); }
+.timer-note p, .timer-note ul { margin: 0.2rem 0; }
+.timer-note ul { padding-left: 1.2rem; }
+
+/* ---------- Complaint follow-up tracker ---------- */
+.status-neutral { color: var(--color-primary); background: var(--color-surface); }
+.status-problem { color: var(--color-problem); background: var(--color-problem-bg); }
+.complaint-list > li { margin: 0.75rem 0; }
+.complaint-card:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.complaint-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.75rem; margin: 0.75rem 0; }
+.complaint-facts dt { font-weight: 700; }
+.complaint-facts dd { margin: 0; overflow-wrap: anywhere; }
+.complaint-notes { white-space: pre-wrap; }
+.complaint-editor { margin-top: 0.75rem; }
+.next-steps { margin-top: 1rem; padding: 1rem; border-radius: 12px; background: var(--color-problem-bg); }
+.next-steps h3 { margin-top: 0; }
+.next-steps ol { padding-left: 1.4rem; }
+.next-steps li + li { margin-top: 1rem; }
+@media (max-width: 420px) {
+  .complaint-facts { grid-template-columns: 1fr; }
+  .complaint-facts dd { margin-bottom: 0.4rem; }
+}
+
+/* ---------- Share with my care team ---------- */
+.care-summary h2 { margin-top: 0; }
+.care-summary h3 { margin: 1.25rem 0 0.4rem; }
+.care-item { margin: 0.4rem 0; padding-left: 1.1rem; position: relative; }
+.care-item::before { content: '•'; position: absolute; left: 0; }
+
+/* ---------- Language button ---------- */
+/* The header holds the brand, "Device access", the language button, and the
+   demo buttons. On a phone (390px wide) they can't all fit on one line, so
+   the brand and "Device access" share the first line and the buttons sit on
+   the second, lined up on the right. In demo mode the buttons share that
+   line evenly, and longer Spanish labels wrap onto two short lines instead
+   of pushing a button onto a third line. (app-theme.css loads after this
+   file, so these selectors start with .app-header to win.) */
+@media (max-width: 650px) {
+  .app-header .header-bar .rp-brand { flex: 1 1 calc(100% - 110px); }
+  .app-header .header-bar .language-button { padding: 0 9px; margin-left: auto; }
+  .app-header .header-bar:has(.demo-button[aria-pressed='true']) .demo-button {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.15;
+  }
+  .app-header .header-bar:has(.demo-button[aria-pressed='true']) .demo-button.language-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+/* Spanish tour chapter names are longer ("Configuración"). Instead of
+   breaking words in the middle, each button grows to fit its name, and the
+   chapter row scrolls sideways (it already does on narrow phones). */
+.demo-tour-chapters:lang(es) { grid-template-columns: repeat(8, max-content); }
+.demo-tour-chapter:lang(es) { white-space: nowrap; }

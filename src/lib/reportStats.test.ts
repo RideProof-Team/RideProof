@@ -46,6 +46,16 @@ describe('computeStats', () => {
       missedAppointments: 1,
       strandedReturns: 1,
       lateReturns: 1,
+      // 15 + 30 + 60 minutes late. "60" means "an hour or more", so it's "at least".
+      waitMinutes: 105,
+      waitPrecision: 'at_least',
+      // 2 pickups and 1 ride home never came, with no timer: not guessed.
+      untimedNeverCame: 3,
+      // The late ride home has no minutes (an older-style check-in).
+      untimedLate: 1,
+      failedBookings: 0,
+      problemRides: 7, // every October ride except Oct 5
+      failedBookingsByReason: { no_answer: 0, no_rides: 0, too_late: 0, other: 0 },
       firstDate: '2026-10-02',
       lastDate: '2026-10-23',
     });

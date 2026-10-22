@@ -4,6 +4,7 @@
 // Google Maps everywhere else. (Tapping sends the address to that maps
 // service; nothing is sent unless the user taps.)
 // ---------------------------------------------------------------------------
+import { t } from '../lib/i18n';
 import type { Appointment } from '../types';
 import { Icon } from './Icon';
 
@@ -20,12 +21,14 @@ export function ClinicActions({ appointment }: { appointment: Appointment }) {
     <div className="clinic-actions">
       {clinicAddress && (
         <a href={mapsLink(clinicAddress)} target="_blank" rel="noreferrer" className="button-secondary">
-          <Icon name="map" /> Directions<span className="visually-hidden"> to {clinicName} (opens maps)</span>
+          <Icon name="map" /> {t('Directions')}
+          <span className="visually-hidden"> {t('to {clinic} (opens maps)', { clinic: clinicName })}</span>
         </a>
       )}
       {clinicPhone && (
         <a href={`tel:${clinicPhone}`} className="button-secondary">
-          <Icon name="phone" /> Call clinic<span className="visually-hidden"> {clinicName}</span>
+          <Icon name="phone" /> {t('Call clinic')}
+          <span className="visually-hidden"> {clinicName}</span>
         </a>
       )}
     </div>

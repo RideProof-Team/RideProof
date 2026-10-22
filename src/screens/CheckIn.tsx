@@ -24,7 +24,8 @@ import {
 } from '../lib/checkinFlow';
 import { nowTimestamp } from '../lib/clock';
 import { motionAllowed } from '../lib/motion';
-import { formatLongDate, formatTime } from '../lib/dates';
+import { capitalize, formatLongDate, formatTime } from '../lib/dates';
+import { msg, t, tn, tx } from '../lib/i18n';
 import {
   APPOINTMENT_TYPE_LABELS,
   MINUTES_LATE_LABELS,
@@ -32,11 +33,12 @@ import {
   RETURN_LABELS,
 } from '../lib/labels';
 import { tripsBetween } from '../lib/recurrence';
+import { prefillFromWaits } from '../lib/waitTimer';
 import { askConfirm, showSnackbar } from '../lib/feedback';
 import { allowLeave, navigate, routeToHash, useLeaveWarning } from '../lib/router';
 import { newId } from '../lib/storage';
 import { useRideData } from '../lib/useRideData';
-import type { AppointmentType, Profile, RideLog } from '../types';
+import type { ActiveWait, AppointmentType, Profile, RideLog } from '../types';
 
 /** The details of the trip being checked in on. */
 interface TripInfo {
@@ -47,15 +49,19 @@ interface TripInfo {
   date: string;
 }
 
-const TITLE = 'Ride check-in';
-const BACK = { to: { name: 'home' } as const, label: 'Home' };
+const TITLE = msg('Ride check-in');
+const BACK_LABEL = msg('Home');
+const back = () => ({ to: { name: 'home' } as const, label: t(BACK_LABEL) });
 
 export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?: string }) {
   const { today, profile } = useApp();
   const { data } = useRideData();
 
-  if (!data || !profile) return <Screen title={TITLE} back={BACK}><p>Loading…</p></Screen>;
-  const { appointments, rideLogs } = data;
+  if (!data || !profile) return <Screen title={t(TITLE)} back={back()}><p>{t('Loading…')}</p></Screen>;
+  const { appointments, rideLogs, waits } = data;
+  // Finished "Where's my ride?" timers for a trip: they fill in the answers.
+  const timersFor = (id: string, tripDate: string) =>
+    waits.filter((w) => w.appointmentId === id && w.tripDate === tripDate && w.finishedAt);
 
   // --- A specific trip was named in the address ---
   if (appointmentId && date) {
@@ -66,9 +72,9 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
     const source = appointment ?? existing;
     if (!source) {
       return (
-        <Screen title={TITLE} back={BACK}>
-          <p>Sorry, that ride wasn't found.</p>
-            </Screen>
+        <Screen title={t(TITLE)} back={back()}>
+          <p>{t("Sorry, that ride wasn't found.")}</p>
+        </Screen>
       );
     }
     const trip: TripInfo = {
@@ -79,50 +85,67 @@ export function CheckIn({ appointmentId, date }: { appointmentId?: string; date?
       date,
     };
     // key: start the questions fresh if the trip changes.
-    return <Questions key={`${appointmentId}-${date}`} trip={trip} existing={existing} profile={profile} />;
+    return (
+      <Questions
+        key={`${appointmentId}-${date}`}
+        trip={trip}
+        existing={existing}
+        profile={profile}
+        timers={timersFor(appointmentId, date)}
+        isToday={date === today}
+      />
+    );
   }
 
   // --- No trip named: use today's ---
   const todaysTrips = tripsBetween(appointments, today, today);
   if (todaysTrips.length === 1) {
-    const t = todaysTrips[0];
+    const only = todaysTrips[0];
     const trip: TripInfo = {
-      appointmentId: t.appointment.id,
-      clinicName: t.appointment.clinicName,
-      appointmentType: t.appointment.type,
-      time: t.appointment.time,
-      date: t.date,
+      appointmentId: only.appointment.id,
+      clinicName: only.appointment.clinicName,
+      appointmentType: only.appointment.type,
+      time: only.appointment.time,
+      date: only.date,
     };
-    return <Questions trip={trip} existing={findLog(rideLogs, t.appointment.id, t.date)} profile={profile} />;
+    return (
+      <Questions
+        trip={trip}
+        existing={findLog(rideLogs, only.appointment.id, only.date)}
+        profile={profile}
+        timers={timersFor(only.appointment.id, only.date)}
+        isToday
+      />
+    );
   }
 
   // Zero or several trips today: let the user choose.
   const choices = todaysTrips.length > 1 ? todaysTrips : tripsNeedingCheckIn(appointments, rideLogs, today);
   return (
-    <Screen title={TITLE} back={BACK}>
+    <Screen title={t(TITLE)} back={back()}>
       <p>
         {todaysTrips.length > 1
-          ? 'There is more than one appointment today. Which ride do you want to check in on?'
-          : 'There is no appointment today.'}
+          ? t('There is more than one appointment today. Which ride do you want to check in on?')
+          : t('There is no appointment today.')}
       </p>
-      {todaysTrips.length === 0 && choices.length > 0 && <h2>Recent rides with no check-in</h2>}
+      {todaysTrips.length === 0 && choices.length > 0 && <h2>{t('Recent rides with no check-in')}</h2>}
       <ul className="card-list">
-        {choices.map((t) => (
-          <li key={`${t.appointment.id}-${t.date}`}>
+        {choices.map((choice) => (
+          <li key={`${choice.appointment.id}-${choice.date}`}>
             <a
               className="card card-link"
-              href={routeToHash({ name: 'checkin', appointmentId: t.appointment.id, date: t.date })}
+              href={routeToHash({ name: 'checkin', appointmentId: choice.appointment.id, date: choice.date })}
             >
-              <span className="card-title">{formatLongDate(t.date)}, {formatTime(t.appointment.time)}</span>
+              <span className="card-title">{capitalize(formatLongDate(choice.date))}, {formatTime(choice.appointment.time)}</span>
               <span className="card-detail">
-                {APPOINTMENT_TYPE_LABELS[t.appointment.type]} at {t.appointment.clinicName}
+                {t('{type} at {clinic}', { type: t(APPOINTMENT_TYPE_LABELS[choice.appointment.type]), clinic: choice.appointment.clinicName })}
               </span>
             </a>
           </li>
         ))}
       </ul>
       {todaysTrips.length === 0 && choices.length === 0 && (
-        <p>There are no recent rides to check in on.</p>
+        <p>{t('There are no recent rides to check in on.')}</p>
       )}
     </Screen>
   );
@@ -139,10 +162,23 @@ interface Option<T> {
   tone: 'good' | 'late' | 'problem' | 'neutral';
 }
 
-function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: RideLog; profile: Profile }) {
+interface QuestionsProps {
+  trip: TripInfo;
+  existing?: RideLog;
+  profile: Profile;
+  /** Finished wait timers for this trip. */
+  timers: ActiveWait[];
+  isToday: boolean;
+}
+
+function Questions({ trip, existing, profile, timers, isToday }: QuestionsProps) {
   const { storage, mode, refreshAll } = useApp();
+  // Answers from the wait timer(s), laid over any earlier check-in. The
+  // rider sees them already chosen and can still change any of them.
+  const prefill = prefillFromWaits(timers);
+  const startingAnswers: Answers = { ...(existing ? answersFromLog(existing) : { notes: '' }), ...prefill };
   // If this trip was already logged, start with the old answers so they can be changed.
-  const [answers, setAnswers] = useState<Answers>(() => (existing ? answersFromLog(existing) : { notes: '' }));
+  const [answers, setAnswers] = useState<Answers>(startingAnswers);
   const [step, setStep] = useState<Step>('pickup');
   // Which way the questions slide: forward (from the right) or back (from the left).
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
@@ -153,11 +189,13 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   const firstRender = useRef(true);
 
   // Warn before leaving a check-in that was started but not saved.
-  const original = existing ? JSON.stringify(answersFromLog(existing)) : JSON.stringify({ notes: '' });
+  // Compared with what the screen started with (including timer answers,
+  // which are already saved in the timer, so leaving doesn't lose them).
+  const original = JSON.stringify(startingAnswers);
   useLeaveWarning(!saved && JSON.stringify(answers) !== original, {
-    title: 'Leave without saving?',
-    message: 'This check-in is not saved yet. Your answers will be lost.',
-    confirmLabel: 'Leave without saving',
+    title: t('Leave without saving?'),
+    message: t('This check-in is not saved yet. Your answers will be lost.'),
+    confirmLabel: t('Leave without saving'),
   });
 
   // Each time the question changes, move focus to it so screen readers read it.
@@ -203,6 +241,14 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
     }
   }
 
+  const hasPickupTimer = timers.some((timer) => timer.leg === 'pickup');
+
+  function notHomeYet() {
+    allowLeave();
+    navigate({ name: 'home' });
+    showSnackbar(t('Your pickup time is saved. When you\'re waiting to go home, tap "I\'m waiting for my ride home".'));
+  }
+
   async function save() {
     const log = buildRideLog(answers, {
       id: existing?.id ?? newId(),
@@ -214,6 +260,8 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       recordedAt: existing?.recordedAt ?? nowTimestamp(mode),
     });
     await storage.saveRideLog(log);
+    // The timers' minutes are now part of the ride log, so clear them.
+    for (const timer of timers) await storage.deleteWait(timer.id);
     allowLeave();
     setSaved(log);
   }
@@ -221,17 +269,17 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   async function deleteLog() {
     if (!existing) return;
     const ok = await askConfirm({
-      title: 'Delete this check-in?',
-      message: `Your record of the ride on ${formatLongDate(existing.rideDate)} will be removed.`,
-      confirmLabel: 'Delete check-in',
+      title: t('Delete this check-in?'),
+      message: t('Your record of the ride on {date} will be removed.', { date: formatLongDate(existing.rideDate) }),
+      confirmLabel: t('Delete check-in'),
       danger: true,
     });
     if (!ok) return;
     await storage.deleteRideLog(existing.id);
     allowLeave();
     navigate({ name: 'history' });
-    showSnackbar('Check-in deleted.', {
-      label: 'Undo',
+    showSnackbar(t('Check-in deleted.'), {
+      label: t('Undo'),
       run: async () => {
         await storage.saveRideLog(existing);
         refreshAll();
@@ -241,9 +289,9 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
 
   const tripLine = (
     <p className="trip-line">
-      {APPOINTMENT_TYPE_LABELS[trip.appointmentType]} at {trip.clinicName}
+      {t('{type} at {clinic}', { type: t(APPOINTMENT_TYPE_LABELS[trip.appointmentType]), clinic: trip.clinicName })}
       <br />
-      {formatLongDate(trip.date)}
+      {capitalize(formatLongDate(trip.date))}
       {trip.time && `, ${formatTime(trip.time)}`}
     </p>
   );
@@ -254,19 +302,19 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       saved.pickupStatus !== 'on_time' || saved.appointmentOutcome !== 'made_it' ||
       saved.returnRideStatus === 'late' || saved.returnRideStatus === 'never_came';
     return (
-      <Screen title={TITLE} back={BACK}>
+      <Screen title={t(TITLE)} back={back()}>
         {tripLine}
         <div className="done-box" role="status">
           <SavedCheck />
-          <h2 tabIndex={-1} ref={questionRef}>Saved</h2>
+          <h2 tabIndex={-1} ref={questionRef}>{t('Saved')}</h2>
         </div>
         <p>
           {hadProblem
-            ? 'This ride had a problem. It is saved with the date and time, so you can use it as proof.'
-            : 'Great — this ride went well. It is saved in your history.'}
+            ? t('This ride had a problem. It is saved with the date and time, so you can use it as proof.')
+            : t('Great — this ride went well. It is saved in your history.')}
         </p>
-        <a href="#/home" className="button-primary">Back to Home</a>
-        <a href="#/history" className="button-secondary">See ride history</a>
+        <a href="#/home" className="button-primary">{t('Back to Home')}</a>
+        <a href="#/history" className="button-secondary">{t('See ride history')}</a>
       </Screen>
     );
   }
@@ -276,22 +324,22 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   let content;
   switch (step) {
     case 'pickup':
-      question = isCaregiver ? `Did the ride pick ${name} up on time?` : 'Did your ride pick you up on time?';
+      question = isCaregiver ? t('Did the ride pick {name} up on time?', { name }) : t('Did your ride pick you up on time?');
       content = (
         <Options
           picked={picked}
           selected={answers.pickupStatus}
           onPick={(v) => answer({ pickupStatus: v })}
           options={[
-            { value: 'on_time', label: PICKUP_LABELS.on_time, icon: 'check', tone: 'good' },
-            { value: 'late', label: PICKUP_LABELS.late, icon: 'clock', tone: 'late' },
-            { value: 'never_came', label: PICKUP_LABELS.never_came, icon: 'x', tone: 'problem' },
+            { value: 'on_time', label: t(PICKUP_LABELS.on_time), icon: 'check', tone: 'good' },
+            { value: 'late', label: t(PICKUP_LABELS.late), icon: 'clock', tone: 'late' },
+            { value: 'never_came', label: t(PICKUP_LABELS.never_came), icon: 'x', tone: 'problem' },
           ]}
         />
       );
       break;
     case 'howLate':
-      question = 'How late was the ride?';
+      question = t('How late was the ride?');
       content = (
         <Options
           picked={picked}
@@ -307,42 +355,70 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       );
       break;
     case 'outcome':
-      question = isCaregiver ? `Did ${name} make it to the appointment?` : 'Did you make it to your appointment?';
+      question = isCaregiver ? t('Did {name} make it to the appointment?', { name }) : t('Did you make it to your appointment?');
       content = (
         <Options
           picked={picked}
           selected={answers.appointmentOutcome}
           onPick={(v) => answer({ appointmentOutcome: v })}
           options={[
-            { value: 'made_it', label: 'Yes, on time', icon: 'check', tone: 'good' },
-            { value: 'late', label: 'Yes, but late', icon: 'clock', tone: 'late' },
-            { value: 'missed', label: 'No, missed it', icon: 'x', tone: 'problem' },
+            { value: 'made_it', label: t('Yes, on time'), icon: 'check', tone: 'good' },
+            { value: 'late', label: t('Yes, but late'), icon: 'clock', tone: 'late' },
+            { value: 'missed', label: t('No, missed it'), icon: 'x', tone: 'problem' },
           ]}
         />
       );
       break;
     case 'returnRide':
-      question = 'How was the ride home?';
+      question = t('How was the ride home?');
       content = (
         <Options
           picked={picked}
           selected={answers.returnRideStatus}
           onPick={(v) => answer({ returnRideStatus: v })}
           options={[
-            { value: 'on_time', label: RETURN_LABELS.on_time, icon: 'check', tone: 'good' },
-            { value: 'late', label: RETURN_LABELS.late, icon: 'clock', tone: 'late' },
-            { value: 'never_came', label: RETURN_LABELS.never_came, icon: 'x', tone: 'problem' },
-            { value: 'not_needed', label: "Didn't need one", icon: 'home', tone: 'neutral' },
+            { value: 'on_time', label: t(RETURN_LABELS.on_time), icon: 'check', tone: 'good' },
+            { value: 'late', label: t(RETURN_LABELS.late), icon: 'clock', tone: 'late' },
+            { value: 'never_came', label: t(RETURN_LABELS.never_came), icon: 'x', tone: 'problem' },
+            { value: 'not_needed', label: t("Didn't need one"), icon: 'home', tone: 'neutral' },
           ]}
+        />
+      );
+      // Came from the pickup timer and still at the clinic? Nothing is lost
+      // by stopping here: the pickup timer's result stays saved for later.
+      if (isToday && hasPickupTimer && !answers.returnRideStatus) {
+        content = (
+          <>
+            {content}
+            <button type="button" className="link-button" onClick={notHomeYet}>
+              {t("I'm not home yet — finish this later")}
+            </button>
+          </>
+        );
+      }
+      break;
+    case 'returnHowLate':
+      question = t('How late was the ride home?');
+      content = (
+        <Options
+          picked={picked}
+          selected={answers.returnMinutesLate}
+          onPick={(v) => answer({ returnMinutesLate: v })}
+          options={([15, 30, 60] as const).map((m) => ({
+            value: m,
+            label: MINUTES_LATE_LABELS[m],
+            icon: 'clock',
+            tone: 'late',
+          }))}
         />
       );
       break;
     case 'notes':
-      question = 'Anything else to note?';
+      question = t('Anything else to note?');
       content = (
         <div className="field">
-          <label htmlFor="notes">Notes (optional)</label>
-          <p id="notes-hint" className="field-hint">For example: "Waited 2 hours for ride home."</p>
+          <label htmlFor="notes">{t('Notes (optional)')}</label>
+          <p id="notes-hint" className="field-hint">{t('For example: "Waited 2 hours for ride home."')}</p>
           <textarea
             id="notes"
             rows={4}
@@ -351,24 +427,24 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
             aria-describedby="notes-hint"
           />
           <details className="time-details" open={Boolean(answers.scheduledPickup || answers.actualPickup)}>
-            <summary>Add pickup times (optional, makes a stronger record)</summary>
+            <summary>{t('Add pickup times (optional, makes a stronger record)')}</summary>
             <TimeBox
               id="scheduledPickup"
-              label="Pickup time you were given"
+              label={t('Pickup time you were given')}
               value={answers.scheduledPickup}
               onChange={(v) => setAnswers({ ...answers, scheduledPickup: v })}
             />
             {answers.pickupStatus !== 'never_came' && (
               <TimeBox
                 id="actualPickup"
-                label="Time the driver actually came"
+                label={t('Time the driver actually came')}
                 value={answers.actualPickup}
                 onChange={(v) => setAnswers({ ...answers, actualPickup: v })}
               />
             )}
           </details>
           <button type="button" className="button-primary button-big" onClick={save}>
-            Save check-in
+            {t('Save check-in')}
           </button>
         </div>
       );
@@ -376,23 +452,24 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   }
 
   return (
-    <Screen title={TITLE} back={BACK}>
+    <Screen title={t(TITLE)} back={back()}>
       {tripLine}
+      {timers.length > 0 && <TimerNote timers={timers} />}
       {/* key={step}: a new question is a new "page", so its slide-in animation plays. */}
       <div key={step} className={direction === 'back' ? 'step-back' : 'step-forward'}>
-        <p className="step-count">Question {steps.indexOf(step) + 1} of {steps.length}</p>
+        <p className="step-count">{t('Question {n} of {total}', { n: steps.indexOf(step) + 1, total: steps.length })}</p>
         {/* aria-live isn't needed: focus moves to this heading on each step. */}
         <h2 className="question" tabIndex={-1} ref={questionRef}>{question}</h2>
         {content}
       </div>
       {steps.indexOf(step) > 0 && (
         <button type="button" className="button-secondary" onClick={goBack}>
-          Previous question
+          {t('Previous question')}
         </button>
       )}
       {existing && step === 'pickup' && (
         <button type="button" className="button-danger" onClick={deleteLog}>
-          Delete this check-in
+          {t('Delete this check-in')}
         </button>
       )}
     </Screen>
@@ -447,5 +524,29 @@ function SavedCheck() {
       <circle cx="28" cy="28" r="26" />
       <path d="M17 29l7 7 15-16" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/** "From your ride timer: the driver came 23 minutes late." */
+function TimerNote({ timers }: { timers: ActiveWait[] }) {
+  return (
+    <div className="timer-note">
+      <Icon name="clock" />
+      <div>
+        <p>{tx('{bold} (already chosen below; you can change them):', { bold: <strong>{t('From your ride timer')}</strong> })}</p>
+        <ul>
+          {timers.map((timer) => (
+            <li key={timer.id}>
+              {timer.leg === 'pickup' ? t('Pickup') : t('Ride home')}:{' '}
+              {timer.result === 'never_came'
+                ? tn(timer.finalMinutesLate ?? 0, 'never came (you waited {n} minute)', 'never came (you waited {n} minutes)')
+                : timer.finalMinutesLate
+                  ? tn(timer.finalMinutesLate, '{n} minute late', '{n} minutes late')
+                  : t('on time')}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

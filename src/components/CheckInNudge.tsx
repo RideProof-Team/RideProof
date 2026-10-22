@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { useApp } from '../AppContext';
 import { getNowTime } from '../lib/clock';
 import { formatTime } from '../lib/dates';
+import { t } from '../lib/i18n';
 import { APPOINTMENT_TYPE_LABELS } from '../lib/labels';
 import { notifyOncePerDay } from '../lib/notifications';
 import type { Trip } from '../lib/recurrence';
@@ -32,13 +33,19 @@ export function CheckInNudge({ trips }: { trips: Trip[] }) {
     const now = minutesOf(getNowTime(mode));
     for (const trip of trips) {
       if (now < minutesOf(trip.appointment.time) + NUDGE_AFTER_MINUTES) continue;
-      const who = profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your';
+      const blanks = {
+        name: profile.riderFirstName,
+        type: t(APPOINTMENT_TYPE_LABELS[trip.appointment.type]).toLowerCase(),
+        time: formatTime(trip.appointment.time),
+      };
       notifyOncePerDay(
         mode,
         `checkin:${trip.appointment.id}:${trip.date}`,
         today,
-        "How did today's ride go?",
-        `Tap to check in on ${who} ${APPOINTMENT_TYPE_LABELS[trip.appointment.type].toLowerCase()} ride at ${formatTime(trip.appointment.time)}.`,
+        t("How did today's ride go?"),
+        profile.role === 'caregiver'
+          ? t("Tap to check in on {name}'s {type} ride at {time}.", blanks)
+          : t('Tap to check in on your {type} ride at {time}.', blanks),
       );
     }
     // `key` stands in for `trips` (a new list is made on every redraw).

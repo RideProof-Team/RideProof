@@ -22,7 +22,27 @@ export interface Profile {
   rideCompanyPhone: string;
   /** Optional, so it can be an empty string. */
   healthPlanName: string;
+  /**
+   * The rider's own answer to "How many business days ahead does your ride
+   * company require you to book?" — a number from 1 to 14, or 'not_sure'.
+   * Missing (undefined) means they haven't answered. Optional, because
+   * profiles saved by older versions of the app don't have it.
+   */
+  riderBookingWindow?: RiderBookingWindow;
+  /**
+   * Optional, for the booking call script ("I use a walker"). Missing means
+   * the rider hasn't said; the script shows [brackets] instead.
+   */
+  mobilityNeeds?: MobilityNeeds;
+  /** Optional pickup address for the booking call script. Stays on this device. */
+  homeAddress?: string;
 }
+
+/** What help the rider needs getting into and riding in the vehicle. */
+export type MobilityNeeds = 'none' | 'walker' | 'wheelchair' | 'needs_help';
+
+/** 1–14 business days, or "Not sure". */
+export type RiderBookingWindow = number | 'not_sure';
 
 export type AppointmentType = 'dialysis' | 'checkup' | 'specialist' | 'therapy' | 'other';
 
@@ -46,6 +66,11 @@ export interface Appointment {
   clinicAddress: string;
   /** Optional: the clinic's phone number, for tap-to-call. */
   clinicPhone?: string;
+  /**
+   * Optional "HH:MM": the pickup time the ride company gave. If missing,
+   * RideConnect estimates 1 hour before the appointment.
+   */
+  pickupTime?: string;
   type: AppointmentType;
   recurrence: RecurrenceRule;
   rideBooked: boolean;
@@ -89,4 +114,115 @@ export interface RideLog {
   /** Optional evidence: when pickup was scheduled, and when the driver came ("HH:MM"). */
   scheduledPickup?: string;
   actualPickup?: string;
+  /**
+   * How late the ride home was (only when returnRideStatus is 'late').
+   * Optional: check-ins saved before this question existed don't have it.
+   */
+  returnMinutesLate?: MinutesLate | null;
+  /**
+   * EXACT minutes waited, measured by the "Where's my ride?" timer:
+   *   pickupWaitMinutes: minutes past the scheduled pickup time (if the ride
+   *     never came, how long the rider waited before giving up).
+   *   returnWaitMinutes: minutes waited for the ride home.
+   * When present, these are used instead of the 15 / 30 / 60+ choices.
+   */
+  pickupWaitMinutes?: number;
+  returnWaitMinutes?: number;
+}
+
+// ---------------------------------------------------------------------------
+// "Where's my ride?" wait timers
+// ---------------------------------------------------------------------------
+
+/** Which part of the trip: the ride TO the appointment, or the ride home. */
+export type WaitLeg = 'pickup' | 'return';
+
+/**
+ * A running (or just-finished) wait timer. We store WHEN it started, never
+ * a running count, so the timer is still right after the phone locks, the
+ * app closes, or the page reloads: elapsed time = now − startedAt.
+ */
+export interface ActiveWait {
+  /** "<appointment id>|<date>|<leg>": one timer per leg of each trip. */
+  id: string;
+  appointmentId: string;
+  /** "YYYY-MM-DD" of the trip. */
+  tripDate: string;
+  leg: WaitLeg;
+  /** Pickup leg: the scheduled (or estimated) pickup time "HH:MM". Ride home: null. */
+  scheduledTime: string | null;
+  /** True if scheduledTime was estimated (1 hour before the appointment). */
+  scheduledIsEstimate: boolean;
+  /** The exact moment the rider tapped "I'm waiting" (ISO format). */
+  startedAt: string;
+  /** Which "it's been 15 / 30 minutes" prompts were already shown. */
+  promptsShown: number[];
+  /** Set when the wait ends: the ride came, or the rider gave up. */
+  finishedAt?: string;
+  result?: 'arrived' | 'never_came';
+  /** Minutes late when it ended (pickup: past the pickup time; ride home: since the rider started waiting). */
+  finalMinutesLate?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Complaints the rider sent (the follow-up tracker)
+// ---------------------------------------------------------------------------
+
+/** How the complaint was sent. */
+export type ComplaintMethod = 'email' | 'mail' | 'phone' | 'online_form';
+
+/** Where things stand with a complaint. */
+export type ComplaintStatus = 'waiting' | 'answered' | 'fixed' | 'not_fixed';
+
+/** A complaint the rider says they sent ("I sent this complaint"). */
+export interface SentComplaint {
+  id: string;
+  /** "YYYY-MM-DD": the day it was sent. */
+  sentDate: string;
+  /** Who it went to: a contact name from the state rules, or a name the rider typed. */
+  sentTo: string;
+  method: ComplaintMethod;
+  /** Optional reference / case number they were given. */
+  referenceNumber: string;
+  status: ComplaintStatus;
+  /** "YYYY-MM-DD" the status was last changed. */
+  statusChangedOn?: string;
+  /** Anything the rider wants to remember ("Talked to Sam, said 10 days"). */
+  notes: string;
+  /**
+   * "YYYY-MM-DD": when to show the "Did you hear back?" reminder. Missing
+   * means the usual 14 days after sentDate. "Remind me later" moves it.
+   */
+  remindOn?: string;
+  /** If this is a follow-up letter: the id of the complaint it follows up on. */
+  followUpOf?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Booking calls that didn't work (saved as evidence)
+// ---------------------------------------------------------------------------
+
+/** Why a ride couldn't be booked. */
+export type BookingFailReason = 'no_rides' | 'too_late' | 'no_answer' | 'other';
+
+/**
+ * "I called to book a ride and couldn't." Saved as evidence: shown in
+ * History and counted in the Report, PDF, and complaint letter.
+ * (A call that DID book the ride just marks the appointment as booked.)
+ */
+export interface FailedBooking {
+  id: string;
+  appointmentId: string;
+  /** "YYYY-MM-DD" of the trip they were trying to book. */
+  tripDate: string;
+  /** Copied from the appointment, so the record still makes sense if it's edited or deleted. */
+  clinicName: string;
+  appointmentType: AppointmentType;
+  /** "YYYY-MM-DD": the day of the call. Report periods use this date. */
+  attemptedOn: string;
+  /** Exact moment it was saved (ISO format). */
+  recordedAt: string;
+  reason: BookingFailReason;
+  /** Optional: more detail, e.g. "On hold 40 minutes, then cut off". */
+  details: string;
 }

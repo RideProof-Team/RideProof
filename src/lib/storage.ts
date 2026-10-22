@@ -12,7 +12,7 @@
 // change, delete, or mix with the user's real data.
 // ---------------------------------------------------------------------------
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Appointment, Profile, RideLog } from '../types';
+import type { ActiveWait, Appointment, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
 
 export type DataMode = 'real' | 'demo';
 
@@ -22,8 +22,13 @@ export const DB_NAMES: Record<DataMode, string> = {
   demo: 'rideproof-demo',
 };
 
-// Bump this number whenever the database layout below changes.
-const DB_VERSION = 1;
+// Bump this number whenever the database layout below changes, and add a
+// step to upgrade() below. Version history:
+//   1: profile, appointments, rideLogs
+//   2: + waits (the "Where's my ride?" timers)
+//   3: + complaints (complaints the rider sent, for the follow-up tracker)
+//   4: + bookingAttempts (calls to book a ride that didn't work)
+export const DB_VERSION = 4;
 
 // The profile is stored under this one fixed key, since there's only one.
 const PROFILE_KEY = 'profile';
@@ -33,6 +38,9 @@ interface RideConnectDB extends DBSchema {
   profile: { key: string; value: Profile };
   appointments: { key: string; value: Appointment };
   rideLogs: { key: string; value: RideLog };
+  waits: { key: string; value: ActiveWait };
+  complaints: { key: string; value: SentComplaint };
+  bookingAttempts: { key: string; value: FailedBooking };
 }
 
 // Opening a database takes time, so we remember the open connection for
@@ -42,20 +50,42 @@ const openDatabases = new Map<DataMode, Promise<IDBPDatabase<RideConnectDB>>>();
 function getDb(mode: DataMode): Promise<IDBPDatabase<RideConnectDB>> {
   let db = openDatabases.get(mode);
   if (!db) {
-    db = openDB<RideConnectDB>(DB_NAMES[mode], DB_VERSION, {
-      // upgrade() runs only the first time the database is created
-      // (or when DB_VERSION goes up). It creates the "tables".
-      upgrade(database) {
-        database.createObjectStore('profile');
-        database.createObjectStore('appointments', { keyPath: 'id' });
-        database.createObjectStore('rideLogs', { keyPath: 'id' });
+    const opening: Promise<IDBPDatabase<RideConnectDB>> = openDB<RideConnectDB>(DB_NAMES[mode], DB_VERSION, {
+      // upgrade() runs when the database is brand new, or when this app's
+      // DB_VERSION is higher than the version saved on the phone.
+      // `oldVersion` says what the phone has (0 = nothing yet). Each step only
+      // ADDS what's missing, so a phone on version 1 keeps every profile,
+      // appointment, and ride log, and just gains the new boxes.
+      upgrade(database, oldVersion) {
+        if (oldVersion < 1) {
+          database.createObjectStore('profile');
+          database.createObjectStore('appointments', { keyPath: 'id' });
+          database.createObjectStore('rideLogs', { keyPath: 'id' });
+        }
+        if (oldVersion < 2) {
+          database.createObjectStore('waits', { keyPath: 'id' });
+        }
+        if (oldVersion < 3) {
+          database.createObjectStore('complaints', { keyPath: 'id' });
+        }
+        if (oldVersion < 4) {
+          database.createObjectStore('bookingAttempts', { keyPath: 'id' });
+        }
+      },
+      // Another tab (for example, a newer version of RideConnect) needs to
+      // upgrade or delete this database, but this tab still has it open.
+      // Close our connection so the other tab isn't stuck waiting forever;
+      // the next save or load here simply opens it again.
+      blocking() {
+        void opening.then((database) => database.close());
+        if (openDatabases.get(mode) === opening) openDatabases.delete(mode);
       },
     });
-    const opening = db;
     void opening.catch(() => {
       if (openDatabases.get(mode) === opening) openDatabases.delete(mode);
     });
-    openDatabases.set(mode, db);
+    openDatabases.set(mode, opening);
+    db = opening;
   }
   return db;
 }
@@ -71,6 +101,15 @@ export interface Storage {
   listRideLogs(): Promise<RideLog[]>;
   saveRideLog(log: RideLog): Promise<void>;
   deleteRideLog(id: string): Promise<void>;
+  listWaits(): Promise<ActiveWait[]>;
+  saveWait(wait: ActiveWait): Promise<void>;
+  deleteWait(id: string): Promise<void>;
+  listComplaints(): Promise<SentComplaint[]>;
+  saveComplaint(complaint: SentComplaint): Promise<void>;
+  deleteComplaint(id: string): Promise<void>;
+  listBookingAttempts(): Promise<FailedBooking[]>;
+  saveBookingAttempt(attempt: FailedBooking): Promise<void>;
+  deleteBookingAttempt(id: string): Promise<void>;
   /** Erase everything in THIS mode's database only. */
   clearAll(): Promise<void>;
 }
@@ -111,14 +150,47 @@ export function createStorage(mode: DataMode): Storage {
       await (await getDb(mode)).delete('rideLogs', id);
     },
 
+    async listWaits() {
+      return (await getDb(mode)).getAll('waits');
+    },
+    async saveWait(wait) {
+      await (await getDb(mode)).put('waits', wait);
+    },
+    async deleteWait(id) {
+      await (await getDb(mode)).delete('waits', id);
+    },
+
+    async listComplaints() {
+      return (await getDb(mode)).getAll('complaints');
+    },
+    async saveComplaint(complaint) {
+      await (await getDb(mode)).put('complaints', complaint);
+    },
+    async deleteComplaint(id) {
+      await (await getDb(mode)).delete('complaints', id);
+    },
+
+    async listBookingAttempts() {
+      return (await getDb(mode)).getAll('bookingAttempts');
+    },
+    async saveBookingAttempt(attempt) {
+      await (await getDb(mode)).put('bookingAttempts', attempt);
+    },
+    async deleteBookingAttempt(id) {
+      await (await getDb(mode)).delete('bookingAttempts', id);
+    },
+
     async clearAll() {
       const db = await getDb(mode);
       // A transaction groups changes so they all succeed or all fail.
-      const tx = db.transaction(['profile', 'appointments', 'rideLogs'], 'readwrite');
+      const tx = db.transaction(['profile', 'appointments', 'rideLogs', 'waits', 'complaints', 'bookingAttempts'], 'readwrite');
       await Promise.all([
         tx.objectStore('profile').clear(),
         tx.objectStore('appointments').clear(),
         tx.objectStore('rideLogs').clear(),
+        tx.objectStore('waits').clear(),
+        tx.objectStore('complaints').clear(),
+        tx.objectStore('bookingAttempts').clear(),
         tx.done,
       ]);
     },
