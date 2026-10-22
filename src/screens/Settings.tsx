@@ -20,8 +20,8 @@ import { createStorage } from '../lib/storage';
 const APP_VERSION = '1.0.0';
 
 const PERMISSION_TEXT = {
-  granted: 'On. Reminders are also sent as notifications when RideProof is open.',
-  denied: 'Blocked. To turn them on, allow notifications for RideProof in your phone or browser settings.',
+  granted: 'On. Reminders are also sent as notifications when RideConnect is open.',
+  denied: 'Blocked. To turn them on, allow notifications for RideConnect in your phone or browser settings.',
   default: 'Off. Reminders still show on the Home screen.',
   unsupported: 'This browser does not support notifications. Reminders still show on the Home screen.',
 };
@@ -123,7 +123,7 @@ export function Settings() {
           </button>
         )}
         <p className="field-hint">
-          On iPhone, notifications only work after you add RideProof to your Home Screen (see Help).
+          On iPhone, notifications only work after you add RideConnect to your Home Screen (see Help).
         </p>
       </section>
 
@@ -142,8 +142,8 @@ export function Settings() {
             {persist && (
               <p className="field-hint">
                 {persist === 'persisted'
-                  ? '✓ This browser has agreed to keep RideProof’s data until you delete it.'
-                  : 'This browser may clear saved data if the phone runs low on space. Add RideProof to your Home Screen and keep a backup to be safe.'}
+                  ? '✓ This browser has agreed to keep RideConnect’s data until you delete it.'
+                  : 'This browser may clear saved data if the phone runs low on space. Add RideConnect to your Home Screen and keep a backup to be safe.'}
               </p>
             )}
           </>
@@ -160,7 +160,7 @@ export function Settings() {
         ) : (
           <>
             <p>
-              Erase everything RideProof has saved on this device: your information, appointments, and ride history.
+              Erase everything RideConnect has saved on this device: your information, appointments, and ride history.
               If you want to keep a copy, download a PDF report first.
             </p>
             <button type="button" className="button-danger" onClick={deleteEverything} disabled={deleting}>
@@ -171,10 +171,10 @@ export function Settings() {
       </section>
 
       <section aria-labelledby="about-heading">
-        <h2 id="about-heading">About RideProof</h2>
+        <h2 id="about-heading">About RideConnect</h2>
         <p>Version {APP_VERSION}. Made for the Congressional App Challenge.</p>
         <p>
-          <strong>Your privacy:</strong> RideProof has no accounts and no server. Everything you enter stays on this
+          <strong>Your privacy:</strong> RideConnect has no accounts and no server. Everything you enter stays on this
           device and is never sent anywhere. Clearing your browser's data for this site will also erase it.
         </p>
         <p>

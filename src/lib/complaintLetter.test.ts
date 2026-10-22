@@ -51,7 +51,7 @@ describe('small wording helpers', () => {
 });
 
 describe('summarySentence', () => {
-  it('matches the RideProof example sentence', () => {
+  it('matches the RideConnect example sentence', () => {
     const problems = [
       log('2026-09-30', { pickupStatus: 'late', minutesLate: 15 }),
       log('2026-10-07', { pickupStatus: 'late', minutesLate: 30 }),

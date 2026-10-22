@@ -21,7 +21,7 @@ function publicFiles(dir = 'public'): string[] {
  */
 function serviceWorkerPlugin(): Plugin {
   return {
-    name: 'rideproof-service-worker',
+    name: 'rideconnect-service-worker',
     apply: 'build',
     generateBundle(_options, bundle) {
       const files = ['./', './index.html', ...Object.keys(bundle).map((f) => `./${f}`), ...publicFiles().map((f) => `./${f}`)];
@@ -39,7 +39,7 @@ function serviceWorkerPlugin(): Plugin {
 // Vite is the tool that runs our dev server and bundles the app for production.
 export default defineConfig({
   // './' makes every file path relative, so the built app works from any
-  // folder, e.g. https://example.github.io/RideProof/.
+  // folder, e.g. https://example.github.io/RideConnect/.
   base: './',
   plugins: [react(), serviceWorkerPlugin()],
   test: {

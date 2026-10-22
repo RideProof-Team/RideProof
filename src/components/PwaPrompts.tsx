@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// PwaPrompts.tsx — "A new version is ready" and "Install RideProof".
+// PwaPrompts.tsx — "A new version is ready" and "Install RideConnect".
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { applyUpdate, installApp, usePwa } from '../lib/pwa';
@@ -13,7 +13,7 @@ export function UpdateBanner() {
   if (!updateReady) return null;
   return (
     <div className="update-banner" role="status">
-      <span>A new version of RideProof is ready.</span>
+      <span>A new version of RideConnect is ready.</span>
       <button type="button" className="button-primary" onClick={applyUpdate}>
         Update now
       </button>
@@ -44,10 +44,10 @@ export function InstallCard() {
 
   return (
     <section className="card card-info" aria-labelledby="install-heading">
-      <h2 id="install-heading">Put RideProof on your home screen</h2>
+      <h2 id="install-heading">Put RideConnect on your home screen</h2>
       <p>It opens like a regular app and works without internet.</p>
       <button type="button" className="button-primary" onClick={installApp}>
-        <Icon name="download" /> Install RideProof
+        <Icon name="download" /> Install RideConnect
       </button>
       <button type="button" className="link-button" onClick={notNow}>Not now</button>
     </section>
@@ -60,7 +60,7 @@ export function InstallButton() {
   if (!canInstall) return null;
   return (
     <button type="button" className="button-primary" onClick={installApp}>
-      <Icon name="download" /> Install RideProof now
+      <Icon name="download" /> Install RideConnect now
     </button>
   );
 }

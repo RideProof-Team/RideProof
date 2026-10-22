@@ -17,7 +17,7 @@ export function Toast({ message, onClose }: { message: ToastMessage; onClose(): 
     // role="alert" makes screen readers read it out right away.
     <div className="toast" role="alert">
       <div className="toast-app">
-        <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={20} height={20} /> RideProof · now
+        <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={20} height={20} /> RideConnect · now
       </div>
       <p className="toast-title">{message.title}</p>
       <p className="toast-body">{message.body}</p>

@@ -9,7 +9,7 @@ function PublicHeader() {
 
 function usePageTitle(title: string) {
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { document.title = `${title} · RideProof`; window.scrollTo(0, 0); heading.current?.focus(); }, [title]);
+  useEffect(() => { document.title = `${title} · RideConnect`; window.scrollTo(0, 0); heading.current?.focus(); }, [title]);
   return heading;
 }
 
@@ -24,7 +24,7 @@ export function Landing({ onDemo }: { onDemo(autoPlay?: boolean): void }) {
           <h1 ref={heading} tabIndex={-1}>Your care matters.<br />So does the ride<br /><em>that gets you there.</em></h1>
           <p className="rp-intro">A late pickup. A missed appointment. Another call to explain what happened. Keep the details together, so you don’t have to start from scratch.</p>
           <div className="rp-actions"><a className="rp-button" href="#/setup">Start your ride record <span aria-hidden="true">→</span></a></div>
-          <div className="rp-demo-options" aria-label="Try RideProof"><button className="rp-button" onClick={() => onDemo(true)}>Watch the auto-demo</button><button className="rp-text-button" onClick={() => onDemo(false)}>Take a guided tour</button></div>
+          <div className="rp-demo-options" aria-label="Try RideConnect"><button className="rp-button" onClick={() => onDemo(true)}>Watch the auto-demo</button><button className="rp-text-button" onClick={() => onDemo(false)}>Take a guided tour</button></div>
           <p className="rp-caption">About two minutes. Sample rides only, no setup needed. Watch it run or go at your own pace.</p>
         </div>
         <div className="rp-record-wrap">
@@ -51,9 +51,9 @@ export function Landing({ onDemo }: { onDemo(autoPlay?: boolean): void }) {
           <article><span className="rp-step-label">WHEN YOU NEED HELP</span><h3>Bring the full picture.</h3><p>Turn your history into a report and an editable complaint letter to share with the right person.</p></article>
         </div>
       </section>
-      <section className="rp-care"><div><p className="rp-kicker">For you. Or someone you care for.</p><h2>You can be the rider.<br />You can be their backup.</h2></div><div><p>Helping a parent keep track of dialysis rides? Managing your own appointments? RideProof gives you one place for the schedule, the calls, and what actually happened.</p><a href="#/setup">Set up your ride record <span aria-hidden="true">→</span></a></div></section>
+      <section className="rp-care"><div><p className="rp-kicker">For you. Or someone you care for.</p><h2>You can be the rider.<br />You can be their backup.</h2></div><div><p>Helping a parent keep track of dialysis rides? Managing your own appointments? RideConnect gives you one place for the schedule, the calls, and what actually happened.</p><a href="#/setup">Set up your ride record <span aria-hidden="true">→</span></a></div></section>
       <section className="rp-questions" aria-labelledby="questions-title"><h2 id="questions-title">A few things to know.</h2><div>
-        <details><summary>Does RideProof book or send a ride?</summary><p>No. You still book through your transportation provider. RideProof helps you organize the booking details and record the outcome.</p></details>
+        <details><summary>Does RideConnect book or send a ride?</summary><p>No. You still book through your transportation provider. RideConnect helps you organize the booking details and record the outcome.</p></details>
         <details><summary>Where does my information go?</summary><p>This version saves your records in this browser on this device. There is no online account or automatic syncing. Use the backup tools in Settings to save a copy.</p></details>
         <details><summary>Can I try it before setting anything up?</summary><p>Yes. The sample dashboard has fictional rides you can explore. Sample records stay separate from your own records.</p><button className="rp-text-button" onClick={() => onDemo(false)}>Open the guided tour →</button></details>
       </div></section>
@@ -66,7 +66,7 @@ export function SignIn({ profile, loading, error, onRetry, onContinue, onDemo }:
   const heading = usePageTitle('Sign in');
   return <div className="rp-public rp-access-page"><PublicHeader /><main id="main" className="rp-access">
     <aside className="rp-access-aside"><p className="rp-kicker">Your next ride starts here</p><h2>Less remembering.<br />More getting<br /><em>where you need to go.</em></h2><p>Appointments, ride details, and your history. Together in one place.</p><div className="rp-access-line" aria-hidden="true"><span /> <hr /> <span /></div><small>From the first booking to the ride home.</small></aside>
-    <section className="rp-access-form"><a className="rp-back" href="#/landing">← Back to RideProof</a><p className="rp-kicker">Device access</p><h1 ref={heading} tabIndex={-1}>Welcome back.</h1><p>Open your ride record on this device.</p>
+    <section className="rp-access-form"><a className="rp-back" href="#/landing">← Back to RideConnect</a><p className="rp-kicker">Device access</p><h1 ref={heading} tabIndex={-1}>Welcome back.</h1><p>Open your ride record on this device.</p>
       <div className="rp-local-notice"><strong>No password needed for this version.</strong><p>Your records live in this browser. This opens your local profile; it does not sign you into an online account or lock your records.</p></div>
       {error ? <><p role="alert">{error}</p><button className="rp-button" onClick={onRetry}>Try again</button></> : loading ? <p role="status">Looking for your saved profile…</p> : profile ? <><div className="rp-saved-profile"><span className="rp-avatar" aria-hidden="true">{profile.riderFirstName.slice(0, 1).toUpperCase()}</span><div><strong>{profile.riderFirstName}’s ride record</strong><span>Saved on this device</span></div></div><button className="rp-button" onClick={onContinue}>Continue to my dashboard →</button></> : <><p className="rp-empty">There isn’t a saved profile in this browser yet. Set one up to start keeping your ride record.</p><a className="rp-button" href="#/setup">Set up my ride record →</a></>}
       <div className="rp-access-demo"><span>Just taking a look?</span><button className="rp-text-button" onClick={onDemo}>Try the sample dashboard ↗</button></div>

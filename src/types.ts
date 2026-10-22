@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// types.ts — the "shape" of every piece of data RideProof stores.
+// types.ts — the "shape" of every piece of data RideConnect stores.
 //
 // TypeScript types don't run; they are a contract. If any part of the app
 // tries to save an appointment without a date, or uses a pickup status that
@@ -53,7 +53,7 @@ export interface Appointment {
   /**
    * Days this appointment is NOT happening (e.g. dialysis cancelled for a
    * holiday), as "YYYY-MM-DD". Optional, because appointments saved by
-   * older versions of RideProof don't have it.
+   * older versions of RideConnect don't have it.
    */
   skippedDates?: string[];
 }

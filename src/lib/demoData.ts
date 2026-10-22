@@ -2,7 +2,7 @@
 // demoData.ts — the sample story shown in demo mode. ALL OF IT IS FAKE.
 //
 // The story: Rosa (72) goes to dialysis every Monday, Wednesday, and Friday.
-// Her granddaughter Maria uses RideProof in caregiver mode. Over the past
+// Her granddaughter Maria uses RideConnect in caregiver mode. Over the past
 // month, 13 dialysis rides were logged:
 //   - 5 late pickups (15, 30, and 60+ minutes)
 //   - 2 rides that never came (one made her miss dialysis on Oct 14)

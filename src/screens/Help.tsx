@@ -37,7 +37,7 @@ export function Help() {
             <strong>Call your clinic.</strong> Tell them you will be late. Some clinics can hold your time.
           </li>
           <li>
-            <strong>Log it in RideProof</strong> with "Check in on today's ride", even if the ride shows up late.
+            <strong>Log it in RideConnect</strong> with "Check in on today's ride", even if the ride shows up late.
             Each record helps prove a pattern.
           </li>
           <li>
@@ -52,7 +52,7 @@ export function Help() {
         <ol className="help-steps">
           <li>Call the ride company and ask when the driver will come.</li>
           <li>Ask the clinic staff for help. Don't wait outside alone if it isn't safe.</li>
-          <li>Log it in RideProof, and write how long you waited in the notes.</li>
+          <li>Log it in RideConnect, and write how long you waited in the notes.</li>
         </ol>
       </section>
 
@@ -67,7 +67,7 @@ export function Help() {
           <>
             <p>
               <strong>Booking:</strong> Book rides at least <strong>{rule.bookingWindowBusinessDays} business days</strong>{' '}
-              before the appointment. Weekends and federal holidays don't count. RideProof reminds you on the Home
+              before the appointment. Weekends and federal holidays don't count. RideConnect reminds you on the Home
               screen.
             </p>
             <p><strong>Where to complain:</strong></p>
@@ -81,7 +81,7 @@ export function Help() {
             </ul>
           </>
         ) : (
-          <p>RideProof doesn't have rules for your state yet. Check your state Medicaid website.</p>
+          <p>RideConnect doesn't have rules for your state yet. Check your state Medicaid website.</p>
         )}
       </section>
 
@@ -89,18 +89,18 @@ export function Help() {
         <h2 id="tips-heading">Tips</h2>
         <ul className="help-steps">
           <li>For regular appointments like dialysis, ask the ride company for a <strong>standing order</strong>, so you don't have to book every ride.</li>
-          <li>Save the confirmation number every time you book. Add it to the appointment in RideProof.</li>
+          <li>Save the confirmation number every time you book. Add it to the appointment in RideConnect.</li>
           <li>Check in after every ride, including the good ones. A full record is more convincing.</li>
         </ul>
       </section>
 
       <section aria-labelledby="install-heading">
-        <h2 id="install-heading">Put RideProof on your home screen</h2>
+        <h2 id="install-heading">Put RideConnect on your home screen</h2>
         <ul className="help-steps">
           <li><strong>iPhone:</strong> In Safari, tap the Share button, then "Add to Home Screen".</li>
           <li><strong>Android:</strong> In Chrome, tap the ⋮ menu, then "Add to Home screen" or "Install app".</li>
         </ul>
-        <p>After that, RideProof opens like a regular app and works without internet.</p>
+        <p>After that, RideConnect opens like a regular app and works without internet.</p>
         <InstallButton />
       </section>
 

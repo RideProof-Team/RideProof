@@ -64,7 +64,7 @@ export function RestoreButton({ label = 'Restore from a backup file' }: { label?
           `It has ${plural(backup.appointments.length, 'appointment', 'appointments')} and ` +
           `${plural(backup.rideLogs.length, 'ride record', 'ride records')}` +
           (backup.exportedAt ? `, saved on ${formatLongDate(backup.exportedAt.slice(0, 10), true)}` : '') +
-          '. It will REPLACE the RideProof data on this device.',
+          '. It will REPLACE the RideConnect data on this device.',
         confirmLabel: 'Restore backup',
         danger: true,
       });

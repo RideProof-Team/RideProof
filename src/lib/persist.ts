@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// persist.ts — ask the browser to keep RideProof's data permanently.
+// persist.ts — ask the browser to keep RideConnect's data permanently.
 //
 // Browsers may delete a website's saved data to free up space, and Safari
 // can delete it after about 7 days without a visit (unless the app was

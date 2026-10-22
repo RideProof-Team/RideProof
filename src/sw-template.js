@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // sw-template.js — the service worker: a helper script the browser runs in
-// the background, separately from the page. Its job is to make RideProof
+// the background, separately from the page. Its job is to make RideConnect
 // work with no internet connection.
 //
 // How it works:
@@ -11,10 +11,10 @@
 //
 // When the app is built, `npm run build` replaces the two placeholders
 // below with the real list of files and a version name (see vite.config.ts).
-// RideProof's data is never in here: it lives in IndexedDB on the device.
+// RideConnect's data is never in here: it lives in IndexedDB on the device.
 // ---------------------------------------------------------------------------
 const PRECACHE_FILES = self.__PRECACHE_FILES__;
-const CACHE_NAME = 'rideproof-' + self.__CACHE_VERSION__;
+const CACHE_NAME = 'rideconnect-' + self.__CACHE_VERSION__;
 
 self.addEventListener('install', (event) => {
   // Save the files. On the very first visit this version starts right away.

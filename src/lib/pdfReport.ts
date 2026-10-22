@@ -13,8 +13,8 @@ import { computeStats, headline, logsInRange, type ReportPeriod } from './report
 import { getStateRule } from './stateRules';
 
 const FOOTER =
-  'Created with RideProof. Ride details were recorded by the rider or caregiver. ' +
-  'RideProof is not affiliated with any state, health plan, or ride company.';
+  'Created with RideConnect. Ride details were recorded by the rider or caregiver. ' +
+  'RideConnect is not affiliated with any state, health plan, or ride company.';
 
 interface ReportInput {
   profile: Profile;
@@ -31,7 +31,7 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
   const rides = logsInRange(logs, period.from, period.to);
 
   // ----- Title -----
-  pdf.text('RideProof Ride Report', { size: 20, bold: true, gapAfter: 2 });
+  pdf.text('RideConnect Ride Report', { size: 20, bold: true, gapAfter: 2 });
   pdf.text(`${formatLongDate(period.from, true)} to ${formatLongDate(period.to, true)}`, { size: 12, gapAfter: 2 });
   pdf.text(`Created ${formatLongDate(today, true)}`, { size: 10, italic: true, gapAfter: 10 });
   pdf.rule();
@@ -135,7 +135,7 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
   }
 
   pdf.addFooters(FOOTER);
-  pdf.save(`RideProof-report-${period.from}-to-${period.to}.pdf`);
+  pdf.save(`RideConnect-report-${period.from}-to-${period.to}.pdf`);
 }
 
 /** Save the (possibly edited) complaint letter as a PDF. */
@@ -148,6 +148,6 @@ export async function downloadLetterPdf(letter: string, today: string) {
       pdf.text(paragraph, { size: 11.5, gapAfter: 0 });
     }
   }
-  pdf.addFooters('Created with RideProof. RideProof is not affiliated with any state, health plan, or ride company.');
-  pdf.save(`RideProof-complaint-letter-${today}.pdf`);
+  pdf.addFooters('Created with RideConnect. RideConnect is not affiliated with any state, health plan, or ride company.');
+  pdf.save(`RideConnect-complaint-letter-${today}.pdf`);
 }

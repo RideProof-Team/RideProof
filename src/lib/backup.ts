@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
-// backup.ts — save all RideProof data to a file, and load it back.
+// backup.ts — save all RideConnect data to a file, and load it back.
 //
-// RideProof keeps data only on this device (no accounts, no server). That's
+// RideConnect keeps data only on this device (no accounts, no server). That's
 // great for privacy, but it means a lost phone or cleared browser loses
 // everything. A backup file fixes that: the user saves it somewhere safe
 // (email it to themselves, save it to Files or Google Drive) and can load
@@ -9,11 +9,12 @@
 //
 // The file is JSON: plain text that both people and programs can read.
 // When loading, we check every field carefully, because the file came
-// from outside the app and could be damaged or not a RideProof file at all.
+// from outside the app and could be damaged or not a RideConnect file at all.
 // ---------------------------------------------------------------------------
 import type { Appointment, Profile, RideLog } from '../types';
 import type { Storage } from './storage';
 
+// Keep the original identifier so backups created before the rename still import.
 export const BACKUP_FORMAT = 'rideproof-backup';
 export const BACKUP_VERSION = 1;
 
@@ -43,7 +44,7 @@ export async function createBackup(storage: Storage, exportedAt: string): Promis
 }
 
 export function backupFileName(today: string): string {
-  return `RideProof-backup-${today}.json`;
+  return `RideConnect-backup-${today}.json`;
 }
 
 // ----- Checking a loaded file -----
@@ -129,13 +130,13 @@ export function parseBackup(fileText: string): BackupFile {
   try {
     data = JSON.parse(fileText);
   } catch {
-    throw new BackupError('This file is not a RideProof backup.');
+    throw new BackupError('This file is not a RideConnect backup.');
   }
   if (!isObject(data) || data.format !== BACKUP_FORMAT) {
-    throw new BackupError('This file is not a RideProof backup.');
+    throw new BackupError('This file is not a RideConnect backup.');
   }
   if (typeof data.version !== 'number' || data.version > BACKUP_VERSION) {
-    throw new BackupError('This backup was made by a newer version of RideProof. Update the app and try again.');
+    throw new BackupError('This backup was made by a newer version of RideConnect. Update the app and try again.');
   }
   if (!Array.isArray(data.appointments) || !Array.isArray(data.rideLogs)) {
     throw new BackupError('This backup file is damaged.');

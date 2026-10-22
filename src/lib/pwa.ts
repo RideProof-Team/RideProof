@@ -3,7 +3,7 @@
 //
 //   Install: Chrome on Android fires a "beforeinstallprompt" event when the
 //   app can be installed. We save that event so a friendly "Install" button
-//   inside RideProof can show the install box later. (iPhones don't support
+//   inside RideConnect can show the install box later. (iPhones don't support
 //   this; the Help screen explains how to "Add to Home Screen" instead.)
 //
 //   Update: when a new version is published, the browser downloads the new
@@ -24,7 +24,7 @@ let waitingWorker: ServiceWorker | null = null;
 const listeners = new Set<() => void>();
 const changed = () => listeners.forEach((listener) => listener());
 
-/** True when RideProof is running as an installed app (not in a browser tab). */
+/** True when RideConnect is running as an installed app (not in a browser tab). */
 export function isInstalled(): boolean {
   return window.matchMedia?.('(display-mode: standalone)').matches || ('standalone' in navigator && navigator.standalone === true);
 }

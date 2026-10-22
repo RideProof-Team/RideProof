@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // Welcome.tsx — the first screen. The user chooses rider or caregiver and
-// enters the basic information RideProof needs. Saving it creates the
+// enters the basic information RideConnect needs. Saving it creates the
 // profile, and the app moves on to the Home screen.
 //
 // The same form is reused from Settings ("Edit your information"): with
@@ -79,7 +79,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
   return (
     <Screen
-      title={editing ? 'Your information' : 'Welcome to RideProof'}
+      title={editing ? 'Your information' : 'Welcome to RideConnect'}
       back={editing ? { to: { name: 'settings' }, label: 'Settings' } : undefined}
     >
       {!editing && <p>Keep track of your medical rides, and prove it when rides go wrong.</p>}
@@ -91,7 +91,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
         {/* A fieldset + legend groups the two choices under one question. */}
         <fieldset className="choice-group">
-          <legend>Who is using RideProof?</legend>
+          <legend>Who is using RideConnect?</legend>
           {([
             ['rider', 'I am the rider', 'I ride to my own appointments.'],
             ['caregiver', 'I help a rider', 'I am a family member or caregiver.'],
@@ -175,7 +175,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
         />
 
         <p className="privacy-note">
-          Your information stays on this device. RideProof never sends it anywhere.
+          Your information stays on this device. RideConnect never sends it anywhere.
         </p>
 
         <button type="submit" className="button-primary" disabled={saving}>
@@ -184,7 +184,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
         {!editing && (
           <div className="restore-box">
             <p>Moving from another phone?</p>
-            <RestoreButton label="Restore a RideProof backup" />
+            <RestoreButton label="Restore a RideConnect backup" />
           </div>
         )}
         {editing && <a href="#/settings" className="button-secondary">Cancel</a>}

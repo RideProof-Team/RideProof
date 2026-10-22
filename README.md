@@ -1,6 +1,6 @@
-# RideProof
+# RideConnect
 
-RideProof helps Medicaid members who use free **non-emergency medical transportation (NEMT)** keep track of their rides, catch problems, and prove when rides fail.
+RideConnect helps Medicaid members who use free **non-emergency medical transportation (NEMT)** keep track of their rides, catch problems, and prove when rides fail.
 
 Riders (often seniors, people with disabilities, or dialysis patients) or their caregivers use it to:
 
@@ -8,13 +8,13 @@ Riders (often seniors, people with disabilities, or dialysis patients) or their 
 2. **Log each ride with one tap per question:** on time, late, or never came.
 3. **Generate a report and a ready-to-send complaint letter** that shows the pattern of problems.
 
-> RideProof is not affiliated with any state, health plan, or ride company. Confirm rules with your state Medicaid office.
+> RideConnect is not affiliated with any state, health plan, or ride company. Confirm rules with your state Medicaid office.
 
 ---
 
 ## The problem
 
-When a medical ride fails, a patient may report it by phone, but they rarely have an organized record showing that failures keep happening. For someone who needs dialysis three times a week, a ride that doesn't come means a missed life-sustaining treatment. RideProof gives the rider a dated record of their own, and turns it into evidence they can send.
+When a medical ride fails, a patient may report it by phone, but they rarely have an organized record showing that failures keep happening. For someone who needs dialysis three times a week, a ride that doesn't come means a missed life-sustaining treatment. RideConnect gives the rider a dated record of their own, and turns it into evidence they can send.
 
 ## Features
 
@@ -66,7 +66,7 @@ From the landing page, choose **Watch the auto-demo** for a hands-free walkthrou
 - The app pretends today is **Friday, October 30, 2026** (`DEMO_TODAY` in `src/lib/clock.ts`), so dates and reminders look the same every time you record.
 - **Demo data is stored in a completely separate database**, so turning demo mode on or off never changes your own data.
 
-**The demo story (all fake):** Rosa, 72, goes to dialysis every Mon/Wed/Fri at 9:00 AM at "Riverside Dialysis Center." Her granddaughter Maria uses RideProof in caregiver mode. The ride company is "Sample Ride Co." (555-0100). Over the past month, 13 rides were logged: 5 late pickups (15, 30, and 60+ minutes), 2 rides that never came, a missed dialysis session on October 14, and a ride home that never came ("Waited 2 hours for ride home"). Today there's a dialysis ride to check in on, and a cardiology appointment on Tuesday whose ride isn't booked, so a **"Book today"** reminder shows on Home.
+**The demo story (all fake):** Rosa, 72, goes to dialysis every Mon/Wed/Fri at 9:00 AM at "Riverside Dialysis Center." Her granddaughter Maria uses RideConnect in caregiver mode. The ride company is "Sample Ride Co." (555-0100). Over the past month, 13 rides were logged: 5 late pickups (15, 30, and 60+ minutes), 2 rides that never came, a missed dialysis session on October 14, and a ride home that never came ("Waited 2 hours for ride home"). Today there's a dialysis ride to check in on, and a cardiology appointment on Tuesday whose ride isn't booked, so a **"Book today"** reminder shows on Home.
 
 **Demo controls:** tap the purple banner to open:
 - shortcuts to **Home, Ride check-in, History, Report, Complaint preview**;
@@ -132,7 +132,7 @@ vite.config.ts          Build settings + a small plugin that writes the offline 
 
 ## Accessibility
 
-Many RideProof users are elderly or disabled, so accessibility was a requirement from the start, not an add-on:
+Many RideConnect users are elderly or disabled, so accessibility was a requirement from the start, not an add-on:
 
 - Body text is 18px or larger and **grows with the user's text-size setting**. At very large sizes, the layout switches to a single column with no sideways scrolling.
 - Every button and link is at least 48px tall. Check-in answers are 80px tall.
@@ -146,9 +146,9 @@ Many RideProof users are elderly or disabled, so accessibility was a requirement
 ## Privacy
 
 - Everything is stored only on the device, in the browser's IndexedDB. Nothing is sent anywhere.
-- **Settings → Delete all my data** erases everything RideProof saved.
+- **Settings → Delete all my data** erases everything RideConnect saved.
 - **Settings → Save a backup file** makes a readable JSON file the user keeps themselves (for example, by emailing it to themselves). Restoring it is the only way data moves to another phone, and it's always the user's choice.
-- RideProof asks the browser for *persistent storage*, so the browser won't quietly delete records to free up space.
+- RideConnect asks the browser for *persistent storage*, so the browser won't quietly delete records to free up space.
 - The complaint letter leaves a `[bracketed]` space for the Medicaid ID instead of storing it.
 - All demo data is fictional, and no real patient data appears anywhere in the code.
 
@@ -167,7 +167,7 @@ These are the hardest problems we solved, written so they can be adapted for the
 
 ### 1. Keeping demo data completely separate from real data
 **Problem:** The pitch video needs a rich sample story, but a real user who taps "Demo" must never have their own records changed, deleted, or mixed with fake ones.
-**Solution:** Real data and demo data live in **two separate IndexedDB databases** (`rideproof-real` and `rideproof-demo`). The rest of the app never talks to a database directly. It asks for a "storage" object for one mode, and that object can only open its own database. The demo seeding and "Reset demo" functions also refuse to run on real storage. Automated tests prove that seeding, editing, and resetting the demo leave real data exactly as it was.
+**Solution:** Real data and demo data live in **two separate IndexedDB databases**. Their legacy internal names stay unchanged so records created before the RideConnect rename remain available. The rest of the app never talks to a database directly. It asks for a "storage" object for one mode, and that object can only open its own database. The demo seeding and "Reset demo" functions also refuse to run on real storage. Automated tests prove that seeding, editing, and resetting the demo leave real data exactly as it was.
 
 ### 2. Dates without time-zone bugs
 **Problem:** JavaScript `Date` objects are exact moments in time, so "October 14 at midnight" can turn into October 13 in another time zone. For a medical appointment, that's a wrong day.
@@ -198,12 +198,12 @@ These are the hardest problems we solved, written so they can be adapted for the
 **Solution:** Big buttons, one question per screen, icons plus words instead of color alone, and focus moved to each new screen and question for screen readers. Testing at **double text size** showed the original design failed: the pinned header covered a third of the screen and the menu labels overlapped. A media query measured in `em` (which tracks the user's text-size setting) now switches to a one-column layout with an unpinned header. The same test found a hidden "skip" link poking out and covering the Demo button at large sizes, which is now fixed. Every screen passes an automated axe-core accessibility audit with zero issues.
 
 ### 9. Reminders without a server
-**Problem:** Normal apps get push notifications from a server, and RideProof has none, for privacy.
+**Problem:** Normal apps get push notifications from a server, and RideConnect has none, for privacy.
 **Solution:** Reminders are calculated on the device and always shown on the Home screen. If the user allows it, the same reminders are also sent as browser notifications, at most once per reminder per day. The app works fully if notifications are blocked or unsupported. Demo mode adds a "Simulate reminder" button with an in-app pop-up, so the reminder shows up in screen recordings.
 
 ### 10. Never losing someone's records
 **Problem:** With no accounts or server, a lost phone, a new phone, or a browser cleaning up space could erase months of evidence.
-**Solution:** First, RideProof asks the browser for *persistent storage*. Second, users can save a **backup file** and restore it on any device. Because a backup file comes from outside the app, the restore code checks every field (dates, times, statuses) and explains problems in plain words ("This file is not a RideProof backup."). It fills in fields that older backups didn't have, and it refuses to restore into demo storage. Tests cover a full round trip through a real JSON file.
+**Solution:** First, RideConnect asks the browser for *persistent storage*. Second, users can save a **backup file** and restore it on any device. Because a backup file comes from outside the app, the restore code checks every field (dates, times, statuses) and explains problems in plain words ("This file is not a RideConnect backup."). It fills in fields that older backups didn't have, and it refuses to restore into demo storage. Tests cover a full round trip through a real JSON file.
 
 ### 11. Finding a hidden bug in offline updates
 **Problem:** While testing the "A new version is ready" message, the app sometimes failed to start after an update.

@@ -26,6 +26,10 @@ describe('public entry pages', () => {
   it('provides setup, sign-in, and a working sample entry point', async () => {
     const demo = vi.fn();
     await act(async () => root.render(<Landing onDemo={demo} />));
+    expect(container.textContent).toContain('RideConnect');
+    expect(container.textContent).not.toContain('RideProof');
+    expect(container.querySelector('.rp-mark')?.textContent).toBe('rc');
+    expect(document.title).toBe('Keep a record. Have a voice. · RideConnect');
     expect(container.querySelector('a[href="#/setup"]')).not.toBeNull();
     expect(container.querySelector('a[href="#/signin"]')).not.toBeNull();
     await act(async () => container.querySelector('button')!.click());

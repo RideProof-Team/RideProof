@@ -2,7 +2,7 @@
 export function Disclaimer() {
   return (
     <p className="disclaimer">
-      RideProof is not affiliated with any state, health plan, or ride company. Confirm rules
+      RideConnect is not affiliated with any state, health plan, or ride company. Confirm rules
       with your state Medicaid office.
     </p>
   );
