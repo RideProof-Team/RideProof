@@ -10,6 +10,36 @@ Riders (often seniors, people with disabilities, or dialysis patients) or their 
 
 > RideConnect is not affiliated with any state, health plan, or ride company. Confirm rules with your state Medicaid office.
 
+## Everything RideConnect can do (at a glance)
+
+**Before the ride**
+- Save appointments, including repeating ones like dialysis every Mon/Wed/Fri, and skip a single day for a holiday or cancellation.
+- Get **booking reminders** before the state's deadline, counted in business days (weekends and federal holidays skipped), with one-tap **Call the ride company** and **I booked this ride**.
+- See today's appointment, the next one, and what's coming up, with **Directions** and **Call clinic** buttons.
+
+**During and after the ride**
+- **Check in** in about a minute: one big-button question per screen (pickup, how late, did you make it, ride home), plus optional notes and pickup times. Each record is time-stamped.
+- A gentle "How did today's ride go?" nudge after the appointment, if notifications are on.
+
+**When rides keep failing**
+- **History** of every ride, color-coded with icons and words, with search and filters.
+- A **Report** with totals, a one-sentence summary, and a week-by-week chart.
+- A **PDF report** and a ready-to-edit **complaint letter** (copy, email, PDF, or print) written from the rider's own records, showing who to send it to.
+
+**Keeping records safe and private**
+- No accounts, no server: everything stays on the device.
+- **Back up / Restore** with a file, so records can move to a new phone; the browser is asked to keep the data permanently.
+- **Delete all my data** any time.
+
+**Made for everyone**
+- Large text that grows with the phone's text-size setting, big buttons, high contrast, screen-reader support, and **dark mode**.
+- Gentle animations that can be turned off (and are off automatically if the phone asks for reduced motion).
+- Installs on a phone's home screen, **works offline**, and offers updates when a new version is published.
+- "Are you sure?" dialogs, **Undo**, and a warning before leaving unsaved changes.
+
+**For trying it out**
+- A **landing page** with an **auto-playing demo** or a **guided tour** of a fictional rider's story, kept completely separate from real records.
+
 ---
 
 ## The problem
@@ -20,7 +50,9 @@ When a medical ride fails, a patient may report it by phone, but they rarely hav
 
 | Screen | What it does |
 |---|---|
-| **Welcome / setup** | Choose rider or caregiver, enter first name, state, ride company and phone. |
+| **Landing page** | What RideConnect is, with **Start your ride record**, **Watch the auto-demo**, and **Take a guided tour**, plus short answers to common questions. |
+| **Sign in (Device access)** | Reopens the ride record saved in this browser. No password: records live on this device, not in an online account. |
+| **Welcome / setup** | Choose rider or caregiver, enter first name, state (all 50 states and Washington, DC), ride company and phone. Moving from another phone? Restore a backup here. |
 | **Home** | Today's appointment with a big **Check in on today's ride** button (it appears once the appointment time has passed), Directions and Call clinic buttons, booking reminders, the next appointment and whether its ride is booked, what's coming up, and a "Getting started" checklist for new users. |
 | **Schedule** | Add, edit, and delete appointments, including repeating ones (e.g. every Mon/Wed/Fri). Skip a single day (holiday, cancellation) without changing the rest, and restore it later. |
 | **Ride check-in** | One question per screen with big buttons: pickup → how late → appointment outcome → ride home → optional notes and pickup times. Timestamped automatically. |
@@ -28,7 +60,7 @@ When a medical ride fails, a patient may report it by phone, but they rarely hav
 | **Report** | Totals for a time period, a headline sentence, a week-by-week chart, **Download PDF report**, and **Create complaint letter**. |
 | **Complaint letter** | A formal letter written from the logs, editable before sending, with Copy, Email, Download PDF, and Print. Shows who to send it to based on the state rules file. |
 | **Help** | What to do when a ride (or ride home) doesn't come, the state's rules, and how to install the app. |
-| **Settings** | Edit your information, Light / Dark / Match my phone appearance, notifications, **Back up / Restore**, **Delete all my data**, and privacy info. |
+| **Settings** | Edit your information, Light / Dark / Match my phone appearance, **Animations On / Off**, notifications, **Back up / Restore**, **Delete all my data**, and privacy info. |
 
 It's also a **Progressive Web App**: it can be installed on a phone's home screen (with an Install button on Android), works with no internet connection, and shows "A new version is ready" when you publish an update.
 
@@ -43,7 +75,7 @@ You need [Node.js](https://nodejs.org/) version 20 or newer.
 ```bash
 npm install        # download the libraries (first time only)
 npm run dev        # start the app at http://localhost:5173
-npm test           # run the automated tests
+npm test           # run the 119 automated tests
 npm run build      # build the final app into the dist/ folder
 npm run preview    # try the built app (including offline mode) at http://localhost:4173
 ```
@@ -68,7 +100,7 @@ From the landing page, choose **Watch the auto-demo** for a hands-free walkthrou
 
 **The demo story (all fake):** Rosa, 72, goes to dialysis every Mon/Wed/Fri at 9:00 AM at "Riverside Dialysis Center." Her granddaughter Maria uses RideConnect in caregiver mode. The ride company is "Sample Ride Co." (555-0100). Over the past month, 13 rides were logged: 5 late pickups (15, 30, and 60+ minutes), 2 rides that never came, a missed dialysis session on October 14, and a ride home that never came ("Waited 2 hours for ride home"). Today there's a dialysis ride to check in on, and a cardiology appointment on Tuesday whose ride isn't booked, so a **"Book today"** reminder shows on Home.
 
-**Demo controls:** tap the purple banner to open:
+**Demo controls:** tap the "Demo mode" banner to open:
 - shortcuts to **Home, Ride check-in, History, Report, Complaint preview**;
 - **Simulate reminder**: shows the booking reminder as a notification-style pop-up inside the app (so it appears in screen recordings), and as a real phone notification if allowed;
 - **Reset demo**: puts the story back to the start, so you can do another take.
@@ -85,14 +117,18 @@ From the landing page, choose **Watch the auto-demo** for a hands-free walkthrou
 
 ## State rules: you need to fill these in
 
-`src/data/stateRules.json` has three example states (Washington, California, Texas). **Every value is a placeholder.** Look up the real rules on each state's Medicaid website, then:
+Riders can pick **any of the 50 states or Washington, DC** during setup. Detailed rules (the booking window and complaint contacts) exist for only three example states so far, in `src/data/stateRules.json`: Washington, California, and Texas. **Every value there is a placeholder.**
+
+For a state with no detailed rules yet, everything works **except booking reminders and the "who to send it to" list**, because the app doesn't know that state's booking deadline. The Help screen tells the rider RideConnect doesn't have their state's rules yet. Adding a state's rules turns those features on.
+
+Look up the real rules on each state's Medicaid website, then:
 
 1. Set `bookingWindowBusinessDays` (how many business days ahead rides must be booked).
 2. Replace each `complaintContacts` entry's `name`, `phone`, `email`, and `website`.
 3. Change `"isPlaceholder": true` to `false` once a state is verified. That removes the "these are placeholders" warnings in the app.
 4. Run `npm test`. One test expects all three states to be placeholders and will tell you it needs updating. The demo tests also check that Washington's rule still produces a booking reminder.
 
-To add a state, copy one entry and change the two-letter key (e.g. `"OR"`).
+To add rules for another state, copy one entry and change the two-letter key (e.g. `"OR"`).
 
 ---
 
@@ -108,8 +144,15 @@ src/
   App.tsx               Picks real or demo storage, loads the profile, shows the right screen
   AppContext.tsx        Shared values every screen can read (mode, storage, today...)
   data/stateRules.json  Booking windows and complaint contacts per state (PLACEHOLDERS)
+  styles.css            Layout, colors (light and dark), and accessibility rules
+  app-theme.css         The RideConnect look, plus screen and card entrance animations
+  motion.css            Small animations inside screens, and the "Animations: Off" switch
   screens/              One file per screen (Home, CheckIn, Report, Complaint, ...)
+    PublicPages.tsx       The landing page and Sign in (device access)
   components/           Reusable pieces (Header, Icon, RideChart, DemoControls, ...)
+    DemoTour.tsx          The auto-playing / guided demo tour
+    FeedbackHost.tsx      "Are you sure?" dialogs and "Saved / Undo" messages
+    PwaPrompts.tsx        Install button and "A new version is ready"
   lib/                  The logic, with no screen code, so it can be unit tested:
     storage.ts            IndexedDB: two separate databases, real and demo
     dates.ts              Date math on "YYYY-MM-DD" text (no time-zone bugs)
@@ -123,12 +166,16 @@ src/
     pdfWriter.ts / pdfReport.ts   Builds the PDF files
     demoData.ts           The fake Rosa story, demo seeding and reset
     clock.ts              "What's today?" (fixed date in demo mode)
-    router.ts             Which screen to show, based on the #address
+    router.ts             Which screen to show (the #address), and "unsaved changes" warnings
+    backup.ts / persist.ts  Backup files, restore checks, and permanent-storage request
+    theme.ts / motion.ts  Light/Dark and Animations On/Off settings
+    pwa.ts                Install and update handling
+    feedback.ts           askConfirm() and showSnackbar() for any screen to use
   sw-template.js        The service worker (offline support)
 vite.config.ts          Build settings + a small plugin that writes the offline file list
 ```
 
-**Tests** (`npm test`, 97 tests in 10 files) cover the tricky logic: business-day deadlines and holidays, recurring appointment dates and skipped days, report statistics, the complaint letter's wording, the check-in question order, History filters, backup files, and that demo data never mixes with real data.
+**Tests** (`npm test`, 119 tests in 15 files) cover the tricky logic: business-day deadlines and holidays, recurring appointment dates and skipped days, report statistics, the complaint letter's wording, the check-in question order, History filters, backup files, state selection, the demo tour, the public pages, the motion rules, and that demo data never mixes with real data.
 
 ## Accessibility
 
@@ -157,7 +204,9 @@ Many RideConnect users are elderly or disabled, so accessibility was a requireme
 - **Notifications only arrive while the app is open** (or opened). Without a server, a web app can't wake itself up to send a reminder. The Home screen reminders always work.
 - On iPhone, notifications only work after the app is added to the Home Screen.
 - Rider entries are the rider's own record, not independent proof. A dated record made at the time is still strong evidence.
-- Ideas: Spanish and other languages, more than one rider per caregiver, verified rules for all 50 states.
+- **Booking reminders only work in states with detailed rules** (currently 3 placeholder states). Riders in other states can still log rides and make reports and letters.
+- "Sign in" opens the record saved in this browser; there are no online accounts, so records don't sync between devices (use Back up / Restore).
+- Ideas: Spanish and other languages, more than one rider per caregiver, verified rules for all 50 states, letting riders type in their own booking window.
 
 ---
 
@@ -216,6 +265,14 @@ These are the hardest problems we solved, written so they can be adapted for the
 ### 13. Dark mode that still works on paper
 **Problem:** Dark mode is easy for normal page parts, but the chart is drawn on a `<canvas>`, which can't use the page's color settings. Worse, the PDF uses a picture of the chart, and a dark-mode picture would print light-gray text on white paper.
 **Solution:** Every color became a named token with a light and a dark value, each pair checked against WCAG contrast. The chart reads the current colors and redraws when the theme changes. The PDF gets its own off-screen copy of the chart, always in light colors (and wider, so every week is labeled).
+
+### 14. Animations that help, never hurt
+**Problem:** Animation makes an app feel polished and helps explain changes (a new question replacing the old one), but for some people motion causes dizziness or nausea, and two teammates were adding animations in different files.
+**Solution:** Animations are short and gentle, and none loop forever (the "Due today" badge pulses twice, then stops). Every one is off when the phone asks for reduced motion. On top of that, one master rule in `motion.css` turns off **all** animations in every file when the user picks **Settings → Animations: Off**. Animations done in code, like numbers counting up and chart bars growing, check the same setting. Screen readers always get the final number right away instead of hearing it count. While combining the two teammates' work, a screenshot caught a bug: the "Saved" circle's animation filled it in solid green and hid the check mark. It's now fixed.
+
+### 15. Renaming the app without losing anyone's data
+**Problem:** The app was renamed from RideProof to RideConnect, but the internal names of the databases and backup files already existed on people's devices.
+**Solution:** Every name people *see* changed, but the internal storage names and the backup format name intentionally stayed the same. Records saved before the rename still open, and older backup files still restore; the backup tests use the original format name to prove it.
 
 ---
 
