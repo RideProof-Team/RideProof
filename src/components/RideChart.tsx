@@ -17,6 +17,7 @@ import {
 import { forwardRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { WeekCounts } from '../lib/reportStats';
+import { motionAllowed } from '../lib/motion';
 import { cssColor, useIsDark } from '../lib/theme';
 
 // Chart.js only includes the pieces you "register", which keeps the app smaller.
@@ -30,8 +31,6 @@ export const CHART_COLORS = {
   noShow: '#ad4a42',
 };
 
-const reduceMotion =
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** Light-mode colors, always used for the PDF (paper is white). */
 const PRINT = { text: '#1a1a1a', muted: '#4a4a4a', grid: '#e5e7eb', background: '#ffffff' };
@@ -85,7 +84,11 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, Props>(function 
         options={{
           responsive: true,
           maintainAspectRatio: false,
-          animation: reduceMotion || forPrint ? false : { duration: 600 },
+          // Bars grow up from the bottom, one week after another (left to right).
+          animation:
+            forPrint || !motionAllowed()
+              ? false
+              : { duration: 600, easing: 'easeOutQuart', delay: (context) => (context.type === 'data' ? context.dataIndex * 90 : 0) },
           plugins: {
             legend: {
               position: 'top',

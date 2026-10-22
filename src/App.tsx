@@ -200,7 +200,8 @@ export function App() {
       {!isPublic && <UpdateBanner />}
       {toast && <Toast message={toast} onClose={closeToast} />}
       {tourOpen && mode === 'demo' && profile && !loading && !isPublic && <DemoTour key={tourRun} route={route} autoPlay={tourAutoPlay} onClose={() => setTourOpen(false)} />}
-      {/* The key makes React replay the fade-in each time the screen changes. */}
+      {/* The key makes React draw each new screen from scratch, which also
+          replays its entrance animation (see app-theme.css and motion.css). */}
       <div className="screen-transition" key={screenKey}>
         {screen}
       </div>

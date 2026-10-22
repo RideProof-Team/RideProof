@@ -50,7 +50,7 @@ export function BookingReminders({ reminders, onBooked }: Props) {
             <li key={`${reminder.appointment.id}-${reminder.tripDate}`} className="reminder-item">
               <p className="reminder-title">
                 {reminder.urgency !== 'soon' && (
-                  <span className="badge badge-problem">{reminder.urgency === 'today' ? 'Due today' : 'Past due'}</span>
+                  <span className="badge badge-problem badge-attention">{reminder.urgency === 'today' ? 'Due today' : 'Past due'}</span>
                 )}{' '}
                 {title}
               </p>

@@ -23,6 +23,7 @@ import {
   type Step,
 } from '../lib/checkinFlow';
 import { nowTimestamp } from '../lib/clock';
+import { motionAllowed } from '../lib/motion';
 import { formatLongDate, formatTime } from '../lib/dates';
 import {
   APPOINTMENT_TYPE_LABELS,
@@ -143,6 +144,10 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   // If this trip was already logged, start with the old answers so they can be changed.
   const [answers, setAnswers] = useState<Answers>(() => (existing ? answersFromLog(existing) : { notes: '' }));
   const [step, setStep] = useState<Step>('pickup');
+  // Which way the questions slide: forward (from the right) or back (from the left).
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
+  // The answer just tapped, shown "popping" for a moment before moving on.
+  const [picked, setPicked] = useState<string | null>(null);
   const [saved, setSaved] = useState<RideLog | null>(null);
   const questionRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
@@ -171,15 +176,31 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
 
   /** Record an answer and go straight to the next question: one tap per question. */
   function answer(change: Partial<Answers>) {
-    const updated = { ...answers, ...change };
-    setAnswers(updated);
-    const next = nextStep(step, updated);
-    if (next !== 'done') setStep(next);
+    if (picked) return; // ignore extra taps while the next question is coming
+    const moveOn = () => {
+      setPicked(null);
+      const updated = { ...answers, ...change };
+      setAnswers(updated);
+      const next = nextStep(step, updated);
+      setDirection('forward');
+      if (next !== 'done') setStep(next);
+    };
+    if (motionAllowed()) {
+      // Show the tapped answer "pop" for 0.2 seconds, so it's clear the tap
+      // counted, then slide in the next question.
+      setPicked(String(Object.values(change)[0]));
+      setTimeout(moveOn, 200);
+    } else {
+      moveOn();
+    }
   }
 
   function goBack() {
     const previous = previousStep(step, answers);
-    if (previous) setStep(previous);
+    if (previous) {
+      setDirection('back');
+      setStep(previous);
+    }
   }
 
   async function save() {
@@ -236,7 +257,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       <Screen title={TITLE} back={BACK}>
         {tripLine}
         <div className="done-box" role="status">
-          <Icon name="check" size={40} />
+          <SavedCheck />
           <h2 tabIndex={-1} ref={questionRef}>Saved</h2>
         </div>
         <p>
@@ -258,6 +279,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       question = isCaregiver ? `Did the ride pick ${name} up on time?` : 'Did your ride pick you up on time?';
       content = (
         <Options
+          picked={picked}
           selected={answers.pickupStatus}
           onPick={(v) => answer({ pickupStatus: v })}
           options={[
@@ -272,6 +294,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       question = 'How late was the ride?';
       content = (
         <Options
+          picked={picked}
           selected={answers.minutesLate}
           onPick={(v) => answer({ minutesLate: v })}
           options={([15, 30, 60] as const).map((m) => ({
@@ -287,6 +310,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       question = isCaregiver ? `Did ${name} make it to the appointment?` : 'Did you make it to your appointment?';
       content = (
         <Options
+          picked={picked}
           selected={answers.appointmentOutcome}
           onPick={(v) => answer({ appointmentOutcome: v })}
           options={[
@@ -301,6 +325,7 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
       question = 'How was the ride home?';
       content = (
         <Options
+          picked={picked}
           selected={answers.returnRideStatus}
           onPick={(v) => answer({ returnRideStatus: v })}
           options={[
@@ -353,10 +378,13 @@ function Questions({ trip, existing, profile }: { trip: TripInfo; existing?: Rid
   return (
     <Screen title={TITLE} back={BACK}>
       {tripLine}
-      <p className="step-count">Question {steps.indexOf(step) + 1} of {steps.length}</p>
-      {/* aria-live isn't needed: focus moves to this heading on each step. */}
-      <h2 className="question" tabIndex={-1} ref={questionRef}>{question}</h2>
-      {content}
+      {/* key={step}: a new question is a new "page", so its slide-in animation plays. */}
+      <div key={step} className={direction === 'back' ? 'step-back' : 'step-forward'}>
+        <p className="step-count">Question {steps.indexOf(step) + 1} of {steps.length}</p>
+        {/* aria-live isn't needed: focus moves to this heading on each step. */}
+        <h2 className="question" tabIndex={-1} ref={questionRef}>{question}</h2>
+        {content}
+      </div>
       {steps.indexOf(step) > 0 && (
         <button type="button" className="button-secondary" onClick={goBack}>
           Previous question
@@ -376,10 +404,13 @@ function Options<T extends string | number>({
   options,
   selected,
   onPick,
+  picked,
 }: {
   options: Option<T>[];
   selected: T | undefined;
   onPick(value: T): void;
+  /** The answer just tapped (while it "pops", before the next question). */
+  picked: string | null;
 }) {
   return (
     <div className="answer-list">
@@ -387,8 +418,8 @@ function Options<T extends string | number>({
         <button
           key={String(option.value)}
           type="button"
-          className={`answer-button tone-${option.tone}`}
-          aria-pressed={selected === option.value}
+          className={`answer-button tone-${option.tone}${picked === String(option.value) ? ' just-picked' : ''}`}
+          aria-pressed={picked !== null ? picked === String(option.value) : selected === option.value}
           onClick={() => onPick(option.value)}
         >
           <Icon name={option.icon} size={32} />
@@ -406,5 +437,15 @@ function TimeBox({ id, label, value, onChange }: { id: string; label: string; va
       <label htmlFor={id}>{label}</label>
       <input id={id} type="time" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
     </div>
+  );
+}
+
+/** The big "Saved" check mark. motion.css makes it draw itself in. */
+function SavedCheck() {
+  return (
+    <svg className="saved-check" width="56" height="56" viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+      <circle cx="28" cy="28" r="26" />
+      <path d="M17 29l7 7 15-16" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

@@ -12,6 +12,7 @@ import { saveLastBackupDate } from '../lib/backup';
 import { resetOnboarding } from '../lib/onboarding';
 import { askConfirm } from '../lib/feedback';
 import { requestPersistentStorage, type PersistState } from '../lib/persist';
+import { loadMotion, saveMotion, systemReducesMotion, type MotionChoice } from '../lib/motion';
 import { loadTheme, saveTheme, type ThemeChoice } from '../lib/theme';
 import { navigate, routeToHash } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
@@ -32,6 +33,7 @@ export function Settings() {
   const [deleting, setDeleting] = useState(false);
   const [persist, setPersist] = useState<PersistState | null>(null);
   const [theme, setTheme] = useState<ThemeChoice>(loadTheme);
+  const [motion, setMotion] = useState<MotionChoice>(loadMotion);
   useEffect(() => {
     requestPersistentStorage().then(setPersist);
   }, []);
@@ -107,6 +109,33 @@ export function Settings() {
               </label>
             ))}
           </div>
+        </fieldset>
+        <fieldset className="choice-group">
+          <legend>Animations</legend>
+          <div className="chip-row">
+            {([
+              ['on', 'On'],
+              ['off', 'Off'],
+            ] as [MotionChoice, string][]).map(([value, label]) => (
+              <label key={value} className="chip">
+                <input
+                  type="radio"
+                  name="motion"
+                  checked={motion === value}
+                  onChange={() => {
+                    setMotion(value);
+                    saveMotion(value);
+                  }}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="field-hint">
+            {systemReducesMotion()
+              ? 'Your phone is set to reduce motion, so animations are already off.'
+              : 'Turn animations off if moving things on screen are distracting or make you feel dizzy.'}
+          </p>
         </fieldset>
       </section>
 
