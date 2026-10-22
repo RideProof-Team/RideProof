@@ -10,7 +10,7 @@ import { APPOINTMENT_TYPE_LABELS, MINUTES_LATE_SHORT, OUTCOME_LABELS, PICKUP_LAB
 import { pickupTimesText } from './complaintLetter';
 import { PdfWriter, pdfSafe } from './pdfWriter';
 import { computeStats, headline, logsInRange, type ReportPeriod } from './reportStats';
-import { getStateRule } from './stateRules';
+import { stateName } from './stateRules';
 
 const FOOTER =
   'Created with RideConnect. Ride details were recorded by the rider or caregiver. ' +
@@ -37,9 +37,8 @@ export async function downloadReportPdf({ profile, logs, period, today, chartIma
   pdf.rule();
 
   // ----- Who and which company -----
-  const state = getStateRule(profile.state);
   pdf.text(`Rider: ${profile.riderFirstName}`, { gapAfter: 2 });
-  pdf.text(`State: ${state?.name ?? profile.state}`, { gapAfter: 2 });
+  pdf.text(`State: ${stateName(profile.state)}`, { gapAfter: 2 });
   pdf.text(`Ride company: ${profile.rideCompanyName} (${profile.rideCompanyPhone})`, { gapAfter: 2 });
   if (profile.healthPlanName) pdf.text(`Health plan: ${profile.healthPlanName}`, { gapAfter: 2 });
   pdf.y += 8;

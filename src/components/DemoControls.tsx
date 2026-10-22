@@ -12,6 +12,7 @@ import { resetDemo } from '../lib/demoData';
 import { askNotificationPermission, notificationPermission, showNotification } from '../lib/notifications';
 import { bookingReminders, reminderText } from '../lib/reminders';
 import { navigate, type Route } from '../lib/router';
+import { effectiveBookingWindow } from '../lib/bookingWindow';
 import { getStateRule } from '../lib/stateRules';
 
 const SHORTCUTS: { label: string; route: Route }[] = [
@@ -37,8 +38,8 @@ export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogEle
   async function simulateReminder() {
     close();
     if (!profile) return;
-    const rule = getStateRule(profile.state);
-    const reminders = bookingReminders(await storage.listAppointments(), today, rule?.bookingWindowBusinessDays ?? 2);
+    const bookingWindow = effectiveBookingWindow(profile, getStateRule(profile.state));
+    const reminders = bookingWindow.days === null ? [] : bookingReminders(await storage.listAppointments(), today, bookingWindow.days);
     if (reminders.length === 0) {
       showToast({ title: 'No booking reminders right now', body: 'Tap "Reset demo" to bring the sample reminder back.' });
       return;

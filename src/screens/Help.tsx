@@ -8,12 +8,14 @@ import { Icon } from '../components/Icon';
 import { InstallButton } from '../components/PwaPrompts';
 import { Screen } from '../components/Screen';
 import { routeToHash } from '../lib/router';
-import { getStateRule } from '../lib/stateRules';
+import { businessDaysText, effectiveBookingWindow } from '../lib/bookingWindow';
+import { getStateRule, stateName } from '../lib/stateRules';
 
 export function Help() {
   const { profile } = useApp();
   if (!profile) return null;
   const rule = getStateRule(profile.state);
+  const bookingWindow = effectiveBookingWindow(profile, rule);
   const phone = (
     <a href={`tel:${profile.rideCompanyPhone}`} className="button-primary">
       <Icon name="phone" /> Call {profile.rideCompanyName}
@@ -57,7 +59,7 @@ export function Help() {
       </section>
 
       <section aria-labelledby="rules-heading">
-        <h2 id="rules-heading">{rule ? `${rule.name} rules` : 'Your state\'s rules'}</h2>
+        <h2 id="rules-heading">{stateName(profile.state)} rules</h2>
         {rule?.isPlaceholder && (
           <p className="placeholder-warning">
             <Icon name="warning" /> These rules are placeholders. Check your state Medicaid website for the real rules.
@@ -70,6 +72,12 @@ export function Help() {
               before the appointment. Weekends and federal holidays don't count. RideConnect reminds you on the Home
               screen.
             </p>
+            {bookingWindow.source === 'rider' && (
+              <p>
+                You told RideConnect your ride company needs <strong>{businessDaysText(bookingWindow.days!)}</strong>, so
+                reminders use your number instead. You can change it in <a href="#/settings">Settings</a>.
+              </p>
+            )}
             <p><strong>Where to complain:</strong></p>
             <ul className="plain-list contact-list">
               {rule.complaintContacts.map((c) => (
@@ -81,7 +89,24 @@ export function Help() {
             </ul>
           </>
         ) : (
-          <p>RideConnect doesn't have rules for your state yet. Check your state Medicaid website.</p>
+          <>
+            <p>
+              RideConnect doesn't have {stateName(profile.state)}'s rules yet. Check your state Medicaid website or ask
+              your ride company how far ahead rides must be booked.
+            </p>
+            {bookingWindow.source === 'rider' ? (
+              <p>
+                You told RideConnect your ride company needs <strong>{businessDaysText(bookingWindow.days!)}</strong>, so
+                booking reminders are on. You can change it in <a href="#/settings">Settings</a>.
+              </p>
+            ) : (
+              <p>
+                <strong>You can still get booking reminders:</strong> in <a href="#/settings">Settings</a>, enter how many
+                business days ahead your ride company requires you to book (for example, 2 business days). Weekends and
+                federal holidays won't be counted.
+              </p>
+            )}
+          </>
         )}
       </section>
 

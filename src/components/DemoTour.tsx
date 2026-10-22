@@ -66,7 +66,7 @@ const STEPS: TourStep[] = [
     route: { name: 'settings' },
     chapter: 'Settings',
     title: 'Keep control of the record',
-    description: 'Profile, display, and backup tools make the prototype adaptable while keeping its records on this device instead of a cloud account.',
+    description: 'Profile, booking reminder, display, and backup tools keep the record working for each rider. If a state’s booking rule isn’t built in yet, the rider can enter their ride company’s own rule here.',
     notice: 'Nothing has been sent or changed. Finish the tour to keep exploring Rosa’s sample data.',
   },
 ];

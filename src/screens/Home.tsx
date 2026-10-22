@@ -26,6 +26,7 @@ import { SEVERITY_DISPLAY, rideSeverity } from '../lib/rideStatus';
 import { loadLastBackupDate } from '../lib/backup';
 import { showSnackbar } from '../lib/feedback';
 import { routeToHash } from '../lib/router';
+import { effectiveBookingWindow } from '../lib/bookingWindow';
 import { getStateRule } from '../lib/stateRules';
 import type { Appointment } from '../types';
 import { useRideData } from '../lib/useRideData';
@@ -50,8 +51,11 @@ export function Home() {
   const laterTrips = trips.filter((t) => t.date > today);
   const nextTrip = laterTrips[0];
   const comingUp = laterTrips.slice(1, 1 + COMING_UP_COUNT);
-  const stateRule = getStateRule(profile.state);
-  const reminders = stateRule ? bookingReminders(appointments, today, stateRule.bookingWindowBusinessDays) : [];
+  // Rider's own number first, then the state's rule, else no reminders.
+  const bookingWindow = effectiveBookingWindow(profile, getStateRule(profile.state));
+  const reminders = bookingWindow.days !== null ? bookingReminders(appointments, today, bookingWindow.days) : [];
+  // Reminders are off only because we don't know the booking window: say so.
+  const remindersOff = bookingWindow.source === 'none' && appointments.some((a) => !a.rideBooked);
 
   // One tap to mark a ride as booked, right from Home.
   async function markBooked(appointment: Appointment) {
@@ -138,6 +142,15 @@ export function Home() {
       )}
 
       <BookingReminders reminders={reminders} onBooked={(r) => markBooked(r.appointment)} />
+      {remindersOff && (
+        <section className="card card-info" aria-labelledby="reminders-off-heading">
+          <h2 id="reminders-off-heading">
+            <Icon name="clock" /> Booking reminders are off
+          </h2>
+          <p>Tell RideConnect how many business days ahead your ride company needs, and it will remind you when to book.</p>
+          <a href="#/settings" className="button-secondary">Set up booking reminders</a>
+        </section>
+      )}
 
       {nextTrip && (
         <section className="card" aria-labelledby="next-heading">

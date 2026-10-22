@@ -12,6 +12,7 @@
 // from outside the app and could be damaged or not a RideConnect file at all.
 // ---------------------------------------------------------------------------
 import type { Appointment, Profile, RideLog } from '../types';
+import { isValidRiderBookingWindow } from './bookingWindow';
 import type { Storage } from './storage';
 
 // Keep the original identifier so backups created before the rename still import.
@@ -61,6 +62,10 @@ function readProfile(v: unknown): Profile {
   if (!isObject(v) || !oneOf(v.role, ['rider', 'caregiver'] as const) || !text(v.riderFirstName)) {
     throw new BackupError('The rider information in this file is missing or damaged.');
   }
+  // Added later: older backups don't have it, and that's fine (left unset).
+  if (v.riderBookingWindow !== undefined && v.riderBookingWindow !== null && !isValidRiderBookingWindow(v.riderBookingWindow)) {
+    throw new BackupError('The booking reminder setting in this file is damaged. It must be a number of business days from 1 to 14, or "Not sure".');
+  }
   return {
     role: v.role,
     riderFirstName: text(v.riderFirstName),
@@ -69,6 +74,7 @@ function readProfile(v: unknown): Profile {
     rideCompanyName: text(v.rideCompanyName),
     rideCompanyPhone: text(v.rideCompanyPhone),
     healthPlanName: text(v.healthPlanName),
+    ...(isValidRiderBookingWindow(v.riderBookingWindow) ? { riderBookingWindow: v.riderBookingWindow } : {}),
   };
 }
 

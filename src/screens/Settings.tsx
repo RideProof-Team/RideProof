@@ -15,7 +15,10 @@ import { requestPersistentStorage, type PersistState } from '../lib/persist';
 import { loadMotion, saveMotion, systemReducesMotion, type MotionChoice } from '../lib/motion';
 import { loadTheme, saveTheme, type ThemeChoice } from '../lib/theme';
 import { navigate, routeToHash } from '../lib/router';
-import { getStateRule } from '../lib/stateRules';
+import { BookingWindowPicker } from '../components/BookingWindowPicker';
+import { showSnackbar } from '../lib/feedback';
+import { stateName } from '../lib/stateRules';
+import type { RiderBookingWindow } from '../types';
 import { createStorage } from '../lib/storage';
 
 const APP_VERSION = '1.0.0';
@@ -28,7 +31,7 @@ const PERMISSION_TEXT = {
 };
 
 export function Settings() {
-  const { profile, mode, setProfile, toggleDemo } = useApp();
+  const { profile, mode, setProfile, toggleDemo, storage } = useApp();
   const [permission, setPermission] = useState(notificationPermission);
   const [deleting, setDeleting] = useState(false);
   const [persist, setPersist] = useState<PersistState | null>(null);
@@ -64,6 +67,14 @@ export function Settings() {
     navigate({ name: 'home' }); // with no profile, this shows the Welcome screen
   }
 
+  // Save the booking window right away (no separate Save button needed).
+  async function saveBookingWindow(value: RiderBookingWindow | undefined) {
+    const updated = { ...profile!, riderBookingWindow: value };
+    await storage.saveProfile(updated);
+    setProfile(updated);
+    showSnackbar('Booking reminder setting saved.');
+  }
+
   return (
     <Screen title="Settings" back={{ to: { name: 'help' }, label: 'Help' }}>
       <section className="card" aria-labelledby="info-heading">
@@ -72,7 +83,7 @@ export function Settings() {
           <dt>{profile.role === 'caregiver' ? 'Rider (you help them)' : 'Rider'}</dt>
           <dd>{profile.riderFirstName}</dd>
           <dt>State</dt>
-          <dd>{getStateRule(profile.state)?.name ?? profile.state}</dd>
+          <dd>{stateName(profile.state)}</dd>
           <dt>Ride company</dt>
           <dd>{profile.rideCompanyName}, {profile.rideCompanyPhone}</dd>
           {profile.healthPlanName && (
@@ -83,6 +94,12 @@ export function Settings() {
           )}
         </dl>
         <a href={routeToHash({ name: 'profile-edit' })} className="button-secondary">Edit your information</a>
+      </section>
+
+      <section className="card" aria-labelledby="booking-heading">
+        <h2 id="booking-heading">Booking reminders</h2>
+        {isDemo && <p className="field-hint">In demo mode this changes the sample data only.</p>}
+        <BookingWindowPicker id="settings-booking-window" profile={profile} onChange={saveBookingWindow} />
       </section>
 
       <section className="card" aria-labelledby="appearance-heading">

@@ -22,7 +22,17 @@ export interface Profile {
   rideCompanyPhone: string;
   /** Optional, so it can be an empty string. */
   healthPlanName: string;
+  /**
+   * The rider's own answer to "How many business days ahead does your ride
+   * company require you to book?" — a number from 1 to 14, or 'not_sure'.
+   * Missing (undefined) means they haven't answered. Optional, because
+   * profiles saved by older versions of the app don't have it.
+   */
+  riderBookingWindow?: RiderBookingWindow;
 }
+
+/** 1–14 business days, or "Not sure". */
+export type RiderBookingWindow = number | 'not_sure';
 
 export type AppointmentType = 'dialysis' | 'checkup' | 'specialist' | 'therapy' | 'other';
 

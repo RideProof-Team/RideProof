@@ -14,7 +14,8 @@ import { Disclaimer } from '../components/Disclaimer';
 import { ErrorSummary, TextField } from '../components/FormFields';
 import { showSnackbar } from '../lib/feedback';
 import { allowLeave, navigate, useLeaveWarning } from '../lib/router';
-import { listStates } from '../lib/stateRules';
+import { BookingWindowPicker } from '../components/BookingWindowPicker';
+import { getStateRule, listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
 import type { Profile, Role } from '../types';
 
@@ -148,6 +149,20 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
           </select>
           {errors.state && <p id="state-error" className="field-error">{errors.state}</p>}
         </div>
+
+        {/* Optional: only for states RideConnect has no rules for yet, so
+            booking reminders can still work. (Settings has it for everyone.) */}
+        {!editing && form.state && !getStateRule(form.state) && (
+          <fieldset className="choice-group optional-step">
+            <legend>Booking reminders (optional)</legend>
+            <BookingWindowPicker
+              id="setup-booking-window"
+              profile={form}
+              onChange={(value) => update('riderBookingWindow', value)}
+            />
+            <p className="field-hint">You can skip this and set it later in Settings.</p>
+          </fieldset>
+        )}
 
         <TextField
           id="rideCompanyName"
