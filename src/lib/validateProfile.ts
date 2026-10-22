@@ -4,7 +4,7 @@
 // Returns a list of problems in plain language; an empty object means "OK".
 // ---------------------------------------------------------------------------
 import type { Profile } from '../types';
-import { getStateRule } from './stateRules';
+import { isStateCode } from './stateRules';
 
 export type ProfileErrors = Partial<Record<keyof Profile, string>>;
 
@@ -14,7 +14,7 @@ export function validateProfile(profile: Profile): ProfileErrors {
   if (profile.riderFirstName.trim() === '') {
     errors.riderFirstName = 'Please enter a first name.';
   }
-  if (!getStateRule(profile.state)) {
+  if (!isStateCode(profile.state)) {
     errors.state = 'Please choose a state.';
   }
   if (profile.rideCompanyName.trim() === '') {

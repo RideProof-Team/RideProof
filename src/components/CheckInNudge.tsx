@@ -3,7 +3,7 @@
 //
 // Two hours after an appointment starts, if there's still no check-in, we
 // send one gentle notification (only if the user turned notifications on).
-// Like booking reminders, this can only happen while RideProof is open,
+// Like booking reminders, this can only happen while RideConnect is open,
 // because there's no server to send it. It draws nothing on screen.
 // ---------------------------------------------------------------------------
 import { useEffect } from 'react';

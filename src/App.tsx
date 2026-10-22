@@ -149,7 +149,7 @@ export function App() {
   } else if (loadError) {
     screen = <Screen title="Your records couldn’t be opened"><p role="alert">{loadError}</p><button className="button-primary" onClick={refreshAll}>Try again</button></Screen>;
   } else if (loading) {
-    screen = <Screen title="RideProof"><p>Loading…</p></Screen>;
+    screen = <Screen title="RideConnect"><p>Loading…</p></Screen>;
   } else if (!profile) {
     screen = <Welcome />;
   } else {

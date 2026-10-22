@@ -1,4 +1,4 @@
-# Contributing to RideProof
+# Contributing to RideConnect
 
 ## Getting started
 

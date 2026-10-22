@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // notifications.ts — phone/computer notifications for booking reminders.
 //
-// IMPORTANT LIMIT: RideProof has no server, so it can't "push" a message
+// IMPORTANT LIMIT: RideConnect has no server, so it can't "push" a message
 // to a phone while the app is closed. Notifications are sent when the
 // app is opened (or is open). The Home screen reminders always work,
 // with or without notification permission.

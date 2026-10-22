@@ -33,10 +33,10 @@ export function Screen({ title, children, back, className = '' }: ScreenProps) {
     window.scrollTo(0, 0);
   }, []);
 
-  // The browser tab title, e.g. "Report – RideProof". Screen readers
+  // The browser tab title, e.g. "Report – RideConnect". Screen readers
   // announce it, and it helps people with many tabs open.
   useEffect(() => {
-    document.title = title === 'RideProof' ? 'RideProof' : `${title} – RideProof`;
+    document.title = title === 'RideConnect' ? 'RideConnect' : `${title} – RideConnect`;
   }, [title]);
 
   return (

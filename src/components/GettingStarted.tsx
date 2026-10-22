@@ -20,7 +20,7 @@ export function GettingStarted({ hasAppointments, hasCheckIns }: Props) {
     {
       done: hasAppointments,
       title: 'Add your appointments',
-      detail: 'Include repeating ones, like dialysis. RideProof will remind you when to book each ride.',
+      detail: 'Include repeating ones, like dialysis. RideConnect will remind you when to book each ride.',
       link: { href: routeToHash({ name: 'appointment-new' }), label: 'Add an appointment' },
     },
     {

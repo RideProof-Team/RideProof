@@ -107,6 +107,51 @@ textarea { font-family: var(--font-body); }
   .header-bar .device-access-link { margin-left: 0; margin-right: auto; }
 }
 
+/* Motion follows the way a paper ride record is opened and reviewed: the
+   page settles first, then its useful cards arrive in a short sequence. */
+@keyframes screen-arrive {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes card-arrive {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .screen-transition { animation: screen-arrive 260ms cubic-bezier(.2, .75, .25, 1) both; }
+  .screen-dashboard > .card,
+  .screen-dashboard > section:not(.card) { animation: card-arrive 360ms cubic-bezier(.2, .75, .25, 1) both; }
+  .screen-dashboard > :nth-child(3) { animation-delay: 45ms; }
+  .screen-dashboard > :nth-child(4) { animation-delay: 90ms; }
+  .screen-dashboard > :nth-child(5) { animation-delay: 135ms; }
+  .screen-dashboard > :nth-child(n + 6) { animation-delay: 180ms; }
+
+  .button-primary, .button-secondary, .button-danger, .button-danger-solid,
+  .answer-button, .choice-card, .bottom-nav a, .bottom-nav a .icon {
+    transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease,
+      border-color 140ms ease, color 140ms ease;
+  }
+  .button-primary:hover, .button-secondary:hover, .button-danger:hover,
+  .button-danger-solid:hover, .answer-button:hover { transform: translateY(-2px); }
+  .button-primary:active, .button-secondary:active, .button-danger:active,
+  .button-danger-solid:active, .answer-button:active { transform: translateY(1px); }
+  .choice-card:has(input:checked) { transform: translateX(4px); }
+  .bottom-nav a[aria-current='page'] .icon { transform: translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-transition,
+  .screen-dashboard > .card,
+  .screen-dashboard > section:not(.card) { animation: none; }
+  .button-primary, .button-secondary, .button-danger, .button-danger-solid,
+  .answer-button, .choice-card, .bottom-nav a, .bottom-nav a .icon {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* Dark mode keeps the same green identity and preserves the user's preference. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {

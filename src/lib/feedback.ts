@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // feedback.ts — two ways the app talks back to the user:
 //
-//   askConfirm({...})   "Are you sure?" in RideProof's own big, clear dialog
+//   askConfirm({...})   "Are you sure?" in RideConnect's own big, clear dialog
 //                       (instead of the browser's small, plain OK/Cancel box).
 //                       It returns a Promise: await it to get true or false.
 //

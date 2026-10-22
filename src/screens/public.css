@@ -136,5 +136,39 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .rp-public .rp-button, .rp-nav a, .rp-care a { transition: background-color 120ms ease, text-decoration-thickness 120ms ease; }
+  .rp-hero-copy { animation: hero-copy-arrive 420ms cubic-bezier(.2, .75, .25, 1) both; }
+  .rp-record-wrap { animation: trip-log-arrive 520ms 100ms cubic-bezier(.2, .75, .25, 1) both; }
+  .rp-timeline li { animation: timeline-entry-arrive 300ms cubic-bezier(.2, .75, .25, 1) both; }
+  .rp-timeline li:nth-child(1) { animation-delay: 300ms; }
+  .rp-timeline li:nth-child(2) { animation-delay: 390ms; }
+  .rp-timeline li:nth-child(3) { animation-delay: 480ms; }
+  .rp-public .rp-button, .rp-nav a, .rp-care a, .rp-demo-options .rp-text-button {
+    transition: transform 140ms ease, background-color 140ms ease, text-decoration-thickness 140ms ease,
+      box-shadow 140ms ease;
+  }
+  .rp-public .rp-button:hover, .rp-demo-options .rp-text-button:hover { transform: translateY(-2px); }
+  .rp-public .rp-button:active, .rp-demo-options .rp-text-button:active { transform: translateY(1px); }
+}
+
+@keyframes hero-copy-arrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes trip-log-arrive {
+  from { opacity: 0; transform: translateY(18px) rotate(.6deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
+@keyframes timeline-entry-arrive {
+  from { opacity: 0; transform: translateX(-9px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-hero-copy, .rp-record-wrap, .rp-timeline li { animation: none; }
+  .rp-public .rp-button, .rp-nav a, .rp-care a, .rp-demo-options .rp-text-button {
+    transition: none;
+    transform: none;
+  }
 }

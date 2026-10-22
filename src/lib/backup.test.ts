@@ -61,9 +61,9 @@ describe('parseBackup checks the file carefully', () => {
     rideLogs: DEMO_RIDE_LOGS,
   });
 
-  it('rejects files that are not RideProof backups', () => {
-    expect(() => parseBackup('not json at all')).toThrow('not a RideProof backup');
-    expect(() => parseBackup(JSON.stringify({ hello: 'world' }))).toThrow('not a RideProof backup');
+  it('rejects files that are not RideConnect backups', () => {
+    expect(() => parseBackup('not json at all')).toThrow('not a RideConnect backup');
+    expect(() => parseBackup(JSON.stringify({ hello: 'world' }))).toThrow('not a RideConnect backup');
   });
 
   it('rejects backups from a newer version', () => {

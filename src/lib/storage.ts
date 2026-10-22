@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
-// storage.ts — saves and loads all of RideProof's data on the device.
+// storage.ts — saves and loads all of RideConnect's data on the device.
 //
 // We use IndexedDB, a database built into every modern browser. Data stays
 // on this phone/computer only; nothing is ever sent over the internet.
 // The `idb` library wraps IndexedDB so we can use simple async/await code.
 //
 // KEY IDEA: real data and demo data live in two COMPLETELY SEPARATE
-// databases ("rideproof-real" and "rideproof-demo"). The rest of the app
+// databases (using stable legacy identifiers). The rest of the app
 // asks for a Storage object for one mode, and that object can only ever
 // touch its own database. This makes it impossible for demo mode to
 // change, delete, or mix with the user's real data.
@@ -16,7 +16,7 @@ import type { Appointment, Profile, RideLog } from '../types';
 
 export type DataMode = 'real' | 'demo';
 
-/** The database name for each mode. Two names = two separate databases. */
+/** Stable legacy names preserve existing records after the RideConnect rename. */
 export const DB_NAMES: Record<DataMode, string> = {
   real: 'rideproof-real',
   demo: 'rideproof-demo',
@@ -29,7 +29,7 @@ const DB_VERSION = 1;
 const PROFILE_KEY = 'profile';
 
 /** Describes the database layout ("object stores" are like tables). */
-interface RideProofDB extends DBSchema {
+interface RideConnectDB extends DBSchema {
   profile: { key: string; value: Profile };
   appointments: { key: string; value: Appointment };
   rideLogs: { key: string; value: RideLog };
@@ -37,12 +37,12 @@ interface RideProofDB extends DBSchema {
 
 // Opening a database takes time, so we remember the open connection for
 // each mode and reuse it instead of reopening it on every save.
-const openDatabases = new Map<DataMode, Promise<IDBPDatabase<RideProofDB>>>();
+const openDatabases = new Map<DataMode, Promise<IDBPDatabase<RideConnectDB>>>();
 
-function getDb(mode: DataMode): Promise<IDBPDatabase<RideProofDB>> {
+function getDb(mode: DataMode): Promise<IDBPDatabase<RideConnectDB>> {
   let db = openDatabases.get(mode);
   if (!db) {
-    db = openDB<RideProofDB>(DB_NAMES[mode], DB_VERSION, {
+    db = openDB<RideConnectDB>(DB_NAMES[mode], DB_VERSION, {
       // upgrade() runs only the first time the database is created
       // (or when DB_VERSION goes up). It creates the "tables".
       upgrade(database) {

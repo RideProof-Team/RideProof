@@ -82,7 +82,7 @@ export function Home() {
       {appointments.length === 0 && introHidden() && (
         <section className="card">
           <h2>Get started</h2>
-          <p>Add {profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your'} medical appointments so RideProof can track the rides.</p>
+          <p>Add {profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your'} medical appointments so RideConnect can track the rides.</p>
           <a href={routeToHash({ name: 'appointment-new' })} className="button-primary">
             <Icon name="plus" /> Add an appointment
           </a>

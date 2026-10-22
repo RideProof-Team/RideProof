@@ -52,8 +52,8 @@ const STEPS: TourStep[] = [
     route: { name: 'complaint' },
     chapter: 'Complaint',
     title: 'Prepare the facts before asking for help',
-    description: 'RideProof organizes the sample ride records into a draft letter that can be reviewed, corrected, and completed before sharing.',
-    notice: 'Nothing is sent automatically. A draft remains a draft until the person using RideProof decides otherwise.',
+    description: 'RideConnect organizes the sample ride records into a draft letter that can be reviewed, corrected, and completed before sharing.',
+    notice: 'Nothing is sent automatically. A draft remains a draft until the person using RideConnect decides otherwise.',
   },
   {
     route: { name: 'help' },
