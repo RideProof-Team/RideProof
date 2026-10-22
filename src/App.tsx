@@ -39,7 +39,7 @@ import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 import { Landing, SignIn } from './screens/PublicPages';
 import type { Profile } from './types';
-import { useLanguage } from './lib/i18n';
+import { msg, t, useLanguage } from './lib/i18n';
 
 export function App() {
   const [mode, setMode] = useState<DataMode>(() => (loadDemoFlag() ? 'demo' : 'real'));
@@ -109,7 +109,8 @@ export function App() {
       })
       .catch(() => {
         if (cancelled) return;
-        setLoadError('We couldn’t open your records on this device. Check that browser storage is allowed, then try again.');
+        // Kept in English (marked with msg) and translated when shown.
+        setLoadError(msg('We couldn’t open your records on this device. Check that browser storage is allowed, then try again.'));
         setLoading(false);
       });
     return () => {
@@ -154,11 +155,11 @@ export function App() {
   if (route.name === 'landing') {
     screen = <Landing onDemo={openDemo} />;
   } else if (route.name === 'signin') {
-    screen = <SignIn profile={mode === 'real' ? profile : undefined} loading={loading || mode !== 'real'} error={mode === 'real' ? loadError : null} onRetry={refreshAll} onContinue={() => navigate({ name: 'home' })} onDemo={() => openDemo()} />;
+    screen = <SignIn profile={mode === 'real' ? profile : undefined} loading={loading || mode !== 'real'} error={mode === 'real' && loadError ? t(loadError) : null} onRetry={refreshAll} onContinue={() => navigate({ name: 'home' })} onDemo={() => openDemo()} />;
   } else if (loadError) {
-    screen = <Screen title="Your records couldn’t be opened"><p role="alert">{loadError}</p><button className="button-primary" onClick={refreshAll}>Try again</button></Screen>;
+    screen = <Screen title={t('Your records couldn’t be opened')}><p role="alert">{t(loadError)}</p><button className="button-primary" onClick={refreshAll}>{t('Try again')}</button></Screen>;
   } else if (loading) {
-    screen = <Screen title="RideConnect"><p>Loading…</p></Screen>;
+    screen = <Screen title="RideConnect"><p>{t('Loading…')}</p></Screen>;
   } else if (!profile) {
     screen = <Welcome />;
   } else {
@@ -219,7 +220,7 @@ export function App() {
   return (
     <AppContext.Provider value={contextValue}>
       {/* Lets keyboard users jump past the header straight to the screen's content. */}
-      <a href="#main" className="skip-link" onClick={skipToMain}>Skip to main content</a>
+      <a href="#main" className="skip-link" onClick={skipToMain}>{t('Skip to main content')}</a>
       {!isPublic && <Header onStartTour={() => openDemo()} />}
       {!isPublic && <UpdateBanner />}
       {toast && <Toast message={toast} onClose={closeToast} />}

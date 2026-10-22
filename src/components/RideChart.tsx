@@ -17,6 +17,7 @@ import {
 import { forwardRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { WeekCounts } from '../lib/reportStats';
+import { t, useLanguage } from '../lib/i18n';
 import { motionAllowed } from '../lib/motion';
 import { cssColor, useIsDark } from '../lib/theme';
 
@@ -45,6 +46,8 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, Props>(function 
   // Chart.js draws on a <canvas>, which can't use CSS colors directly, so we
   // read the current text/grid colors and redraw when light/dark changes.
   const dark = useIsDark();
+  // The words are drawn on the canvas too, so redraw when the language changes.
+  const language = useLanguage();
   const text = forPrint ? PRINT.text : cssColor('--color-text') || PRINT.text;
   const muted = forPrint ? PRINT.muted : cssColor('--color-muted') || PRINT.muted;
   const grid = forPrint ? PRINT.grid : cssColor('--color-chart-grid') || PRINT.grid;
@@ -60,23 +63,27 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, Props>(function 
   };
 
   const data = {
-    labels: weeks.map((w) => `Week of ${w.label}`),
+    labels: weeks.map((w) => t('Week of {date}', { date: w.label })),
     datasets: [
-      { label: 'On time', data: weeks.map((w) => w.onTime), backgroundColor: CHART_COLORS.onTime, ...barStyle },
-      { label: 'Late', data: weeks.map((w) => w.late), backgroundColor: CHART_COLORS.late, ...barStyle },
-      { label: 'Never came', data: weeks.map((w) => w.noShow), backgroundColor: CHART_COLORS.noShow, ...barStyle },
+      { label: t('On time'), data: weeks.map((w) => w.onTime), backgroundColor: CHART_COLORS.onTime, ...barStyle },
+      { label: t('Late'), data: weeks.map((w) => w.late), backgroundColor: CHART_COLORS.late, ...barStyle },
+      { label: t('Never came'), data: weeks.map((w) => w.noShow), backgroundColor: CHART_COLORS.noShow, ...barStyle },
     ],
   };
 
   const totalLate = weeks.reduce((sum, w) => sum + w.late, 0);
   const totalNoShow = weeks.reduce((sum, w) => sum + w.noShow, 0);
-  const summary = `Bar chart of rides by week. ${totalLate} late and ${totalNoShow} never came over ${weeks.length} weeks.`;
+  const summary = t('Bar chart of rides by week. {late} late and {noShow} never came over {weeks} weeks.', {
+    late: totalLate,
+    noShow: totalNoShow,
+    weeks: weeks.length,
+  });
 
   return (
     <div className="chart-box">
       <Bar
-        // A new key when light/dark changes makes Chart.js redraw with new colors.
-        key={!forPrint && dark ? 'dark' : 'light'}
+        // A new key when light/dark or the language changes makes Chart.js redraw.
+        key={`${!forPrint && dark ? 'dark' : 'light'}-${language}`}
         ref={ref}
         data={data}
         role="img"
@@ -122,7 +129,7 @@ export const RideChart = forwardRef<ChartJS<'bar'> | undefined, Props>(function 
               beginAtZero: true,
               ticks: { precision: 0, color: muted, font: { size: 16 } },
               grid: { color: grid },
-              title: { display: true, text: 'Rides', color: muted, font: { size: 16 } },
+              title: { display: true, text: t('Rides'), color: muted, font: { size: 16 } },
             },
           },
         }}

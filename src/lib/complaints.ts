@@ -12,6 +12,7 @@
 // ---------------------------------------------------------------------------
 import type { ComplaintMethod, ComplaintStatus, SentComplaint } from '../types';
 import { addDays, formatDateInSentence, parseDate } from './dates';
+import { msg, t, tn } from './i18n';
 
 /** Ask "Did you hear back?" this many days after the complaint was sent. */
 export const FOLLOW_UP_AFTER_DAYS = 14;
@@ -19,20 +20,20 @@ export const FOLLOW_UP_AFTER_DAYS = 14;
 export const REMIND_AGAIN_DAYS = 7;
 
 export const COMPLAINT_METHOD_LABELS: Record<ComplaintMethod, string> = {
-  email: 'Email',
-  mail: 'Mail',
-  phone: 'Phone call',
-  online_form: 'Online form',
+  email: msg('Email'),
+  mail: msg('Mail'),
+  phone: msg('Phone call'),
+  online_form: msg('Online form'),
 };
 
 export const COMPLAINT_METHODS: ComplaintMethod[] = ['email', 'mail', 'phone', 'online_form'];
 
 /** The words for each status. (Screens add an icon and a color too.) */
 export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
-  waiting: 'Waiting for an answer',
-  answered: 'Got an answer',
-  fixed: 'Problem fixed',
-  not_fixed: 'Not fixed',
+  waiting: msg('Waiting for an answer'),
+  answered: msg('Got an answer'),
+  fixed: msg('Problem fixed'),
+  not_fixed: msg('Not fixed'),
 };
 
 export const COMPLAINT_STATUSES: ComplaintStatus[] = ['waiting', 'answered', 'fixed', 'not_fixed'];
@@ -82,10 +83,11 @@ export function remindLater(complaint: SentComplaint, today: string): SentCompla
 export function followUpReminderText(complaint: SentComplaint, today: string): { title: string; body: string } {
   const days = daysSinceSent(complaint, today);
   return {
-    title: `Did you hear back from ${complaint.sentTo}?`,
-    body:
-      `You sent a complaint on ${formatDateInSentence(complaint.sentDate)} (${days} ${days === 1 ? 'day' : 'days'} ago)` +
-      `${complaint.referenceNumber ? `, reference number ${complaint.referenceNumber}` : ''}.`,
+    title: t('Did you hear back from {to}?', { to: complaint.sentTo }),
+    body: tn(days, 'You sent a complaint on {date} ({n} day ago){reference}.', 'You sent a complaint on {date} ({n} days ago){reference}.', {
+      date: formatDateInSentence(complaint.sentDate),
+      reference: complaint.referenceNumber ? t(', reference number {number}', { number: complaint.referenceNumber }) : '',
+    }),
   };
 }
 
@@ -104,10 +106,10 @@ export type SentComplaintErrors = Partial<Record<'sentDate' | 'sentTo' | 'method
 /** Check the form. Returns plain-language messages for anything that's wrong. */
 export function validateSentComplaint(input: SentComplaintInput, today: string): SentComplaintErrors {
   const errors: SentComplaintErrors = {};
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.sentDate)) errors.sentDate = 'Enter the date you sent the complaint.';
-  else if (input.sentDate > today) errors.sentDate = "The date sent can't be in the future.";
-  if (!input.sentTo.trim()) errors.sentTo = 'Choose or type who you sent the complaint to.';
-  if (!input.method) errors.method = 'Choose how you sent the complaint.';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.sentDate)) errors.sentDate = t('Enter the date you sent the complaint.');
+  else if (input.sentDate > today) errors.sentDate = t("The date sent can't be in the future.");
+  if (!input.sentTo.trim()) errors.sentTo = t('Choose or type who you sent the complaint to.');
+  if (!input.method) errors.method = t('Choose how you sent the complaint.');
   return errors;
 }
 

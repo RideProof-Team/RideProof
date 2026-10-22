@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { navigate, type Route } from '../lib/router';
+import { msg, t, tn } from '../lib/i18n';
 import './demo-tour.css';
 
 const STEP_SECONDS = 15;
 
+// The text is English, marked with msg() and shown with t() when drawn,
+// so switching the language changes the tour right away.
 type TourStep = {
   route: Route;
   chapter: string;
@@ -15,73 +18,73 @@ type TourStep = {
 const STEPS: TourStep[] = [
   {
     route: { name: 'home' },
-    chapter: 'Today',
-    title: 'Start with the ride that matters now',
-    description: 'Rosa’s sample dashboard puts the next clinic visit, its ride status, and the most useful next action in one calm view. Tuesday’s cardiology ride still isn’t booked: Maria’s call on Thursday didn’t get through.',
-    notice: '“Call Sample Ride Co. to book” opens a “What to say” script built from the appointment, then asks whether the ride got booked.',
+    chapter: msg('Today'),
+    title: msg('Start with the ride that matters now'),
+    description: msg('Rosa’s sample dashboard puts the next clinic visit, its ride status, and the most useful next action in one calm view. Tuesday’s cardiology ride still isn’t booked: Maria’s call on Thursday didn’t get through.'),
+    notice: msg('“Call Sample Ride Co. to book” opens a “What to say” script built from the appointment, then asks whether the ride got booked.'),
   },
   {
     route: { name: 'appointments' },
-    chapter: 'Schedule',
-    title: 'Keep appointments and rides together',
-    description: 'Upcoming and repeat visits stay beside their transportation details, so a ride is less likely to become a last-minute problem.',
-    notice: 'Open an appointment if you want to inspect it. The tour pauses before it can move you away.',
+    chapter: msg('Schedule'),
+    title: msg('Keep appointments and rides together'),
+    description: msg('Upcoming and repeat visits stay beside their transportation details, so a ride is less likely to become a last-minute problem.'),
+    notice: msg('Open an appointment if you want to inspect it. The tour pauses before it can move you away.'),
   },
   {
     route: { name: 'wait' },
-    chapter: 'Ride timer',
-    title: 'Measure the wait while it happens',
-    description: 'Rosa is done with dialysis and waiting for her ride home. The timer keeps counting even if the phone locks, and suggests calling the ride company at 15 and 30 minutes.',
-    notice: 'This sample timer runs on a simulated clock. Demo controls can jump it ahead 15 minutes.',
+    chapter: msg('Ride timer'),
+    title: msg('Measure the wait while it happens'),
+    description: msg('Rosa is done with dialysis and waiting for her ride home. The timer keeps counting even if the phone locks, and suggests calling the ride company at 15 and 30 minutes.'),
+    notice: msg('This sample timer runs on a simulated clock. Demo controls can jump it ahead 15 minutes.'),
   },
   {
     route: { name: 'checkin' },
-    chapter: 'Check-in',
-    title: 'Turn a difficult ride into a clear record',
-    description: 'A few short questions capture pickup, appointment arrival, and the return trip. Late and missing rides become dated evidence.',
-    notice: 'This walkthrough never answers or saves the check-in for you. You remain in control of the sample form.',
+    chapter: msg('Check-in'),
+    title: msg('Turn a difficult ride into a clear record'),
+    description: msg('A few short questions capture pickup, appointment arrival, and the return trip. Late and missing rides become dated evidence.'),
+    notice: msg('This walkthrough never answers or saves the check-in for you. You remain in control of the sample form.'),
   },
   {
     route: { name: 'history' },
-    chapter: 'History',
-    title: 'Find the ride instead of reconstructing it',
-    description: 'Searchable ride history keeps each trip’s outcome and timing in one place, including missed pickups, delayed returns, and booking calls that didn’t work.',
-    notice: 'Try the filters or open a record. Any interaction with the page pauses autoplay.',
+    chapter: msg('History'),
+    title: msg('Find the ride instead of reconstructing it'),
+    description: msg('Searchable ride history keeps each trip’s outcome and timing in one place, including missed pickups, delayed returns, and booking calls that didn’t work.'),
+    notice: msg('Try the filters or open a record. Any interaction with the page pauses autoplay.'),
   },
   {
     route: { name: 'report' },
-    chapter: 'Report',
-    title: 'See whether one bad ride is becoming a pattern',
-    description: 'Counts, the total time spent waiting, failed booking calls, a weekly chart, and an accessible data table summarize what the saved sample rides show over time. “Share with my care team” turns it into a friendly one-page summary for Rosa’s doctors.',
-    notice: 'Exports only happen when you choose them. The automatic tour does not download anything.',
+    chapter: msg('Report'),
+    title: msg('See whether one bad ride is becoming a pattern'),
+    description: msg('Counts, the total time spent waiting, failed booking calls, a weekly chart, and an accessible data table summarize what the saved sample rides show over time. “Share with my care team” turns it into a friendly one-page summary for Rosa’s doctors.'),
+    notice: msg('Exports only happen when you choose them. The automatic tour does not download anything.'),
   },
   {
     route: { name: 'complaint' },
-    chapter: 'Complaint',
-    title: 'Prepare the facts before asking for help',
-    description: 'RideConnect organizes the sample ride records into a draft letter that can be reviewed, corrected, and completed before sharing.',
-    notice: 'Nothing is sent automatically. A draft remains a draft until the person using RideConnect decides otherwise.',
+    chapter: msg('Complaint'),
+    title: msg('Prepare the facts before asking for help'),
+    description: msg('RideConnect organizes the sample ride records into a draft letter that can be reviewed, corrected, and completed before sharing.'),
+    notice: msg('Nothing is sent automatically. A draft remains a draft until the person using RideConnect decides otherwise.'),
   },
   {
     route: { name: 'complaints' },
-    chapter: 'Follow-up',
-    title: 'Keep track after the complaint is sent',
-    description: 'Maria emailed a complaint to Rosa’s health plan on October 16. Two weeks later there is still no answer, so RideConnect asks “Did you hear back?” and offers a follow-up letter that mentions the reference number and every problem since.',
-    notice: 'Try “Update status or notes” and choose Not fixed to see the next steps. Reset demo puts the complaint back.',
+    chapter: msg('Follow-up'),
+    title: msg('Keep track after the complaint is sent'),
+    description: msg('Maria emailed a complaint to Rosa’s health plan on October 16. Two weeks later there is still no answer, so RideConnect asks “Did you hear back?” and offers a follow-up letter that mentions the reference number and every problem since.'),
+    notice: msg('Try “Update status or notes” and choose Not fixed to see the next steps. Reset demo puts the complaint back.'),
   },
   {
     route: { name: 'help' },
-    chapter: 'Help',
-    title: 'Know what to do when a ride does not arrive',
-    description: 'Plain-language steps, service information, and install guidance keep the next move close at hand during a stressful moment.',
-    notice: 'The walkthrough never opens a phone link or places a call.',
+    chapter: msg('Help'),
+    title: msg('Know what to do when a ride does not arrive'),
+    description: msg('Plain-language steps, service information, and install guidance keep the next move close at hand during a stressful moment.'),
+    notice: msg('The walkthrough never opens a phone link or places a call.'),
   },
   {
     route: { name: 'settings' },
-    chapter: 'Settings',
-    title: 'Keep control of the record',
-    description: 'Profile, booking reminder, display, and backup tools keep the record working for each rider. If a state’s booking rule isn’t built in yet, the rider can enter their ride company’s own rule here.',
-    notice: 'Nothing has been sent or changed. Finish the tour to keep exploring Rosa’s sample data.',
+    chapter: msg('Settings'),
+    title: msg('Keep control of the record'),
+    description: msg('Profile, booking reminder, display, and backup tools keep the record working for each rider. If a state’s booking rule isn’t built in yet, the rider can enter their ride company’s own rule here.'),
+    notice: msg('Nothing has been sent or changed. Finish the tour to keep exploring Rosa’s sample data.'),
   },
 ];
 
@@ -159,22 +162,23 @@ export function DemoTour({
     navigate(STEPS[next].route);
   }
 
-  const modeLabel = autoPlay ? 'Automatic demo' : 'Manual tour';
+  const modeLabel = autoPlay ? t('Automatic demo') : t('Manual tour');
   const timing = last
-    ? 'Final stop'
+    ? t('Final stop')
     : playing && onTourPath
-      ? `Next stop in ${secondsLeft} ${secondsLeft === 1 ? 'second' : 'seconds'}`
-      : `Paused with ${secondsLeft} ${secondsLeft === 1 ? 'second' : 'seconds'} left`;
+      ? tn(secondsLeft, 'Next stop in {n} second', 'Next stop in {n} seconds')
+      : tn(secondsLeft, 'Paused with {n} second left', 'Paused with {n} seconds left');
+  const stopNumbers = { n: index + 1, total: STEPS.length };
 
   return (
-    <aside className="demo-tour" aria-label="Guided demo" ref={panel}>
+    <aside className="demo-tour" aria-label={t('Guided demo')} ref={panel}>
       <div className="demo-tour-status">
         <div>
           <p className="demo-tour-mode">{modeLabel}</p>
           <p className="demo-tour-progress-label">
-            {onTourPath ? `Stop ${index + 1} of ${STEPS.length}` : 'Tour paused'}
+            {onTourPath ? t('Stop {n} of {total}', stopNumbers) : t('Tour paused')}
             <span aria-hidden="true"> · </span>
-            <span>Sample data only</span>
+            <span>{t('Sample data only')}</span>
           </p>
         </div>
         <progress
@@ -183,11 +187,11 @@ export function DemoTour({
           max={STEPS.length}
           value={index + 1}
           aria-valuenow={index + 1}
-          aria-label={`Tour progress: stop ${index + 1} of ${STEPS.length}`}
+          aria-label={t('Tour progress: stop {n} of {total}', stopNumbers)}
         />
       </div>
 
-      <nav className="demo-tour-chapters" aria-label="Demo chapters">
+      <nav className="demo-tour-chapters" aria-label={t('Demo chapters')}>
         {STEPS.map((item, chapterIndex) => (
           <button
             type="button"
@@ -196,44 +200,44 @@ export function DemoTour({
             onClick={() => go(chapterIndex)}
             key={item.chapter}
           >
-            {item.chapter}
+            {t(item.chapter)}
           </button>
         ))}
       </nav>
 
       <div className="demo-tour-body">
         <div className="demo-tour-copy" aria-live="polite" aria-atomic="true">
-          {!onTourPath && <p className="demo-tour-detour">You stepped off the tour path</p>}
-          <h2>{onTourPath ? step.title : 'Take your time on this screen'}</h2>
-          <p>{onTourPath ? step.description : `The guide is holding your place at ${step.chapter}. Explore here, then return when you are ready.`}</p>
-          <p className="demo-tour-notice">{onTourPath ? step.notice : 'Autoplay is paused, so this screen will not change underneath you.'}</p>
+          {!onTourPath && <p className="demo-tour-detour">{t('You stepped off the tour path')}</p>}
+          <h2>{onTourPath ? t(step.title) : t('Take your time on this screen')}</h2>
+          <p>{onTourPath ? t(step.description) : t('The guide is holding your place at {chapter}. Explore here, then return when you are ready.', { chapter: t(step.chapter) })}</p>
+          <p className="demo-tour-notice">{onTourPath ? t(step.notice) : t('Autoplay is paused, so this screen will not change underneath you.')}</p>
         </div>
 
         <div className="demo-tour-actions">
           {onTourPath ? (
             <div className="demo-tour-buttons">
-              <button type="button" className="button-secondary" disabled={index === 0} onClick={() => go(index - 1)}>Back</button>
-              <button type="button" className="button-primary" onClick={() => last ? onClose() : go(index + 1)}>{last ? 'Finish tour' : 'Next'}</button>
+              <button type="button" className="button-secondary" disabled={index === 0} onClick={() => go(index - 1)}>{t('Back')}</button>
+              <button type="button" className="button-primary" onClick={() => last ? onClose() : go(index + 1)}>{last ? t('Finish tour') : t('Next')}</button>
             </div>
           ) : (
-            <button type="button" className="button-primary" onClick={() => go(index)}>Return to {step.chapter}</button>
+            <button type="button" className="button-primary" onClick={() => go(index)}>{t('Return to {chapter}', { chapter: t(step.chapter) })}</button>
           )}
 
           {!last && onTourPath && (
             <button type="button" className="demo-tour-play" onClick={() => setPlaying(value => !value)}>
-              {playing ? 'Pause' : 'Resume'}
+              {playing ? t('Pause') : t('Resume')}
             </button>
           )}
-          <button type="button" className="link-button demo-tour-exit" onClick={onClose}>Explore sample on my own</button>
+          <button type="button" className="link-button demo-tour-exit" onClick={onClose}>{t('Explore sample on my own')}</button>
 
           {!last && onTourPath && (
             <div className="demo-tour-countdown" aria-live="off">
               <span>{timing}</span>
-              <progress max={STEP_SECONDS} value={secondsLeft} aria-label={`${secondsLeft} seconds remaining`} />
+              <progress max={STEP_SECONDS} value={secondsLeft} aria-label={t('{n} seconds remaining', { n: secondsLeft })} />
             </div>
           )}
           {prefersReducedMotion && autoPlay && !playing && (
-            <p className="demo-tour-motion-note">Motion preference respected. Start the automatic tour when you are ready.</p>
+            <p className="demo-tour-motion-note">{t('Motion preference respected. Start the automatic tour when you are ready.')}</p>
           )}
         </div>
       </div>

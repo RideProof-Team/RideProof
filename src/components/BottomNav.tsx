@@ -8,8 +8,10 @@
 // ---------------------------------------------------------------------------
 import { routeToHash, type Route } from '../lib/router';
 import { Icon, type IconName } from './Icon';
+import { msg, t } from '../lib/i18n';
 
 interface NavItem {
+  /** English, marked with msg(); shown with t(). */
   label: string;
   icon: IconName;
   route: Route;
@@ -18,22 +20,22 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
-  { label: 'Home', icon: 'home', route: { name: 'home' }, matches: ['home', 'checkin', 'call', 'wait'] },
+  { label: msg('Home'), icon: 'home', route: { name: 'home' }, matches: ['home', 'checkin', 'call', 'wait'] },
   {
-    label: 'Schedule',
+    label: msg('Schedule'),
     icon: 'calendar',
     route: { name: 'appointments' },
     matches: ['appointments', 'appointment-new', 'appointment-edit'],
   },
-  { label: 'History', icon: 'list', route: { name: 'history' }, matches: ['history'] },
-  { label: 'Report', icon: 'chart', route: { name: 'report' }, matches: ['report', 'complaint', 'complaints', 'complaint-sent', 'care-team'] },
-  { label: 'Help', icon: 'help', route: { name: 'help' }, matches: ['help', 'settings', 'profile-edit'] },
+  { label: msg('History'), icon: 'list', route: { name: 'history' }, matches: ['history'] },
+  { label: msg('Report'), icon: 'chart', route: { name: 'report' }, matches: ['report', 'complaint', 'complaints', 'complaint-sent', 'care-team'] },
+  { label: msg('Help'), icon: 'help', route: { name: 'help' }, matches: ['help', 'settings', 'profile-edit'] },
 ];
 
 export function BottomNav({ current }: { current: Route }) {
   const activeIndex = ITEMS.findIndex((item) => item.matches.includes(current.name));
   return (
-    <nav className="bottom-nav" aria-label="Main menu">
+    <nav className="bottom-nav" aria-label={t('Main menu')}>
       <ul>
         {/* The blue bar above the current tab. Moving it with "transform"
             lets motion.css slide it smoothly from tab to tab. */}
@@ -50,7 +52,7 @@ export function BottomNav({ current }: { current: Route }) {
             <li key={item.label}>
               <a href={routeToHash(item.route)} aria-current={active ? 'page' : undefined}>
                 <Icon name={item.icon} />
-                <span>{item.label}</span>
+                <span>{t(item.label)}</span>
               </a>
             </li>
           );

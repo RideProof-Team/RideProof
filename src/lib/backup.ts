@@ -26,6 +26,7 @@ import type { Appointment, FailedBooking, Profile, RideLog, SentComplaint } from
 import { FAIL_REASONS } from './bookingAttempts';
 import { COMPLAINT_METHODS, COMPLAINT_STATUSES } from './complaints';
 import { formatDateInSentence } from './dates';
+import { t } from './i18n';
 import { isValidRiderBookingWindow } from './bookingWindow';
 import type { Storage } from './storage';
 
@@ -44,12 +45,12 @@ export interface BackupFile {
   bookingAttempts: FailedBooking[];
 }
 
-/** A problem with a backup file, explained in plain language. */
+/** A problem with a backup file, explained in plain language (in the app's language). */
 export class BackupError extends Error {}
 
 export async function createBackup(storage: Storage, exportedAt: string): Promise<BackupFile> {
   const profile = await storage.getProfile();
-  if (!profile) throw new BackupError('There is no data to back up yet.');
+  if (!profile) throw new BackupError(t('There is no data to back up yet.'));
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
@@ -79,17 +80,17 @@ const oneOf = <T extends string | number>(v: unknown, allowed: readonly T[]): v 
 
 function readProfile(v: unknown): Profile {
   if (!isObject(v) || !oneOf(v.role, ['rider', 'caregiver'] as const) || !text(v.riderFirstName)) {
-    throw new BackupError('The rider information in this file is missing or damaged.');
+    throw new BackupError(t('The rider information in this file is missing or damaged.'));
   }
   // Added later: older backups don't have it, and that's fine (left unset).
   if (v.riderBookingWindow !== undefined && v.riderBookingWindow !== null && !isValidRiderBookingWindow(v.riderBookingWindow)) {
-    throw new BackupError('The booking reminder setting in this file is damaged. It must be a number of business days from 1 to 14, or "Not sure".');
+    throw new BackupError(t('The booking reminder setting in this file is damaged. It must be a number of business days from 1 to 14, or "Not sure".'));
   }
   if (v.mobilityNeeds !== undefined && !oneOf(v.mobilityNeeds, MOBILITY_NEEDS)) {
-    throw new BackupError('The mobility needs setting in this file is damaged. It must be none, walker, wheelchair, or needs help.');
+    throw new BackupError(t('The mobility needs setting in this file is damaged. It must be none, walker, wheelchair, or needs help.'));
   }
   if (v.homeAddress !== undefined && typeof v.homeAddress !== 'string') {
-    throw new BackupError('The home address in this file is damaged.');
+    throw new BackupError(t('The home address in this file is damaged.'));
   }
   return {
     role: v.role,
@@ -111,11 +112,15 @@ function readAppointment(v: unknown): Appointment {
     !isObject(v) || !text(v.id) || !DATE.test(text(v.date)) || !TIME.test(text(v.time)) ||
     !oneOf(v.type, types) || !isObject(v.recurrence)
   ) {
-    throw new BackupError('An appointment in this file is damaged.');
+    throw new BackupError(t('An appointment in this file is damaged.'));
   }
   // Added later (optional): the pickup time the ride company gave.
   if (v.pickupTime !== undefined && v.pickupTime !== '' && !TIME.test(text(v.pickupTime))) {
-    throw new BackupError(`The pickup time for the appointment at ${text(v.clinicName) || 'a clinic'} is damaged. It must look like 08:15.`);
+    throw new BackupError(
+      t('The pickup time for the appointment at {clinic} is damaged. It must look like 08:15.', {
+        clinic: text(v.clinicName) || t('a clinic'),
+      }),
+    );
   }
   const rule = v.recurrence;
   const weekdays = Array.isArray(rule.weekdays) ? rule.weekdays.filter((d) => oneOf(d, [0, 1, 2, 3, 4, 5, 6] as const)) : [];
@@ -143,16 +148,18 @@ function readRideLog(v: unknown): RideLog {
     !oneOf(v.appointmentOutcome, ['made_it', 'late', 'missed'] as const) ||
     !oneOf(v.returnRideStatus, ['on_time', 'late', 'never_came', 'not_needed'] as const)
   ) {
-    throw new BackupError('A ride record in this file is damaged.');
+    throw new BackupError(t('A ride record in this file is damaged.'));
   }
   // Fields added later. Older backups don't have them (that's fine), but if
   // they're present they must make sense.
   if (v.returnMinutesLate !== undefined && v.returnMinutesLate !== null && !oneOf(v.returnMinutesLate, [15, 30, 60] as const)) {
-    throw new BackupError(`The ride record for ${text(v.rideDate)} has a damaged "how late was the ride home" answer.`);
+    throw new BackupError(t('The ride record for {date} has a damaged "how late was the ride home" answer.', { date: text(v.rideDate) }));
   }
   for (const field of ['pickupWaitMinutes', 'returnWaitMinutes'] as const) {
     if (v[field] !== undefined && !isWaitMinutes(v[field])) {
-      throw new BackupError(`The ride record for ${text(v.rideDate)} has a damaged wait time. It must be a whole number of minutes.`);
+      throw new BackupError(
+        t('The ride record for {date} has a damaged wait time. It must be a whole number of minutes.', { date: text(v.rideDate) }),
+      );
     }
   }
   return {
@@ -177,18 +184,24 @@ function readRideLog(v: unknown): RideLog {
 
 function readComplaint(v: unknown): SentComplaint {
   if (!isObject(v) || !text(v.id) || !DATE.test(text(v.sentDate))) {
-    throw new BackupError('A complaint record in this file is damaged.');
+    throw new BackupError(t('A complaint record in this file is damaged.'));
   }
-  const when = `The complaint sent on ${formatDateInSentence(text(v.sentDate))}`;
-  if (!text(v.sentTo).trim()) throw new BackupError(`${when} is missing who it was sent to.`);
+  const date = formatDateInSentence(text(v.sentDate));
+  if (!text(v.sentTo).trim()) throw new BackupError(t('The complaint sent on {date} is missing who it was sent to.', { date }));
   if (!oneOf(v.method, COMPLAINT_METHODS)) {
-    throw new BackupError(`${when} has a damaged "how it was sent" answer. It must be email, mail, phone call, or online form.`);
+    throw new BackupError(
+      t('The complaint sent on {date} has a damaged "how it was sent" answer. It must be email, mail, phone call, or online form.', { date }),
+    );
   }
   if (!oneOf(v.status, COMPLAINT_STATUSES)) {
-    throw new BackupError(`${when} has a damaged status. It must be Waiting, Got an answer, Problem fixed, or Not fixed.`);
+    throw new BackupError(
+      t('The complaint sent on {date} has a damaged status. It must be Waiting, Got an answer, Problem fixed, or Not fixed.', { date }),
+    );
   }
   for (const field of ['statusChangedOn', 'remindOn'] as const) {
-    if (v[field] !== undefined && !DATE.test(text(v[field]))) throw new BackupError(`${when} has a damaged date.`);
+    if (v[field] !== undefined && !DATE.test(text(v[field]))) {
+      throw new BackupError(t('The complaint sent on {date} has a damaged date.', { date }));
+    }
   }
   return {
     id: text(v.id),
@@ -207,11 +220,14 @@ function readComplaint(v: unknown): SentComplaint {
 function readBookingAttempt(v: unknown): FailedBooking {
   const types = ['dialysis', 'checkup', 'specialist', 'therapy', 'other'] as const;
   if (!isObject(v) || !text(v.id) || !text(v.appointmentId) || !DATE.test(text(v.tripDate)) || !DATE.test(text(v.attemptedOn))) {
-    throw new BackupError('A record of a booking call in this file is damaged.');
+    throw new BackupError(t('A record of a booking call in this file is damaged.'));
   }
   if (!oneOf(v.reason, FAIL_REASONS)) {
     throw new BackupError(
-      `The booking call on ${formatDateInSentence(text(v.attemptedOn))} has a damaged reason. It must be "couldn't get through", "no rides available", "too late to book", or "something else".`,
+      t(
+        'The booking call on {date} has a damaged reason. It must be "couldn\'t get through", "no rides available", "too late to book", or "something else".',
+        { date: formatDateInSentence(text(v.attemptedOn)) },
+      ),
     );
   }
   return {
@@ -238,24 +254,24 @@ export function parseBackup(fileText: string): BackupFile {
   try {
     data = JSON.parse(fileText);
   } catch {
-    throw new BackupError('This file is not a RideConnect backup.');
+    throw new BackupError(t('This file is not a RideConnect backup.'));
   }
   if (!isObject(data) || data.format !== BACKUP_FORMAT) {
-    throw new BackupError('This file is not a RideConnect backup.');
+    throw new BackupError(t('This file is not a RideConnect backup.'));
   }
   if (typeof data.version !== 'number' || data.version > BACKUP_VERSION) {
-    throw new BackupError('This backup was made by a newer version of RideConnect. Update the app and try again.');
+    throw new BackupError(t('This backup was made by a newer version of RideConnect. Update the app and try again.'));
   }
   if (!Array.isArray(data.appointments) || !Array.isArray(data.rideLogs)) {
-    throw new BackupError('This backup file is damaged.');
+    throw new BackupError(t('This backup file is damaged.'));
   }
   // Complaints were added in version 2. Older files don't have them: start with none.
   if (data.complaints !== undefined && !Array.isArray(data.complaints)) {
-    throw new BackupError('The complaints in this backup file are damaged.');
+    throw new BackupError(t('The complaints in this backup file are damaged.'));
   }
   // Booking calls were added in version 3.
   if (data.bookingAttempts !== undefined && !Array.isArray(data.bookingAttempts)) {
-    throw new BackupError('The booking calls in this backup file are damaged.');
+    throw new BackupError(t('The booking calls in this backup file are damaged.'));
   }
   return {
     format: BACKUP_FORMAT,
@@ -271,7 +287,7 @@ export function parseBackup(fileText: string): BackupFile {
 
 /** Replace everything in (real) storage with the backup's contents. */
 export async function restoreBackup(storage: Storage, backup: BackupFile) {
-  if (storage.mode !== 'real') throw new BackupError('Backups can only be restored outside demo mode.');
+  if (storage.mode !== 'real') throw new BackupError(t('Backups can only be restored outside demo mode.'));
   await storage.clearAll();
   await storage.saveProfile(backup.profile);
   for (const appointment of backup.appointments) await storage.saveAppointment(appointment);

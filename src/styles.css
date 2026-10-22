@@ -968,3 +968,29 @@ button, a, summary, label.chip, label.choice-card { -webkit-tap-highlight-color:
 .care-summary h3 { margin: 1.25rem 0 0.4rem; }
 .care-item { margin: 0.4rem 0; padding-left: 1.1rem; position: relative; }
 .care-item::before { content: '•'; position: absolute; left: 0; }
+
+/* ---------- Language button ---------- */
+/* The header holds the brand, "Device access", the language button, and the
+   demo buttons. On a phone (390px wide) they can't all fit on one line, so
+   the brand and "Device access" share the first line and the buttons sit on
+   the second, lined up on the right. In demo mode the buttons share that
+   line evenly, and longer Spanish labels wrap onto two short lines instead
+   of pushing a button onto a third line. (app-theme.css loads after this
+   file, so these selectors start with .app-header to win.) */
+@media (max-width: 650px) {
+  .app-header .header-bar .rp-brand { flex: 1 1 calc(100% - 110px); }
+  .app-header .header-bar .language-button { padding: 0 9px; margin-left: auto; }
+  .app-header .header-bar:has(.demo-button[aria-pressed='true']) .demo-button {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.15;
+  }
+  .app-header .header-bar:has(.demo-button[aria-pressed='true']) .demo-button.language-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+/* Long one-word Spanish tour chapter names ("Configuración") break with a
+   hyphen instead of spilling out of their small buttons. */
+.demo-tour-chapter:lang(es) { hyphens: auto; overflow-wrap: anywhere; }

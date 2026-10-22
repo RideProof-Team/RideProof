@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { useApp } from '../AppContext';
 import { followUpReminderText, remindLater, REMIND_AGAIN_DAYS, setComplaintStatus } from '../lib/complaints';
 import { showSnackbar } from '../lib/feedback';
+import { t } from '../lib/i18n';
 import { notificationPermission, notifyOncePerDay } from '../lib/notifications';
 import { navigate, routeToHash } from '../lib/router';
 import type { ComplaintStatus, SentComplaint } from '../types';
@@ -28,7 +29,7 @@ export function ComplaintFollowUps({ due, onChange }: Props) {
     if (mode !== 'real' || notificationPermission() !== 'granted') return;
     for (const complaint of due) {
       const { title, body } = followUpReminderText(complaint, today);
-      notifyOncePerDay(mode, `complaint:${complaint.id}`, today, title, `${body} Open RideConnect to update what happened.`);
+      notifyOncePerDay(mode, `complaint:${complaint.id}`, today, title, t('{body} Open RideConnect to update what happened.', { body }));
     }
     // `key` changes only when the list of due complaints really changes.
   }, [key, mode, today]);
@@ -39,7 +40,7 @@ export function ComplaintFollowUps({ due, onChange }: Props) {
     await storage.saveComplaint(after);
     await onChange();
     showSnackbar(message, {
-      label: 'Undo',
+      label: t('Undo'),
       run: async () => {
         await storage.saveComplaint(before);
         await onChange();
@@ -48,7 +49,7 @@ export function ComplaintFollowUps({ due, onChange }: Props) {
   }
 
   async function answer(complaint: SentComplaint, status: ComplaintStatus) {
-    await save(complaint, setComplaintStatus(complaint, status, today), 'Complaint updated.');
+    await save(complaint, setComplaintStatus(complaint, status, today), t('Complaint updated.'));
     // "Not fixed": go straight to the next steps.
     if (status === 'not_fixed') navigate({ name: 'complaints', id: complaint.id });
   }
@@ -56,7 +57,7 @@ export function ComplaintFollowUps({ due, onChange }: Props) {
   return (
     <section className="card card-reminder" aria-labelledby="followup-heading">
       <h2 id="followup-heading">
-        <Icon name="mail" /> Complaint follow-up
+        <Icon name="mail" /> {t('Complaint follow-up')}
       </h2>
       <ul className="plain-list">
         {due.map((complaint) => {
@@ -67,23 +68,25 @@ export function ComplaintFollowUps({ due, onChange }: Props) {
               <p>{body}</p>
               <div className="button-stack">
                 <button type="button" className="button-secondary" onClick={() => answer(complaint, 'answered')}>
-                  <Icon name="mail" /> Got an answer
+                  <Icon name="mail" /> {t('Got an answer')}
                 </button>
                 <button type="button" className="button-secondary" onClick={() => answer(complaint, 'fixed')}>
-                  <Icon name="check" /> Problem fixed
+                  <Icon name="check" /> {t('Problem fixed')}
                 </button>
                 <button type="button" className="button-secondary" onClick={() => answer(complaint, 'not_fixed')}>
-                  <Icon name="x" /> Not fixed
+                  <Icon name="x" /> {t('Not fixed')}
                 </button>
                 <button
                   type="button"
                   className="button-secondary"
-                  onClick={() => save(complaint, remindLater(complaint, today), `OK. RideConnect will ask again in ${REMIND_AGAIN_DAYS} days.`)}
+                  onClick={() =>
+                    save(complaint, remindLater(complaint, today), t('OK. RideConnect will ask again in {days} days.', { days: REMIND_AGAIN_DAYS }))
+                  }
                 >
-                  <Icon name="clock" /> Still waiting: remind me in {REMIND_AGAIN_DAYS} days
+                  <Icon name="clock" /> {t('Still waiting: remind me in {days} days', { days: REMIND_AGAIN_DAYS })}
                 </button>
                 <a href={routeToHash({ name: 'complaints', id: complaint.id })} className="link-button">
-                  Add notes or see details
+                  {t('Add notes or see details')}
                 </a>
               </div>
             </li>

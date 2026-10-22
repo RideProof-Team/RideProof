@@ -12,6 +12,7 @@ import { askNotificationPermission, notificationPermission, notifyOncePerDay } f
 import { reminderText, type BookingReminder } from '../lib/reminders';
 import { attemptsForTrip, FAIL_REASON_SHORT } from '../lib/bookingAttempts';
 import { formatLongDate } from '../lib/dates';
+import { t, tn } from '../lib/i18n';
 import { routeToHash } from '../lib/router';
 import type { FailedBooking } from '../types';
 import { Icon } from './Icon';
@@ -48,7 +49,7 @@ export function BookingReminders({ reminders, onBooked, attempts = [] }: Props) 
   return (
     <section className="card card-reminder" aria-labelledby="reminder-heading">
       <h2 id="reminder-heading">
-        <Icon name="warning" /> Book {reminders.length === 1 ? 'a ride' : `${reminders.length} rides`}
+        <Icon name="warning" /> {tn(reminders.length, 'Book a ride', 'Book {n} rides')}
       </h2>
       <ul className="plain-list">
         {reminders.map((reminder) => {
@@ -58,7 +59,7 @@ export function BookingReminders({ reminders, onBooked, attempts = [] }: Props) 
             <li key={`${reminder.appointment.id}-${reminder.tripDate}`} className="reminder-item">
               <p className="reminder-title">
                 {reminder.urgency !== 'soon' && (
-                  <span className="badge badge-problem badge-attention">{reminder.urgency === 'today' ? 'Due today' : 'Past due'}</span>
+                  <span className="badge badge-problem badge-attention">{reminder.urgency === 'today' ? t('Due today') : t('Past due')}</span>
                 )}{' '}
                 {title}
               </p>
@@ -66,15 +67,18 @@ export function BookingReminders({ reminders, onBooked, attempts = [] }: Props) 
               {lastTry && (
                 <p className="status status-problem">
                   <Icon name="x" size={20} />
-                  Last call on {formatLongDate(lastTry.attemptedOn)}: {FAIL_REASON_SHORT[lastTry.reason]}. Still not booked.
+                  {t('Last call on {date}: {reason}. Still not booked.', {
+                    date: formatLongDate(lastTry.attemptedOn),
+                    reason: t(FAIL_REASON_SHORT[lastTry.reason]),
+                  })}
                 </p>
               )}
               <div className="button-stack">
                 <a href={routeToHash({ name: 'call', appointmentId: reminder.appointment.id, date: reminder.tripDate })} className="button-primary">
-                  <Icon name="phone" /> Call {profile.rideCompanyName} to book
+                  <Icon name="phone" /> {t('Call {company} to book', { company: profile.rideCompanyName })}
                 </a>
                 <button type="button" className="button-secondary" onClick={() => onBooked(reminder)}>
-                  <Icon name="check" /> I booked this ride
+                  <Icon name="check" /> {t('I booked this ride')}
                 </button>
               </div>
             </li>
@@ -83,7 +87,7 @@ export function BookingReminders({ reminders, onBooked, attempts = [] }: Props) 
       </ul>
       {permission === 'default' && mode === 'real' && (
         <button type="button" className="link-button" onClick={turnOnNotifications}>
-          Also send reminders as phone notifications
+          {t('Also send reminders as phone notifications')}
         </button>
       )}
     </section>

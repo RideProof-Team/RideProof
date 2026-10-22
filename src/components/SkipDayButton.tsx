@@ -6,6 +6,7 @@
 import { useApp } from '../AppContext';
 import { formatLongDate } from '../lib/dates';
 import { showSnackbar } from '../lib/feedback';
+import { t } from '../lib/i18n';
 import { skipTrip } from '../lib/recurrence';
 import type { Appointment } from '../types';
 
@@ -17,14 +18,14 @@ interface Props {
   label?: string;
 }
 
-export function SkipDayButton({ appointment, date, onChange, label = 'Cancelled? Skip this day' }: Props) {
+export function SkipDayButton({ appointment, date, onChange, label = t('Cancelled? Skip this day') }: Props) {
   const { storage } = useApp();
 
   async function skip() {
     await storage.saveAppointment(skipTrip(appointment, date));
     onChange();
-    showSnackbar(`Skipped ${formatLongDate(date)}.`, {
-      label: 'Undo',
+    showSnackbar(t('Skipped {date}.', { date: formatLongDate(date) }), {
+      label: t('Undo'),
       run: async () => {
         await storage.saveAppointment(appointment);
         onChange();

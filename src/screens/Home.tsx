@@ -19,8 +19,9 @@ import { Screen } from '../components/Screen';
 import { findLog } from '../lib/checkinFlow';
 import { getNowTime } from '../lib/clock';
 import { introHidden } from '../lib/onboarding';
-import { addDays, formatLongDate, formatShortDate, formatTime } from '../lib/dates';
-import { APPOINTMENT_TYPE_LABELS, whose } from '../lib/labels';
+import { addDays, capitalize, formatLongDate, formatShortDate, formatTime } from '../lib/dates';
+import { t } from '../lib/i18n';
+import { APPOINTMENT_TYPE_LABELS } from '../lib/labels';
 import { upcomingTrips } from '../lib/recurrence';
 import { bookingReminders } from '../lib/reminders';
 import { SEVERITY_DISPLAY, rideSeverity } from '../lib/rideStatus';
@@ -45,17 +46,19 @@ export function Home() {
   // Redraw every 30 seconds, so the timer buttons appear on time.
   const now = useNow(30_000);
   if (!profile) return null;
-  const title = profile.role === 'caregiver' ? `${profile.riderFirstName}'s rides` : `Hi, ${profile.riderFirstName}`;
-  if (!data) return <Screen title={title}><p>Loading…</p></Screen>;
+  const isCaregiver = profile.role === 'caregiver';
+  const name = profile.riderFirstName;
+  const title = isCaregiver ? t("{name}'s rides", { name }) : t('Hi, {name}', { name });
+  if (!data) return <Screen title={title}><p>{t('Loading…')}</p></Screen>;
   const { appointments, rideLogs, waits, complaints } = data;
 
   const trips = upcomingTrips(appointments, today);
-  const todaysTrips = trips.filter((t) => t.date === today);
-  const notCheckedIn = todaysTrips.filter((t) => !findLog(rideLogs, t.appointment.id, t.date));
+  const todaysTrips = trips.filter((trip) => trip.date === today);
+  const notCheckedIn = todaysTrips.filter((trip) => !findLog(rideLogs, trip.appointment.id, trip.date));
   // Is it after the appointment time yet? Then the ride has happened (or should have).
   const nowTime = getNowTime(mode);
-  const readyToCheckIn = notCheckedIn.some((t) => t.appointment.time <= nowTime);
-  const laterTrips = trips.filter((t) => t.date > today);
+  const readyToCheckIn = notCheckedIn.some((trip) => trip.appointment.time <= nowTime);
+  const laterTrips = trips.filter((trip) => trip.date > today);
   const nextTrip = laterTrips[0];
   const comingUp = laterTrips.slice(1, 1 + COMING_UP_COUNT);
   // Rider's own number first, then the state's rule, else no reminders.
@@ -68,8 +71,8 @@ export function Home() {
   async function markBooked(appointment: Appointment) {
     await storage.saveAppointment({ ...appointment, rideBooked: true });
     await reload();
-    showSnackbar('Marked as booked.', {
-      label: 'Undo',
+    showSnackbar(t('Marked as booked.'), {
+      label: t('Undo'),
       run: async () => {
         await storage.saveAppointment(appointment);
         await reload();
@@ -83,26 +86,34 @@ export function Home() {
       ? routeToHash({ name: 'checkin', appointmentId: notCheckedIn[0].appointment.id, date: today })
       : routeToHash({ name: 'checkin' });
 
+  /** "Dialysis at Lakeside Clinic" */
+  const typeAt = (appointment: Appointment) =>
+    t('{type} at {clinic}', { type: t(APPOINTMENT_TYPE_LABELS[appointment.type]), clinic: appointment.clinicName });
+
   return (
     <Screen title={title} className="screen-dashboard">
-      <p className="today-line">Today is {formatLongDate(today, true)}</p>
+      <p className="today-line">{t('Today is {date}', { date: formatLongDate(today, true) })}</p>
 
       {mode === 'real' && <GettingStarted hasAppointments={appointments.length > 0} hasCheckIns={rideLogs.length > 0} />}
       {mode === 'real' && <CheckInNudge trips={notCheckedIn} />}
 
       {appointments.length === 0 && introHidden() && (
         <section className="card">
-          <h2>Get started</h2>
-          <p>Add {profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your'} medical appointments so RideConnect can track the rides.</p>
+          <h2>{t('Get started')}</h2>
+          <p>
+            {isCaregiver
+              ? t("Add {name}'s medical appointments so RideConnect can track the rides.", { name })
+              : t('Add your medical appointments so RideConnect can track the rides.')}
+          </p>
           <a href={routeToHash({ name: 'appointment-new' })} className="button-primary">
-            <Icon name="plus" /> Add an appointment
+            <Icon name="plus" /> {t('Add an appointment')}
           </a>
         </section>
       )}
 
       {todaysTrips.length > 0 && (
         <section className="card card-today" aria-labelledby="today-heading">
-          <h2 id="today-heading">Today</h2>
+          <h2 id="today-heading">{t('Today')}</h2>
           <ul className="plain-list">
             {todaysTrips.map((trip) => {
               const log = findLog(rideLogs, trip.appointment.id, trip.date);
@@ -110,12 +121,12 @@ export function Home() {
                 <li key={trip.appointment.id} className="today-trip">
                   <span>
                     <strong>{formatTime(trip.appointment.time)}</strong> —{' '}
-                    {APPOINTMENT_TYPE_LABELS[trip.appointment.type]} at {trip.appointment.clinicName}
+                    {typeAt(trip.appointment)}
                   </span>
                   {log && (
                     <span className={`badge badge-${rideSeverity(log)}`}>
                       <Icon name="check" size={20} />
-                      Checked in: {SEVERITY_DISPLAY[rideSeverity(log)].label}
+                      {t('Checked in: {status}', { status: t(SEVERITY_DISPLAY[rideSeverity(log)].label) })}
                     </span>
                   )}
                   <TripTimers trip={trip} log={log} waits={waits} now={now} />
@@ -125,19 +136,19 @@ export function Home() {
           </ul>
           {notCheckedIn.length > 0 && readyToCheckIn && (
             <a href={checkInHref} className="button-primary button-big">
-              Check in on today's ride
+              {t("Check in on today's ride")}
             </a>
           )}
           {notCheckedIn.length > 0 && !readyToCheckIn && (
             <>
               <p className="checkin-later">
-                <Icon name="clock" /> After the ride, come back here to check in.
+                <Icon name="clock" /> {t('After the ride, come back here to check in.')}
               </p>
-              <a href={checkInHref} className="button-secondary">Check in now</a>
+              <a href={checkInHref} className="button-secondary">{t('Check in now')}</a>
             </>
           )}
           {notCheckedIn.length === 0 && (
-            <a href="#/history" className="button-secondary">See ride history</a>
+            <a href="#/history" className="button-secondary">{t('See ride history')}</a>
           )}
           {/* Helpful extras go below the main button, so it stays easy to find. */}
           {notCheckedIn.map((trip) => (
@@ -154,21 +165,19 @@ export function Home() {
       {remindersOff && (
         <section className="card card-info" aria-labelledby="reminders-off-heading">
           <h2 id="reminders-off-heading">
-            <Icon name="clock" /> Booking reminders are off
+            <Icon name="clock" /> {t('Booking reminders are off')}
           </h2>
-          <p>Tell RideConnect how many business days ahead your ride company needs, and it will remind you when to book.</p>
-          <a href="#/settings" className="button-secondary">Set up booking reminders</a>
+          <p>{t('Tell RideConnect how many business days ahead your ride company needs, and it will remind you when to book.')}</p>
+          <a href="#/settings" className="button-secondary">{t('Set up booking reminders')}</a>
         </section>
       )}
 
       {nextTrip && (
         <section className="card" aria-labelledby="next-heading">
-          <h2 id="next-heading">{whose(profile)} next appointment</h2>
-          <p className="card-title">
-            {APPOINTMENT_TYPE_LABELS[nextTrip.appointment.type]} at {nextTrip.appointment.clinicName}
-          </p>
+          <h2 id="next-heading">{isCaregiver ? t("{name}'s next appointment", { name }) : t('Your next appointment')}</h2>
+          <p className="card-title">{typeAt(nextTrip.appointment)}</p>
           <p className="card-detail">
-            {formatLongDate(nextTrip.date)} at {formatTime(nextTrip.appointment.time)}
+            {capitalize(t('{date} at {time}', { date: formatLongDate(nextTrip.date), time: formatTime(nextTrip.appointment.time) }))}
           </p>
           {nextTrip.appointment.clinicAddress && <p className="card-detail">{nextTrip.appointment.clinicAddress}</p>}
           <ClinicActions appointment={nextTrip.appointment} />
@@ -177,10 +186,10 @@ export function Home() {
           {!nextTrip.appointment.rideBooked && !reminders.some((r) => r.appointment.id === nextTrip.appointment.id) && (
             <div className="button-stack">
               <a href={routeToHash({ name: 'call', appointmentId: nextTrip.appointment.id, date: nextTrip.date })} className="button-secondary">
-                <Icon name="phone" /> Call {profile.rideCompanyName} to book
+                <Icon name="phone" /> {t('Call {company} to book', { company: profile.rideCompanyName })}
               </a>
               <button type="button" className="button-secondary" onClick={() => markBooked(nextTrip.appointment)}>
-                <Icon name="check" /> I booked this ride
+                <Icon name="check" /> {t('I booked this ride')}
               </button>
             </div>
           )}
@@ -188,7 +197,7 @@ export function Home() {
           {nextTrip.appointment.rideBooked && !nextTrip.appointment.confirmationNumber && (
             <p>
               <a href={routeToHash({ name: 'appointment-edit', id: nextTrip.appointment.id })}>
-                Add confirmation number
+                {t('Add confirmation number')}
               </a>
             </p>
           )}
@@ -197,21 +206,19 @@ export function Home() {
 
       {comingUp.length > 0 && (
         <section aria-labelledby="coming-heading">
-          <h2 id="coming-heading">Coming up</h2>
+          <h2 id="coming-heading">{t('Coming up')}</h2>
           <ul className="card-list">
             {comingUp.map((trip) => (
               <li key={`${trip.appointment.id}-${trip.date}`} className="card card-compact">
                 <span className="card-title">
                   {formatShortDate(trip.date)}, {formatTime(trip.appointment.time)}
                 </span>
-                <span className="card-detail">
-                  {APPOINTMENT_TYPE_LABELS[trip.appointment.type]} at {trip.appointment.clinicName}
-                </span>
+                <span className="card-detail">{typeAt(trip.appointment)}</span>
                 <span className={trip.appointment.rideBooked ? 'status status-good' : 'status status-warn'}>
                   <Icon name={trip.appointment.rideBooked ? 'check' : 'warning'} size={20} />
-                  {trip.appointment.rideBooked ? 'Booked' : 'Not booked'}
+                  {trip.appointment.rideBooked ? t('Booked') : t('Not booked')}
                 </span>
-                <SkipDayButton appointment={trip.appointment} date={trip.date} onChange={reload} label="Skip this day" />
+                <SkipDayButton appointment={trip.appointment} date={trip.date} onChange={reload} label={t('Skip this day')} />
               </li>
             ))}
           </ul>
@@ -222,17 +229,17 @@ export function Home() {
 
       {mode === 'real' && needsBackup(rideLogs.length, today) && (
         <section className="card card-info" aria-labelledby="backup-nudge">
-          <h2 id="backup-nudge">Keep your records safe</h2>
-          <p>You have {rideLogs.length} rides logged, saved only on this phone. Save a backup file in case the phone is lost.</p>
-          <a href="#/settings" className="button-secondary">Back up now</a>
+          <h2 id="backup-nudge">{t('Keep your records safe')}</h2>
+          <p>{t('You have {n} rides logged, saved only on this phone. Save a backup file in case the phone is lost.', { n: rideLogs.length })}</p>
+          <a href="#/settings" className="button-secondary">{t('Back up now')}</a>
         </section>
       )}
 
       <section className="card" aria-labelledby="company-heading">
-        <h2 id="company-heading">Ride company</h2>
+        <h2 id="company-heading">{t('Ride company')}</h2>
         <p className="card-title">{profile.rideCompanyName}</p>
         <a href={`tel:${profile.rideCompanyPhone}`} className="button-secondary">
-          <Icon name="phone" /> Call {profile.rideCompanyPhone}
+          <Icon name="phone" /> {t('Call {name}', { name: profile.rideCompanyPhone })}
         </a>
       </section>
     </Screen>

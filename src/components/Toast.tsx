@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 import { useEffect } from 'react';
 import type { ToastMessage } from '../AppContext';
+import { t } from '../lib/i18n';
 
 export function Toast({ message, onClose }: { message: ToastMessage; onClose(): void }) {
   useEffect(() => {
@@ -17,12 +18,13 @@ export function Toast({ message, onClose }: { message: ToastMessage; onClose(): 
     // role="alert" makes screen readers read it out right away.
     <div className="toast" role="alert">
       <div className="toast-app">
-        <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={20} height={20} /> RideConnect · now
+        <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={20} height={20} /> {t('RideConnect · now')}
       </div>
       <p className="toast-title">{message.title}</p>
       <p className="toast-body">{message.body}</p>
       <button type="button" className="toast-close" onClick={onClose}>
-        Close<span className="visually-hidden"> notification</span>
+        {t('Close')}
+        <span className="visually-hidden"> {t('notification')}</span>
       </button>
     </div>
   );

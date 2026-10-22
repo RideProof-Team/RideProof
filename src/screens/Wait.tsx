@@ -14,7 +14,8 @@ import { useEffect } from 'react';
 import { useApp } from '../AppContext';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
-import { formatLongDate, formatTime } from '../lib/dates';
+import { capitalize, formatLongDate, formatTime } from '../lib/dates';
+import { t, tn, tx } from '../lib/i18n';
 import { askConfirm, showSnackbar } from '../lib/feedback';
 import { APPOINTMENT_TYPE_LABELS } from '../lib/labels';
 import { navigate } from '../lib/router';
@@ -56,18 +57,18 @@ export function Wait({ id }: { id?: string }) {
     }
   }, [wait, reached, storage, reload]);
 
-  if (!data || !profile) return <Screen title="Waiting for your ride"><p>Loading…</p></Screen>;
+  if (!data || !profile) return <Screen title={t('Waiting for your ride')}><p>{t('Loading…')}</p></Screen>;
   if (!wait) {
     return (
-      <Screen title="Waiting for your ride" back={{ to: { name: 'home' }, label: 'Home' }}>
-        <p>There's no ride timer running right now. You can start one from the Home screen when it's almost time for your ride.</p>
+      <Screen title={t('Waiting for your ride')} back={{ to: { name: 'home' }, label: t('Home') }}>
+        <p>{t("There's no ride timer running right now. You can start one from the Home screen when it's almost time for your ride.")}</p>
       </Screen>
     );
   }
 
   const appointment = data.appointments.find((a) => a.id === wait.appointmentId);
   const isHome = wait.leg === 'return';
-  const title = isHome ? 'Waiting for your ride home' : 'Waiting for your ride';
+  const title = isHome ? t('Waiting for your ride home') : t('Waiting for your ride');
   const until = minutesUntilPickup(wait, now);
   const prompt = reached !== undefined ? promptText(wait, reached, profile.rideCompanyName) : null;
 
@@ -78,9 +79,11 @@ export function Wait({ id }: { id?: string }) {
 
   async function neverCame() {
     const ok = await askConfirm({
-      title: 'Record that the ride never came?',
-      message: `You waited ${late} minutes${isHome ? ' for your ride home' : ' past the pickup time'}. RideConnect will save that and open the check-in.`,
-      confirmLabel: 'Yes, it never came',
+      title: t('Record that the ride never came?'),
+      message: isHome
+        ? t('You waited {n} minutes for your ride home. RideConnect will save that and open the check-in.', { n: late })
+        : t('You waited {n} minutes past the pickup time. RideConnect will save that and open the check-in.', { n: late }),
+      confirmLabel: t('Yes, it never came'),
       danger: true,
     });
     if (!ok) return;
@@ -90,14 +93,14 @@ export function Wait({ id }: { id?: string }) {
 
   async function stopByMistake() {
     const ok = await askConfirm({
-      title: 'Stop this timer?',
-      message: 'Use this if you started the timer by mistake. Nothing will be recorded.',
-      confirmLabel: 'Stop the timer',
+      title: t('Stop this timer?'),
+      message: t('Use this if you started the timer by mistake. Nothing will be recorded.'),
+      confirmLabel: t('Stop the timer'),
     });
     if (!ok) return;
     await storage.deleteWait(wait!.id);
-    showSnackbar('Timer stopped.', {
-      label: 'Undo',
+    showSnackbar(t('Timer stopped.'), {
+      label: t('Undo'),
       run: async () => {
         await storage.saveWait(wait!);
         refreshAll();
@@ -107,42 +110,44 @@ export function Wait({ id }: { id?: string }) {
   }
 
   return (
-    <Screen title={title} back={{ to: { name: 'home' }, label: 'Home' }}>
+    <Screen title={title} back={{ to: { name: 'home' }, label: t('Home') }}>
       {mode === 'demo' && (
         <p className="demo-note">
-          <Icon name="clock" /> Demo: this timer uses a simulated clock. Open Demo controls and tap "Jump ahead 15 minutes" to
-          see what happens when a ride is late.
+          <Icon name="clock" />{' '}
+          {t('Demo: this timer uses a simulated clock. Open Demo controls and tap "Jump ahead 15 minutes" to see what happens when a ride is late.')}
         </p>
       )}
 
       {appointment && (
         <p className="trip-line">
-          {APPOINTMENT_TYPE_LABELS[appointment.type]} at {appointment.clinicName}
+          {t('{type} at {clinic}', { type: t(APPOINTMENT_TYPE_LABELS[appointment.type]), clinic: appointment.clinicName })}
           <br />
-          {formatLongDate(wait.tripDate)}
+          {capitalize(formatLongDate(wait.tripDate))}
         </p>
       )}
 
       <div className="wait-timer-box">
-        <p className="wait-timer-label">{isHome ? 'Waiting for your ride home' : "You've been waiting"}</p>
+        <p className="wait-timer-label">{isHome ? t('Waiting for your ride home') : t("You've been waiting")}</p>
         {/* role="timer": screen readers know this changes every second and don't announce each tick. */}
-        <p className="wait-timer" role="timer" aria-label={`Waiting time: ${formatClock(elapsedSeconds(wait, now))}`}>
+        <p className="wait-timer" role="timer" aria-label={t('Waiting time: {time}', { time: formatClock(elapsedSeconds(wait, now)) })}>
           {formatClock(elapsedSeconds(wait, now))}
         </p>
         {!isHome && wait.scheduledTime && (
           <p className="wait-detail">
-            Pickup time: <strong>{formatTime(wait.scheduledTime)}</strong>
-            {wait.scheduledIsEstimate && ' (estimated: 1 hour before the appointment)'}
+            {tx('Pickup time: {time}', { time: <strong>{formatTime(wait.scheduledTime)}</strong> })}
+            {wait.scheduledIsEstimate && ` ${t('(estimated: 1 hour before the appointment)')}`}
           </p>
         )}
         <p className="wait-detail">
           {!isHome && until > 0
-            ? `The pickup time is in ${until} ${until === 1 ? 'minute' : 'minutes'}.`
+            ? tn(until, 'The pickup time is in {n} minute.', 'The pickup time is in {n} minutes.')
             : late > 0
-              ? `${late} ${late === 1 ? 'minute' : 'minutes'} ${isHome ? 'waiting so far' : 'past the pickup time'}.`
+              ? isHome
+                ? tn(late, '{n} minute waiting so far.', '{n} minutes waiting so far.')
+                : tn(late, '{n} minute past the pickup time.', '{n} minutes past the pickup time.')
               : isHome
-                ? 'Timer started.'
-                : 'Your ride is due now.'}
+                ? t('Timer started.')
+                : t('Your ride is due now.')}
         </p>
       </div>
 
@@ -159,26 +164,27 @@ export function Wait({ id }: { id?: string }) {
 
       <div className="button-stack">
         <button type="button" className="button-primary button-big" onClick={rideIsHere}>
-          <Icon name="check" /> My ride is here
+          <Icon name="check" /> {t('My ride is here')}
         </button>
         <a href={`tel:${profile.rideCompanyPhone}`} className="button-secondary button-tall">
-          <Icon name="phone" /> Call {profile.rideCompanyName}
+          <Icon name="phone" /> {t('Call {name}', { name: profile.rideCompanyName })}
         </a>
         {canMarkNeverCame(wait, now) ? (
           <button type="button" className="button-danger" onClick={neverCame}>
-            <Icon name="x" /> My ride never came
+            <Icon name="x" /> {t('My ride never came')}
           </button>
         ) : (
           <p className="field-hint">
-            "My ride never came" will appear here after {NEVER_CAME_AFTER_MINUTES} minutes
-            {isHome ? ' of waiting' : ' past the pickup time'}.
+            {isHome
+              ? t('"My ride never came" will appear here after {n} minutes of waiting.', { n: NEVER_CAME_AFTER_MINUTES })
+              : t('"My ride never came" will appear here after {n} minutes past the pickup time.', { n: NEVER_CAME_AFTER_MINUTES })}
           </p>
         )}
         <button type="button" className="link-button" onClick={stopByMistake}>
-          I started this timer by mistake
+          {t('I started this timer by mistake')}
         </button>
       </div>
-      <p className="field-hint">You can close the app or lock your phone. The timer keeps the right time.</p>
+      <p className="field-hint">{t('You can close the app or lock your phone. The timer keeps the right time.')}</p>
     </Screen>
   );
 }

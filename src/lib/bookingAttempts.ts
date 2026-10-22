@@ -11,22 +11,23 @@
 // ---------------------------------------------------------------------------
 import type { Appointment, BookingFailReason, FailedBooking } from '../types';
 import { formatLongDate } from './dates';
+import { msg, t } from './i18n';
 
 export const FAIL_REASONS: BookingFailReason[] = ['no_answer', 'no_rides', 'too_late', 'other'];
 
 export const FAIL_REASON_LABELS: Record<BookingFailReason, string> = {
-  no_answer: "Couldn't get through (busy, on hold too long, or no answer)",
-  no_rides: 'No rides available',
-  too_late: 'Told it was too late to book',
-  other: 'Something else',
+  no_answer: msg("Couldn't get through (busy, on hold too long, or no answer)"),
+  no_rides: msg('No rides available'),
+  too_late: msg('Told it was too late to book'),
+  other: msg('Something else'),
 };
 
 /** Short words for lists and the PDF. */
 export const FAIL_REASON_SHORT: Record<BookingFailReason, string> = {
-  no_answer: "couldn't get through",
-  no_rides: 'no rides available',
-  too_late: 'told it was too late to book',
-  other: 'could not book',
+  no_answer: msg("couldn't get through"),
+  no_rides: msg('no rides available'),
+  too_late: msg('told it was too late to book'),
+  other: msg('could not book'),
 };
 
 export function newFailedBooking(
@@ -67,7 +68,7 @@ export function attemptsForTrip(attempts: FailedBooking[], appointmentId: string
 
 /** One line: "Couldn't get through when calling to book the ride for Tuesday, November 3, 2026." */
 export function describeAttempt(attempt: FailedBooking): string {
-  const what = FAIL_REASON_SHORT[attempt.reason];
-  const line = `When I called to book my ride for ${formatLongDate(attempt.tripDate, true)}: ${what}.`;
-  return attempt.details ? `${line} Note: "${attempt.details}"` : line;
+  const what = t(FAIL_REASON_SHORT[attempt.reason]);
+  const line = t('When I called to book my ride for {date}: {what}.', { date: formatLongDate(attempt.tripDate, true), what });
+  return attempt.details ? `${line} ${t('Note: "{note}"', { note: attempt.details })}` : line;
 }

@@ -22,6 +22,7 @@ import {
 } from '../lib/complaints';
 import { addDays, formatLongDate } from '../lib/dates';
 import { showSnackbar } from '../lib/feedback';
+import { t } from '../lib/i18n';
 import { allowLeave, navigate, useLeaveWarning } from '../lib/router';
 import { getStateRule } from '../lib/stateRules';
 import { newId } from '../lib/storage';
@@ -56,14 +57,14 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
 
   const dirty = whoChoice !== null || typedName !== '' || form.method !== '' || form.referenceNumber !== '' || form.notes !== '';
   useLeaveWarning(dirty, {
-    title: 'Leave without saving?',
-    message: 'What you entered about this complaint will be lost.',
-    confirmLabel: 'Leave without saving',
+    title: t('Leave without saving?'),
+    message: t('What you entered about this complaint will be lost.'),
+    confirmLabel: t('Leave without saving'),
   });
 
-  if (!profile || !data) return <Screen title="I sent a complaint"><p>Loading…</p></Screen>;
+  if (!profile || !data) return <Screen title={t('I sent a complaint')}><p>{t('Loading…')}</p></Screen>;
 
-  const title = earlier ? 'I sent the follow-up' : 'I sent a complaint';
+  const title = earlier ? t('I sent the follow-up') : t('I sent a complaint');
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -85,21 +86,25 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
     const remind = addDays(complaint.sentDate, FOLLOW_UP_AFTER_DAYS);
     showSnackbar(
       remind > today
-        ? `Saved. If you haven't heard back by ${formatLongDate(remind)}, RideConnect will remind you.`
-        : 'Saved. It has been 14 days already, so you can update what happened right away.',
+        ? t("Saved. If you haven't heard back by {date}, RideConnect will remind you.", { date: formatLongDate(remind) })
+        : t('Saved. It has been 14 days already, so you can update what happened right away.'),
     );
     navigate({ name: 'complaints' });
   }
 
   return (
-    <Screen title={title} back={{ to: { name: 'complaints' }, label: 'Complaints' }}>
+    <Screen title={title} back={{ to: { name: 'complaints' }, label: t('Complaints') }}>
       <p>
-        Write down when and where you sent it. {FOLLOW_UP_AFTER_DAYS} days later, if you're still waiting for an answer,
-        RideConnect will remind you to follow up.
+        {t("Write down when and where you sent it. {days} days later, if you're still waiting for an answer, RideConnect will remind you to follow up.", {
+          days: FOLLOW_UP_AFTER_DAYS,
+        })}
       </p>
       {earlier && (
         <p className="field-hint">
-          This is a follow-up to your complaint of {formatLongDate(earlier.sentDate, true)} to {earlier.sentTo}.
+          {t('This is a follow-up to your complaint of {date} to {name}.', {
+            date: formatLongDate(earlier.sentDate, true),
+            name: earlier.sentTo,
+          })}
         </p>
       )}
       <form onSubmit={save} noValidate>
@@ -108,14 +113,14 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
         <TextField
           id="sentDate"
           type="date"
-          label="Date you sent it"
+          label={t('Date you sent it')}
           value={form.sentDate}
           error={errors.sentDate}
           onChange={(v) => update('sentDate', v)}
         />
 
         <fieldset className="choice-group" aria-describedby={errors.sentTo ? 'sentTo-error' : undefined}>
-          <legend>Who did you send it to?</legend>
+          <legend>{t('Who did you send it to?')}</legend>
           {recipients.map((name) => (
             <label key={name} className="choice-card">
               <input type="radio" name="sentTo" checked={who === name} onChange={() => setWhoChoice(name)} />
@@ -124,14 +129,14 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
           ))}
           <label className="choice-card">
             <input type="radio" name="sentTo" checked={who === OTHER} onChange={() => setWhoChoice(OTHER)} />
-            <span className="choice-label">Someone else (type the name)</span>
+            <span className="choice-label">{t('Someone else (type the name)')}</span>
           </label>
           {errors.sentTo && <p id="sentTo-error" className="field-error">{errors.sentTo}</p>}
         </fieldset>
         {who === OTHER && (
           <TextField
             id="sentToName"
-            label="Name of the person or office"
+            label={t('Name of the person or office')}
             value={typed}
             onChange={(v) => {
               setWhoChoice(OTHER);
@@ -141,12 +146,12 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
         )}
 
         <fieldset className="choice-group" aria-describedby={errors.method ? 'method-error' : undefined}>
-          <legend>How did you send it?</legend>
+          <legend>{t('How did you send it?')}</legend>
           <div className="chip-row">
             {COMPLAINT_METHODS.map((method) => (
               <label key={method} className="chip">
                 <input type="radio" name="method" checked={form.method === method} onChange={() => update('method', method)} />
-                <span>{COMPLAINT_METHOD_LABELS[method]}</span>
+                <span>{t(COMPLAINT_METHOD_LABELS[method])}</span>
               </label>
             ))}
           </div>
@@ -155,14 +160,14 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
 
         <TextField
           id="referenceNumber"
-          label="Reference or case number (optional)"
-          hint="If they gave you one. A follow-up letter will mention it."
+          label={t('Reference or case number (optional)')}
+          hint={t('If they gave you one. A follow-up letter will mention it.')}
           value={form.referenceNumber}
           onChange={(v) => update('referenceNumber', v)}
         />
 
         <div className="field">
-          <label htmlFor="complaintNotes">Notes (optional)</label>
+          <label htmlFor="complaintNotes">{t('Notes (optional)')}</label>
           <textarea
             id="complaintNotes"
             rows={3}
@@ -172,7 +177,7 @@ export function ComplaintSent({ followUpOf }: { followUpOf?: string }) {
         </div>
 
         <button type="submit" className="button-primary">
-          <Icon name="check" /> Save
+          <Icon name="check" /> {t('Save')}
         </button>
       </form>
     </Screen>

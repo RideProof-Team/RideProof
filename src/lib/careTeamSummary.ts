@@ -14,8 +14,10 @@
 // a PDF with headings in bold.
 // ---------------------------------------------------------------------------
 import type { FailedBooking, Profile, RideLog } from '../types';
-import { formatDateInSentence, formatLongDate } from './dates';
-import { computeStats, hadProblem, logsInRange, plural, type ReportPeriod } from './reportStats';
+import { joinWords } from './complaintLetter';
+import { capitalize, formatDateInSentence, formatLongDate } from './dates';
+import { getLanguage, msg, t, tn } from './i18n';
+import { computeStats, hadProblem, logsInRange, type ReportPeriod } from './reportStats';
 import { rideWait, timeLostHeadline, timeLostNotCounted } from './timeLost';
 
 /** How many of the worst incidents to list (keeps it to one page). */
@@ -27,13 +29,28 @@ export interface SummaryLine {
   text: string;
 }
 
-const TYPE_WORDS: Record<RideLog['appointmentType'], string> = {
-  dialysis: 'dialysis',
-  checkup: 'a checkup',
-  specialist: 'a specialist appointment',
-  therapy: 'therapy',
-  other: 'an appointment',
+/** "Rosa missed dialysis", by kind of appointment. */
+const MISSED_WORDS: Record<RideLog['appointmentType'], string> = {
+  dialysis: msg('{name} missed dialysis'),
+  checkup: msg('{name} missed a checkup'),
+  specialist: msg('{name} missed a specialist appointment'),
+  therapy: msg('{name} missed therapy'),
+  other: msg('{name} missed an appointment'),
 };
+
+/** "dialysis on October 14, 2026", by kind of appointment. */
+const MISSED_ON_WORDS: Record<RideLog['appointmentType'], string> = {
+  dialysis: msg('dialysis on {date}'),
+  checkup: msg('a checkup on {date}'),
+  specialist: msg('a specialist appointment on {date}'),
+  therapy: msg('therapy on {date}'),
+  other: msg('an appointment on {date}'),
+};
+
+/** English lists these with commas ("A, B, C"); Spanish joins the last one with "y". */
+function listParts(parts: string[]): string {
+  return getLanguage() === 'es' ? joinWords(parts) : parts.join(', ');
+}
 
 /**
  * How bad was one ride? Bigger = worse. A missed appointment is worst,
@@ -60,15 +77,21 @@ export function worstIncidents(logs: RideLog[], count = WORST_INCIDENTS): RideLo
 export function describeIncident(log: RideLog, rider: string): string {
   const parts: string[] = [];
   const minutes = (exact: number | undefined, bucket: number | null | undefined) =>
-    exact !== undefined ? plural(exact, 'minute', 'minutes') : bucket === 60 ? 'an hour or more' : `about ${bucket ?? 15} minutes`;
-  if (log.pickupStatus === 'never_came') parts.push('the ride never came');
-  if (log.pickupStatus === 'late') parts.push(`the pickup was ${minutes(log.pickupWaitMinutes, log.minutesLate)} late`);
-  if (log.appointmentOutcome === 'missed') parts.push(`${rider} missed ${TYPE_WORDS[log.appointmentType]}`);
-  if (log.appointmentOutcome === 'late') parts.push(`${rider} arrived late`);
-  if (log.returnRideStatus === 'never_came') parts.push(`the ride home never came`);
-  if (log.returnRideStatus === 'late') parts.push(`the ride home was ${minutes(log.returnWaitMinutes, log.returnMinutesLate)} late`);
-  const sentence = parts.join(', ');
-  const line = `${formatLongDate(log.rideDate, true)}: ${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}.`;
+    exact !== undefined
+      ? tn(exact, '{n} minute', '{n} minutes')
+      : bucket === 60
+        ? t('an hour or more')
+        : t('about {minutes} minutes', { minutes: bucket ?? 15 });
+  if (log.pickupStatus === 'never_came') parts.push(t('the ride never came'));
+  if (log.pickupStatus === 'late') parts.push(t('the pickup was {time} late', { time: minutes(log.pickupWaitMinutes, log.minutesLate) }));
+  if (log.appointmentOutcome === 'missed') parts.push(t(MISSED_WORDS[log.appointmentType], { name: rider }));
+  if (log.appointmentOutcome === 'late') parts.push(t('{name} arrived late', { name: rider }));
+  if (log.returnRideStatus === 'never_came') parts.push(t('the ride home never came'));
+  if (log.returnRideStatus === 'late') {
+    parts.push(t('the ride home was {time} late', { time: minutes(log.returnWaitMinutes, log.returnMinutesLate) }));
+  }
+  const sentence = listParts(parts);
+  const line = `${capitalize(formatLongDate(log.rideDate, true))}: ${capitalize(sentence)}.`;
   return log.notes ? `${line} "${shorten(log.notes, 120)}"` : line;
 }
 
@@ -91,64 +114,97 @@ export function buildCareTeamSummary({ profile, logs, attempts = [], period, tod
   const lines: SummaryLine[] = [];
   const add = (kind: SummaryLineKind, text: string) => lines.push({ kind, text });
 
-  add('title', `Ride summary for ${rider}'s care team`);
-  add('subtitle', `${formatDateInSentence(period.from)} to ${formatDateInSentence(period.to)} (prepared ${formatDateInSentence(today)})`);
+  add('title', t("Ride summary for {name}'s care team", { name: rider }));
+  add(
+    'subtitle',
+    t('{from} to {to} (prepared {today})', {
+      from: formatDateInSentence(period.from),
+      to: formatDateInSentence(period.to),
+      today: formatDateInSentence(today),
+    }),
+  );
   add(
     'text',
-    `This is a short summary of ${rider}'s rides to medical appointments through Medicaid transportation` +
-      ` (${profile.rideCompanyName}). Each ride was recorded on the day by ` +
-      `${profile.role === 'caregiver' ? `${profile.caregiverName || "the rider's caregiver"}` : rider}.`,
+    t(
+      "This is a short summary of {name}'s rides to medical appointments through Medicaid transportation ({company}). Each ride was recorded on the day by {recorder}.",
+      {
+        name: rider,
+        company: profile.rideCompanyName,
+        recorder: profile.role === 'caregiver' ? profile.caregiverName || t("the rider's caregiver") : rider,
+      },
+    ),
   );
 
-  add('heading', 'At a glance');
+  add('heading', t('At a glance'));
   if (stats.totalRides === 0) {
-    add('item', 'No rides were logged in this period.');
+    add('item', t('No rides were logged in this period.'));
   } else {
     // Same split as the Report headline (which counts pickups), so the numbers line up.
     const pickupProblems = stats.latePickups + stats.noShows;
     const otherProblems = stats.problemRides - pickupProblems;
     add(
       'item',
-      `${plural(stats.totalRides, 'ride', 'rides')} logged. ${pickupProblems} of the pickups were late or never came` +
-        (otherProblems > 0 ? `, and ${otherProblems} more ${otherProblems === 1 ? 'ride' : 'rides'} had a problem later (like the ride home).` : '.'),
+      `${tn(stats.totalRides, '{n} ride logged.', '{n} rides logged.')} ` +
+        t('{count} of the pickups were late or never came', { count: pickupProblems }) +
+        (otherProblems > 0
+          ? tn(
+              otherProblems,
+              ', and {n} more ride had a problem later (like the ride home).',
+              ', and {n} more rides had a problem later (like the ride home).',
+            )
+          : '.'),
     );
     const kinds = [
-      stats.latePickups > 0 && plural(stats.latePickups, 'late pickup', 'late pickups'),
-      stats.noShows > 0 && plural(stats.noShows, 'ride that never came', 'rides that never came'),
-      stats.strandedReturns > 0 && plural(stats.strandedReturns, 'ride home that never came', 'rides home that never came'),
-      stats.lateReturns > 0 && plural(stats.lateReturns, 'late ride home', 'late rides home'),
-    ].filter(Boolean);
-    if (kinds.length > 0) add('item', `${kinds.join(', ')}.`.replace(/^./, (c) => c.toUpperCase()));
+      stats.latePickups > 0 && tn(stats.latePickups, '{n} late pickup', '{n} late pickups'),
+      stats.noShows > 0 && tn(stats.noShows, '{n} ride that never came', '{n} rides that never came'),
+      stats.strandedReturns > 0 && tn(stats.strandedReturns, '{n} ride home that never came', '{n} rides home that never came'),
+      stats.lateReturns > 0 && tn(stats.lateReturns, '{n} late ride home', '{n} late rides home'),
+    ].filter((kind): kind is string => Boolean(kind));
+    if (kinds.length > 0) add('item', capitalize(`${listParts(kinds)}.`));
   }
   const missed = inRange.filter((l) => l.appointmentOutcome === 'missed');
   add(
     'item',
     stats.missedAppointments === 0
-      ? 'No appointments were missed because of a ride.'
-      : `Missed appointments: ${stats.missedAppointments} (${missed.map((l) => `${TYPE_WORDS[l.appointmentType]} on ${formatDateInSentence(l.rideDate)}`).join('; ')}).`,
+      ? t('No appointments were missed because of a ride.')
+      : t('Missed appointments: {count} ({list}).', {
+          count: stats.missedAppointments,
+          list: missed.map((l) => t(MISSED_ON_WORDS[l.appointmentType], { date: formatDateInSentence(l.rideDate) })).join('; '),
+        }),
   );
   if (timeLostHeadline(stats)) {
     add('item', `${timeLostHeadline(stats)}.${timeLostNotCounted(stats) ? ` ${timeLostNotCounted(stats)}` : ''}`);
   }
   if (stats.failedBookings > 0) {
-    add('item', `${plural(stats.failedBookings, 'call', 'calls')} to book a ride didn't work.`);
+    add('item', tn(stats.failedBookings, "{n} call to book a ride didn't work.", "{n} calls to book a ride didn't work."));
   }
 
   const worst = worstIncidents(inRange);
   if (worst.length > 0) {
-    add('heading', worst.length === 1 ? 'The worst problem' : `The ${worst.length} worst problems`);
+    add('heading', tn(worst.length, 'The worst problem', 'The {n} worst problems'));
     for (const log of worst) add('item', describeIncident(log, rider));
   }
 
-  add('heading', 'How you can help');
+  add('heading', t('How you can help'));
   add(
     'text',
     stats.problemRides > 0 || stats.failedBookings > 0
-      ? `Please keep these ride problems in mind when planning ${rider}'s care, and note any missed or shortened treatments in the chart. ` +
-          `If you can, a note from you saying that ${rider} needs reliable rides to these appointments would help when we ask the ride company and health plan to fix this.`
-      : `${rider}'s rides have been working well. Thank you for checking in.`,
+      ? t(
+          "Please keep these ride problems in mind when planning {name}'s care, and note any missed or shortened treatments in the chart. If you can, a note from you saying that {name} needs reliable rides to these appointments would help when we ask the ride company and health plan to fix this.",
+          { name: rider },
+        )
+      : t("{name}'s rides have been working well. Thank you for checking in.", { name: rider }),
   );
-  add('text', `Questions? Please contact ${profile.role === 'caregiver' ? `${profile.caregiverName || 'me'} or ${rider}` : rider}. [Add your phone number]`);
+  add(
+    'text',
+    profile.role !== 'caregiver'
+      ? t('Questions? Please contact {who}. [Add your phone number]', { who: rider })
+      : profile.caregiverName
+        ? t('Questions? Please contact {who}. [Add your phone number]', {
+            who: t('{caregiver} or {rider}', { caregiver: profile.caregiverName, rider }),
+          })
+        : t('Questions? Please contact me or {rider}. [Add your phone number]', { rider }),
+  );
   return lines;
 }
 

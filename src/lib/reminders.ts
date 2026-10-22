@@ -11,8 +11,9 @@
 import type { Appointment, Profile } from '../types';
 import { bookingDeadline } from './businessDays';
 import { addDays, formatLongDate, formatTime } from './dates';
+import { t } from './i18n';
 import { APPOINTMENT_TYPE_LABELS } from './labels';
-import { upcomingTrips } from './recurrence';
+import { spanishOneOClock, upcomingTrips } from './recurrence';
 
 export type Urgency = 'overdue' | 'today' | 'soon';
 
@@ -53,28 +54,47 @@ export function bookingReminders(
   return reminders.sort((a, b) => a.deadline.localeCompare(b.deadline));
 }
 
+/** "your dialysis appointment" / "Rosa's dialysis appointment" ("su cita de diálisis" / "la cita de diálisis de Rosa"). */
+function appointmentPhrase(reminder: BookingReminder, profile: Profile): string {
+  const kind = reminder.appointment.type;
+  const name = profile.riderFirstName;
+  const caregiver = profile.role === 'caregiver';
+  // "Other" has no good Spanish adjective ("su cita de otra"), so it gets its own words.
+  if (kind === 'other') return caregiver ? t("{name}'s other appointment", { name }) : t('your other appointment');
+  const type = t(APPOINTMENT_TYPE_LABELS[kind]).toLowerCase();
+  return caregiver ? t("{name}'s {type} appointment", { name, type }) : t('your {type} appointment', { type });
+}
+
 /** The words for a reminder, used on Home and in phone notifications. */
 export function reminderText(reminder: BookingReminder, profile: Profile): { title: string; body: string } {
-  const who = profile.role === 'caregiver' ? `${profile.riderFirstName}'s` : 'your';
-  const type = APPOINTMENT_TYPE_LABELS[reminder.appointment.type].toLowerCase();
-  const when = `at ${reminder.appointment.clinicName} on ${formatLongDate(reminder.tripDate)} at ${formatTime(reminder.appointment.time)}`;
+  const appointment = appointmentPhrase(reminder, profile);
+  const when = spanishOneOClock(
+    t('at {clinic} on {date} at {time}', {
+      clinic: reminder.appointment.clinicName,
+      date: formatLongDate(reminder.tripDate),
+      time: formatTime(reminder.appointment.time),
+    }),
+  );
   const deadline = formatLongDate(reminder.deadline);
 
   switch (reminder.urgency) {
     case 'overdue':
       return {
-        title: `Book the ride for ${who} ${type} appointment now`,
-        body: `The appointment is ${when}. The booking deadline was ${deadline}. Call ${profile.rideCompanyName} now — they may still be able to help.`,
+        title: t('Book the ride for {appointment} now', { appointment }),
+        body: t(
+          'The appointment is {when}. The booking deadline was {deadline}. Call {company} now — they may still be able to help.',
+          { when, deadline, company: profile.rideCompanyName },
+        ),
       };
     case 'today':
       return {
-        title: `Book the ride for ${who} ${type} appointment today`,
-        body: `The appointment is ${when}. Today is the last day to book the ride.`,
+        title: t('Book the ride for {appointment} today', { appointment }),
+        body: t('The appointment is {when}. Today is the last day to book the ride.', { when }),
       };
     case 'soon':
       return {
-        title: `Book the ride for ${who} ${type} appointment`,
-        body: `The appointment is ${when}. Book the ride by ${deadline}.`,
+        title: t('Book the ride for {appointment}', { appointment }),
+        body: t('The appointment is {when}. Book the ride by {deadline}.', { when, deadline }),
       };
   }
 }

@@ -7,6 +7,7 @@ import { useApp } from '../AppContext';
 import { BookingStatus } from '../components/BookingStatus';
 import { Screen } from '../components/Screen';
 import { Icon } from '../components/Icon';
+import { msg, t } from '../lib/i18n';
 import { APPOINTMENT_TYPE_LABELS } from '../lib/labels';
 import { describeSchedule, isPastAppointment } from '../lib/recurrence';
 import { routeToHash } from '../lib/router';
@@ -17,7 +18,7 @@ export function Appointments() {
   const { today } = useApp();
   const { data } = useRideData();
 
-  if (!data) return <Screen title="Appointments"><p>Loading…</p></Screen>;
+  if (!data) return <Screen title={t('Appointments')}><p>{t('Loading…')}</p></Screen>;
 
   const { appointments } = data;
   // Recurring first, then one-time appointments by date and time.
@@ -31,33 +32,33 @@ export function Appointments() {
   const past = sorted.filter((a) => isPastAppointment(a, today)).reverse();
 
   return (
-    <Screen title="Appointments">
+    <Screen title={t('Appointments')}>
 
       <a href={routeToHash({ name: 'appointment-new' })} className="button-primary">
-        <Icon name="plus" /> Add appointment
+        <Icon name="plus" /> {t('Add appointment')}
       </a>
 
       {appointments.length === 0 && (
-        <p className="empty-note">No appointments yet. Add one to start tracking your rides.</p>
+        <p className="empty-note">{t('No appointments yet. Add one to start tracking your rides.')}</p>
       )}
 
-      {current.length > 0 && <AppointmentList title="Upcoming" items={current} />}
-      {past.length > 0 && <AppointmentList title="Past" items={past} />}
+      {current.length > 0 && <AppointmentList id="Upcoming" title={msg('Upcoming')} items={current} />}
+      {past.length > 0 && <AppointmentList id="Past" title={msg('Past')} items={past} />}
     </Screen>
   );
 }
 
-function AppointmentList({ title, items }: { title: string; items: Appointment[] }) {
+function AppointmentList({ id, title, items }: { id: string; title: string; items: Appointment[] }) {
   return (
-    <section aria-labelledby={`list-${title}`}>
-      <h2 id={`list-${title}`}>{title}</h2>
+    <section aria-labelledby={`list-${id}`}>
+      <h2 id={`list-${id}`}>{t(title)}</h2>
       <ul className="card-list">
         {items.map((appt) => (
           <li key={appt.id}>
             {/* The whole card is one link, so it's one big tap target. */}
             <a href={routeToHash({ name: 'appointment-edit', id: appt.id })} className="card card-link">
               <span className="card-title">
-                {APPOINTMENT_TYPE_LABELS[appt.type]} at {appt.clinicName}
+                {t('{type} at {clinic}', { type: t(APPOINTMENT_TYPE_LABELS[appt.type]), clinic: appt.clinicName })}
               </span>
               <span className="card-detail">{describeSchedule(appt)}</span>
               <BookingStatus appointment={appt} />

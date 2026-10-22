@@ -15,8 +15,10 @@
 //
 // The wording functions at the bottom are shared by the Report screen, the
 // PDF, and the complaint letter, so all three always say the same thing.
+// They write in the app's language (or the one set with withLanguage()).
 // ---------------------------------------------------------------------------
 import type { MinutesLate, RideLog } from '../types';
+import { t, tn } from './i18n';
 
 /** How sure we are about a total: measured exactly, roughly, or a minimum. */
 export type WaitPrecision = 'exact' | 'about' | 'at_least';
@@ -80,20 +82,23 @@ export function totalWait(logs: RideLog[]) {
 // Wording
 // ---------------------------------------------------------------------------
 
-/** 375 -> "6 hours 15 minutes", 60 -> "1 hour", 1 -> "1 minute". */
+/** 375 -> "6 hours 15 minutes" ("6 horas y 15 minutos"), 60 -> "1 hour", 1 -> "1 minute". */
 export function formatDuration(totalMinutes: number): string {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  const parts: string[] = [];
-  if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
-  if (minutes > 0 || hours === 0) parts.push(`${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`);
-  return parts.join(' ');
+  const hourText = tn(hours, '{n} hour', '{n} hours');
+  const minuteText = tn(minutes, '{n} minute', '{n} minutes');
+  if (hours === 0) return minuteText;
+  if (minutes === 0) return hourText;
+  return t('{hours} {minutes}', { hours: hourText, minutes: minuteText });
 }
 
 /** "at least 6 hours 15 minutes" / "about 45 minutes" / "2 hours". */
 export function durationWithPrecision(minutes: number, precision: WaitPrecision): string {
-  const prefix = precision === 'at_least' ? 'at least ' : precision === 'about' ? 'about ' : '';
-  return `${prefix}${formatDuration(minutes)}`;
+  const duration = formatDuration(minutes);
+  if (precision === 'at_least') return t('at least {duration}', { duration });
+  if (precision === 'about') return t('about {duration}', { duration });
+  return duration;
 }
 
 function capitalize(text: string) {
@@ -111,28 +116,34 @@ export interface WaitStats {
 /** Report headline: "At least 6 hours 15 minutes spent waiting" ('' if none). */
 export function timeLostHeadline(stats: WaitStats): string {
   if (stats.waitMinutes === 0) return '';
-  return `${capitalize(durationWithPrecision(stats.waitMinutes, stats.waitPrecision))} spent waiting`;
+  return capitalize(t('{duration} spent waiting', { duration: durationWithPrecision(stats.waitMinutes, stats.waitPrecision) }));
 }
 
 /** What's left out, e.g. "Not counted: 2 times a ride never came (no wait time was recorded)." */
 export function timeLostNotCounted(stats: WaitStats): string {
   const parts: string[] = [];
   if (stats.untimedNeverCame > 0) {
-    parts.push(`${stats.untimedNeverCame} ${stats.untimedNeverCame === 1 ? 'time' : 'times'} a ride never came`);
+    parts.push(tn(stats.untimedNeverCame, '{n} time a ride never came', '{n} times a ride never came'));
   }
   if (stats.untimedLate > 0) {
-    parts.push(`${stats.untimedLate} late ${stats.untimedLate === 1 ? 'ride' : 'rides'} home with no time recorded`);
+    parts.push(tn(stats.untimedLate, '{n} late ride home with no time recorded', '{n} late rides home with no time recorded'));
   }
   if (parts.length === 0) return '';
-  return `Not counted: ${parts.join(' and ')}${stats.untimedNeverCame > 0 ? ' (no wait time was recorded)' : ''}.`;
+  const items = parts.length === 2 ? t('{first} and {second}', { first: parts[0], second: parts[1] }) : parts[0];
+  return stats.untimedNeverCame > 0
+    ? t('Not counted: {items} (no wait time was recorded).', { items })
+    : t('Not counted: {items}.', { items });
 }
 
 /** A sentence for the complaint letter ('' if there's nothing to say). */
 export function timeLostLetterSentence(stats: WaitStats): string {
   if (stats.waitMinutes === 0) return '';
-  let sentence = `In total, I spent ${durationWithPrecision(stats.waitMinutes, stats.waitPrecision)} waiting for late rides`;
-  if (stats.untimedNeverCame > 0) {
-    sentence += `, not counting the ${stats.untimedNeverCame === 1 ? 'time' : `${stats.untimedNeverCame} times`} a ride never came at all`;
-  }
-  return `${sentence}.`;
+  const duration = durationWithPrecision(stats.waitMinutes, stats.waitPrecision);
+  if (stats.untimedNeverCame === 0) return t('In total, I spent {duration} waiting for late rides.', { duration });
+  return tn(
+    stats.untimedNeverCame,
+    'In total, I spent {duration} waiting for late rides, not counting the time a ride never came at all.',
+    'In total, I spent {duration} waiting for late rides, not counting the {n} times a ride never came at all.',
+    { duration },
+  );
 }

@@ -18,17 +18,19 @@ import { bookingReminders, reminderText } from '../lib/reminders';
 import { navigate, type Route } from '../lib/router';
 import { effectiveBookingWindow } from '../lib/bookingWindow';
 import { getStateRule } from '../lib/stateRules';
+import { msg, t } from '../lib/i18n';
 
+// Labels are English, marked with msg() and shown with t().
 const SHORTCUTS: { label: string; route: Route }[] = [
-  { label: 'Home', route: { name: 'home' } },
-  { label: 'Ride timer', route: { name: 'wait' } },
-  { label: 'Booking call script', route: { name: 'call', appointmentId: 'demo-cardiology', date: '2026-11-03' } },
-  { label: 'Ride check-in', route: { name: 'checkin' } },
-  { label: 'History', route: { name: 'history' } },
-  { label: 'Report', route: { name: 'report' } },
-  { label: 'Care team summary', route: { name: 'care-team' } },
-  { label: 'Complaint preview', route: { name: 'complaint' } },
-  { label: 'Complaints sent', route: { name: 'complaints' } },
+  { label: msg('Home'), route: { name: 'home' } },
+  { label: msg('Ride timer'), route: { name: 'wait' } },
+  { label: msg('Booking call script'), route: { name: 'call', appointmentId: 'demo-cardiology', date: '2026-11-03' } },
+  { label: msg('Ride check-in'), route: { name: 'checkin' } },
+  { label: msg('History'), route: { name: 'history' } },
+  { label: msg('Report'), route: { name: 'report' } },
+  { label: msg('Care team summary'), route: { name: 'care-team' } },
+  { label: msg('Complaint preview'), route: { name: 'complaint' } },
+  { label: msg('Complaints sent'), route: { name: 'complaints' } },
 ];
 
 export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogElement | null> }) {
@@ -49,7 +51,7 @@ export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogEle
     const bookingWindow = effectiveBookingWindow(profile, getStateRule(profile.state));
     const reminders = bookingWindow.days === null ? [] : bookingReminders(await storage.listAppointments(), today, bookingWindow.days);
     if (reminders.length === 0) {
-      showToast({ title: 'No booking reminders right now', body: 'Tap "Reset demo" to bring the sample reminder back.' });
+      showToast({ title: t('No booking reminders right now'), body: t('Tap "Reset demo" to bring the sample reminder back.') });
       return;
     }
     const { title, body } = reminderText(reminders[0], profile);
@@ -63,7 +65,7 @@ export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogEle
   function jumpAhead() {
     close();
     jumpDemoClock(15);
-    showSnackbar('Demo clock moved ahead 15 minutes.');
+    showSnackbar(t('Demo clock moved ahead 15 minutes.'));
   }
 
   async function reset() {
@@ -76,29 +78,29 @@ export function DemoControls({ dialogRef }: { dialogRef: RefObject<HTMLDialogEle
 
   return (
     <dialog ref={dialogRef} className="demo-dialog" aria-labelledby="demo-controls-heading">
-      <h2 id="demo-controls-heading">Demo controls</h2>
-      <p className="field-hint">Changes here only affect the sample data, never your own.</p>
-      <h3>Go to</h3>
+      <h2 id="demo-controls-heading">{t('Demo controls')}</h2>
+      <p className="field-hint">{t('Changes here only affect the sample data, never your own.')}</p>
+      <h3>{t('Go to')}</h3>
       <div className="shortcut-grid">
         {SHORTCUTS.map((s) => (
           <button key={s.label} type="button" className="button-secondary" onClick={() => go(s.route)}>
-            {s.label}
+            {t(s.label)}
           </button>
         ))}
       </div>
-      <h3>Actions</h3>
+      <h3>{t('Actions')}</h3>
       <div className="button-stack">
         <button type="button" className="button-secondary" onClick={simulateReminder}>
-          Simulate reminder
+          {t('Simulate reminder')}
         </button>
         <button type="button" className="button-secondary" onClick={jumpAhead}>
-          Ride timer: jump ahead 15 minutes
+          {t('Ride timer: jump ahead 15 minutes')}
         </button>
         <button type="button" className="button-danger" onClick={reset}>
-          Reset demo
+          {t('Reset demo')}
         </button>
         <button type="button" className="button-primary" onClick={close}>
-          Close
+          {t('Close')}
         </button>
       </div>
     </dialog>

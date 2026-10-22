@@ -9,7 +9,8 @@
 // A "trip" = one appointment on one specific date.
 // ---------------------------------------------------------------------------
 import type { Appointment, Weekday } from '../types';
-import { addDays, formatLongDate, formatTime, weekdayOf } from './dates';
+import { addDays, capitalize, formatLongDate, formatTime, weekdayOf } from './dates';
+import { getLanguage, t } from './i18n';
 import { WEEKDAY_SHORT, WEEKDAYS_IN_ORDER } from './labels';
 
 export interface Trip {
@@ -77,19 +78,33 @@ export function upcomingTrips(appointments: Appointment[], today: string): Trip[
 }
 
 /**
+ * Spanish says "a las 9:00" but "a la 1:00" (one o'clock is singular).
+ * Fixes a translated sentence that has "a las {time}" in it.
+ */
+export function spanishOneOClock(text: string): string {
+  return getLanguage() === 'es' ? text.replace(/\ba las 1:/g, 'a la 1:') : text;
+}
+
+/** "Mon, Wed, Fri" (Spanish: "lun, mié y vie"). */
+function joinDays(days: string[]): string {
+  if (getLanguage() !== 'es' || days.length < 2) return days.join(', ');
+  return `${days.slice(0, -1).join(', ')} y ${days[days.length - 1]}`;
+}
+
+/**
  * A plain-language description of when an appointment happens:
- *   "Thursday, November 5 at 2:30 PM"
- *   "Every Mon, Wed, Fri at 9:00 AM"
+ *   "Thursday, November 5 at 2:30 PM"   ("Jueves, 5 de noviembre a las 2:30 p. m.")
+ *   "Every Mon, Wed, Fri at 9:00 AM"    ("Cada lun, mié y vie a las 9:00 a. m.")
  */
 export function describeSchedule(appointment: Appointment): string {
   const time = formatTime(appointment.time);
   const rule = appointment.recurrence;
   if (rule.kind === 'none') {
-    return `${formatLongDate(appointment.date)} at ${time}`;
+    return spanishOneOClock(capitalize(t('{date} at {time}', { date: formatLongDate(appointment.date), time })));
   }
   // List the days Monday-first, no matter what order they were picked in.
-  const days = WEEKDAYS_IN_ORDER.filter((d) => rule.weekdays.includes(d)).map((d) => WEEKDAY_SHORT[d]);
-  return `Every ${days.join(', ')} at ${time}`;
+  const days = WEEKDAYS_IN_ORDER.filter((d) => rule.weekdays.includes(d)).map((d) => t(WEEKDAY_SHORT[d]));
+  return spanishOneOClock(t('Every {days} at {time}', { days: joinDays(days), time }));
 }
 
 /** True if a one-time appointment is over. Recurring ones are never "past". */

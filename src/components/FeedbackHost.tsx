@@ -3,6 +3,7 @@
 // through lib/feedback.ts. It's placed once, in App.tsx.
 // ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../lib/i18n';
 import { onConfirmRequest, onSnackbar, type ConfirmRequest, type Snackbar } from '../lib/feedback';
 
 /** How long a snackbar stays up. Long enough to read and reach "Undo". */
@@ -67,7 +68,7 @@ export function FeedbackHost() {
                 {request.confirmLabel}
               </button>
               <button type="button" className="button-secondary" onClick={() => answer(false)} ref={cancelRef}>
-                {request.cancelLabel ?? 'Cancel'}
+                {request.cancelLabel ?? t('Cancel')}
               </button>
             </div>
           </>
@@ -98,7 +99,7 @@ export function FeedbackHost() {
                 {snackbar.action.label}
               </button>
             )}
-            <button type="button" className="snackbar-close" onClick={() => setSnackbar(null)} aria-label="Dismiss message">
+            <button type="button" className="snackbar-close" onClick={() => setSnackbar(null)} aria-label={t('Dismiss message')}>
               ✕
             </button>
           </div>

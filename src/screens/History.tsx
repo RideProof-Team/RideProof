@@ -12,7 +12,8 @@ import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { SkipDayButton } from '../components/SkipDayButton';
 import { tripsNeedingCheckIn } from '../lib/checkinFlow';
-import { formatLongDate, formatMonthYear, formatTime } from '../lib/dates';
+import { capitalize, formatLongDate, formatMonthYear, formatTime } from '../lib/dates';
+import { t, tn } from '../lib/i18n';
 import { pickupTimesText } from '../lib/complaintLetter';
 import {
   APPOINTMENT_TYPE_LABELS,
@@ -46,7 +47,7 @@ export function History() {
   const { data, reload } = useRideData();
   const [filter, setFilter] = useState<HistoryFilter>('all');
   const [search, setSearch] = useState('');
-  if (!data) return <Screen title="Ride history"><p>Loading…</p></Screen>;
+  if (!data) return <Screen title={t('Ride history')}><p>{t('Loading…')}</p></Screen>;
 
   const unlogged = tripsNeedingCheckIn(data.appointments, data.rideLogs, today).slice(0, MAX_UNLOGGED);
   // Newest first. Text dates sort correctly, so we can compare them directly.
@@ -72,10 +73,10 @@ export function History() {
   }
 
   return (
-    <Screen title="Ride history">
+    <Screen title={t('Ride history')}>
       {unlogged.length > 0 && (
         <section aria-labelledby="unlogged-heading" className="card card-today">
-          <h2 id="unlogged-heading">Needs a check-in</h2>
+          <h2 id="unlogged-heading">{t('Needs a check-in')}</h2>
           <ul className="plain-list">
             {unlogged.map((trip) => (
               <li key={`${trip.appointment.id}-${trip.date}`}>
@@ -83,15 +84,15 @@ export function History() {
                   className="button-secondary"
                   href={routeToHash({ name: 'checkin', appointmentId: trip.appointment.id, date: trip.date })}
                 >
-                  {formatLongDate(trip.date)}, {formatTime(trip.appointment.time)}
+                  {capitalize(formatLongDate(trip.date))}, {formatTime(trip.appointment.time)}
                   {' — '}
-                  {APPOINTMENT_TYPE_LABELS[trip.appointment.type]}
+                  {t(APPOINTMENT_TYPE_LABELS[trip.appointment.type])}
                 </a>
                 <SkipDayButton
                   appointment={trip.appointment}
                   date={trip.date}
                   onChange={reload}
-                  label="No appointment that day? Skip it"
+                  label={t('No appointment that day? Skip it')}
                 />
               </li>
             ))}
@@ -103,29 +104,31 @@ export function History() {
         <div className="history-tools">
           <div className="field search-field">
             <label htmlFor="history-search">
-              <Icon name="search" /> Search notes and clinics
+              <Icon name="search" /> {t('Search notes and clinics')}
             </label>
             <input id="history-search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <fieldset className="choice-group">
-            <legend>Show</legend>
+            <legend>{t('Show')}</legend>
             <div className="chip-row">
               {(Object.keys(HISTORY_FILTER_LABELS) as HistoryFilter[]).map((value) => (
                 <label key={value} className="chip">
                   <input type="radio" name="history-filter" checked={filter === value} onChange={() => setFilter(value)} />
-                  <span>{HISTORY_FILTER_LABELS[value]}</span>
+                  <span>{t(HISTORY_FILTER_LABELS[value])}</span>
                 </label>
               ))}
             </div>
           </fieldset>
           {/* aria-live: screen readers hear the new count as filters change. */}
           <p className="filter-count" aria-live="polite">
-            {filtering ? `Showing ${logs.length} of ${allLogs.length} rides.` : `${allLogs.length} rides logged.`}
-            {calls.length > 0 && ` ${calls.length} booking ${calls.length === 1 ? 'call' : 'calls'} that didn't work.`}
+            {filtering
+              ? t('Showing {shown} of {total} rides.', { shown: logs.length, total: allLogs.length })
+              : tn(allLogs.length, '{n} ride logged.', '{n} rides logged.')}
+            {calls.length > 0 && ` ${tn(calls.length, "{n} booking call that didn't work.", "{n} booking calls that didn't work.")}`}
           </p>
           {filtering && logs.length === 0 && (
             <button type="button" className="link-button" onClick={() => { setFilter('all'); setSearch(''); }}>
-              No rides match. Show all rides
+              {t('No rides match. Show all rides')}
             </button>
           )}
         </div>
@@ -133,7 +136,7 @@ export function History() {
 
       {allLogs.length === 0 && data.bookingAttempts.length === 0 && (
         <p className="empty-note">
-          No rides logged yet. After each ride, tap "Check in on today's ride" on the Home screen.
+          {t('No rides logged yet. After each ride, tap "Check in on today\'s ride" on the Home screen.')}
         </p>
       )}
 
@@ -147,8 +150,8 @@ export function History() {
                 : <CallCard key={item.attempt.id} attempt={item.attempt} onDelete={async () => {
                     await storage.deleteBookingAttempt(item.attempt.id);
                     await reload();
-                    showSnackbar('Booking call record deleted.', {
-                      label: 'Undo',
+                    showSnackbar(t('Booking call record deleted.'), {
+                      label: t('Undo'),
                       run: async () => {
                         await storage.saveBookingAttempt(item.attempt);
                         await reload();
@@ -168,45 +171,46 @@ function RideCard({ log }: { log: RideLog }) {
   const display = SEVERITY_DISPLAY[severity];
   const pickup =
     log.pickupStatus === 'late' && log.minutesLate
-      ? `Late (${MINUTES_LATE_SHORT[log.minutesLate]})`
-      : PICKUP_LABELS[log.pickupStatus];
+      ? t('Late ({minutes})', { minutes: t(MINUTES_LATE_SHORT[log.minutesLate]) })
+      : t(PICKUP_LABELS[log.pickupStatus]);
 
   return (
     <li className={`card ride-card sev-${severity}`}>
       <div className="ride-card-top">
-        <span className="card-title">{formatLongDate(log.rideDate)}</span>
+        <span className="card-title">{capitalize(formatLongDate(log.rideDate))}</span>
         <span className={`badge badge-${severity}`}>
           <Icon name={display.icon} size={20} />
-          {display.label}
+          {t(display.label)}
         </span>
       </div>
       <span className="card-detail">
-        {APPOINTMENT_TYPE_LABELS[log.appointmentType]} at {log.clinicName}
+        {t('{type} at {clinic}', { type: t(APPOINTMENT_TYPE_LABELS[log.appointmentType]), clinic: log.clinicName })}
       </span>
       {severity !== 'good' && <p className="ride-reason">{severityReason(log)}</p>}
       <dl className="ride-details">
-        <dt>Pickup</dt>
+        <dt>{t('Pickup')}</dt>
         <dd>
           {pickup}
           {pickupTimesText(log) && <><br />{pickupTimesText(log)}</>}
         </dd>
-        <dt>Appointment</dt>
-        <dd>{OUTCOME_LABELS[log.appointmentOutcome]}</dd>
-        <dt>Ride home</dt>
+        <dt>{t('Appointment')}</dt>
+        <dd>{t(OUTCOME_LABELS[log.appointmentOutcome])}</dd>
+        <dt>{t('Ride home')}</dt>
         <dd>
           {log.returnRideStatus === 'late' && log.returnMinutesLate
-            ? `Late (${MINUTES_LATE_SHORT[log.returnMinutesLate]})`
-            : RETURN_LABELS[log.returnRideStatus]}
+            ? t('Late ({minutes})', { minutes: t(MINUTES_LATE_SHORT[log.returnMinutesLate]) })
+            : t(RETURN_LABELS[log.returnRideStatus])}
         </dd>
         {log.notes && (
           <>
-            <dt>Notes</dt>
+            <dt>{t('Notes')}</dt>
             <dd>{log.notes}</dd>
           </>
         )}
       </dl>
       <a href={routeToHash({ name: 'checkin', appointmentId: log.appointmentId, date: log.rideDate })}>
-        Edit this ride<span className="visually-hidden"> on {formatLongDate(log.rideDate)}</span>
+        {t('Edit this ride')}
+        <span className="visually-hidden"> {t('on {date}', { date: formatLongDate(log.rideDate) })}</span>
       </a>
     </li>
   );
@@ -217,28 +221,32 @@ function CallCard({ attempt, onDelete }: { attempt: FailedBooking; onDelete(): v
   return (
     <li className="card ride-card sev-problem">
       <div className="ride-card-top">
-        <span className="card-title">{formatLongDate(attempt.attemptedOn)}</span>
+        <span className="card-title">{capitalize(formatLongDate(attempt.attemptedOn))}</span>
         <span className="badge badge-problem">
           <Icon name="phone" size={20} />
-          Couldn't book
+          {t("Couldn't book")}
         </span>
       </div>
       <span className="card-detail">
-        Call to book the ride for {APPOINTMENT_TYPE_LABELS[attempt.appointmentType]} at {attempt.clinicName},{' '}
-        {formatLongDate(attempt.tripDate)}
+        {t('Call to book the ride for {type} at {clinic}, {date}', {
+          type: t(APPOINTMENT_TYPE_LABELS[attempt.appointmentType]),
+          clinic: attempt.clinicName,
+          date: formatLongDate(attempt.tripDate),
+        })}
       </span>
       <dl className="ride-details">
-        <dt>What happened</dt>
-        <dd>{FAIL_REASON_LABELS[attempt.reason]}</dd>
+        <dt>{t('What happened')}</dt>
+        <dd>{t(FAIL_REASON_LABELS[attempt.reason])}</dd>
         {attempt.details && (
           <>
-            <dt>Details</dt>
+            <dt>{t('Details')}</dt>
             <dd>{attempt.details}</dd>
           </>
         )}
       </dl>
       <button type="button" className="link-button" onClick={onDelete}>
-        Delete this record<span className="visually-hidden"> of the call on {formatLongDate(attempt.attemptedOn)}</span>
+        {t('Delete this record')}
+        <span className="visually-hidden"> {t('of the call on {date}', { date: formatLongDate(attempt.attemptedOn) })}</span>
       </button>
     </li>
   );

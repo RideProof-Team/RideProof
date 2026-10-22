@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 import type { BookingFailReason, FailedBooking, RideLog } from '../types';
 import { attemptsInRange } from './bookingAttempts';
+import { t, tn } from './i18n';
 import { addDays, formatMonthYear, formatShortDate, parseDate, toDateString, weekdayOf } from './dates';
 import { totalWait, type WaitPrecision } from './timeLost';
 
@@ -122,7 +123,7 @@ export function reportPeriods(today: string, logs: RideLog[]): ReportPeriod[] {
   const periods: ReportPeriod[] = [
     {
       id: 'past-month',
-      label: `Past month (${formatShortDate(pastMonthFrom)} – ${formatShortDate(today)})`,
+      label: t('Past month ({from} – {to})', { from: formatShortDate(pastMonthFrom), to: formatShortDate(today) }),
       from: pastMonthFrom,
       to: today,
     },
@@ -187,17 +188,31 @@ export function weeklyCounts(logs: RideLog[], from: string, to: string): WeekCou
   return weeks;
 }
 
-/** "1 time" / "5 times" — small helper for plain-language sentences. */
+/**
+ * "1 time" / "5 times" — small helper for plain-language sentences.
+ * English only (other files pass it English words); translated sentences
+ * use tn() from i18n.ts instead.
+ */
 export function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-/** A one-sentence summary, e.g. "5 of 13 rides were late, and 2 never came." */
+/**
+ * A one-sentence summary in the app's language, e.g.
+ * "7 of 13 rides had a problem: 5 were late, and 2 never came."
+ * ("7 de 13 viajes tuvieron un problema: 5 llegaron tarde y 2 nunca llegaron.")
+ */
 export function headline(stats: RideStats): string {
-  if (stats.totalRides === 0) return 'No rides logged in this period.';
+  const total = stats.totalRides;
+  if (total === 0) return t('No rides logged in this period.');
   const problems: string[] = [];
-  if (stats.latePickups > 0) problems.push(`${stats.latePickups} ${stats.latePickups === 1 ? 'was' : 'were'} late`);
-  if (stats.noShows > 0) problems.push(`${stats.noShows} never came`);
-  if (problems.length === 0) return `All ${plural(stats.totalRides, 'ride', 'rides')} picked up on time.`;
-  return `${stats.latePickups + stats.noShows} of ${plural(stats.totalRides, 'ride', 'rides')} had a problem: ${problems.join(', and ')}.`;
+  if (stats.latePickups > 0) problems.push(tn(stats.latePickups, '{n} was late', '{n} were late'));
+  if (stats.noShows > 0) problems.push(tn(stats.noShows, '1 never came', '{n} never came'));
+  if (problems.length === 0) return tn(total, 'All {n} ride picked up on time.', 'All {n} rides picked up on time.');
+  const details = problems.length === 2 ? t('{first}, and {second}', { first: problems[0], second: problems[1] }) : problems[0];
+  const problemCount = stats.latePickups + stats.noShows;
+  // Whole sentences, so Spanish can say "tuvo" (1) or "tuvieron" (many).
+  if (total === 1) return t('1 of 1 ride had a problem: {details}.', { details });
+  if (problemCount === 1) return t('1 of {total} rides had a problem: {details}.', { total, details });
+  return t('{problems} of {total} rides had a problem: {details}.', { problems: problemCount, total, details });
 }

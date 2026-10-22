@@ -8,6 +8,7 @@
 //   - Once a timer has finished, "Finish check-in" uses its results.
 // ---------------------------------------------------------------------------
 import { useApp } from '../AppContext';
+import { t, tn } from '../lib/i18n';
 import { routeToHash, navigate } from '../lib/router';
 import type { Trip } from '../lib/recurrence';
 import {
@@ -56,11 +57,16 @@ export function TripTimers({ trip, log, waits, now }: Props) {
           <div key={w.id}>
             <p className="timer-status">
               <Icon name="clock" />
-              {w.leg === 'return' ? 'Waiting for your ride home' : 'Waiting for your ride'}
-              {minutes > 0 && `: ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}${w.leg === 'pickup' ? ' late' : ''}`}
+              {minutes > 0
+                ? w.leg === 'return'
+                  ? tn(minutes, 'Waiting for your ride home: {n} minute', 'Waiting for your ride home: {n} minutes')
+                  : tn(minutes, 'Waiting for your ride: {n} minute late', 'Waiting for your ride: {n} minutes late')
+                : w.leg === 'return'
+                  ? t('Waiting for your ride home')
+                  : t('Waiting for your ride')}
             </p>
             <a href={routeToHash({ name: 'wait', id: w.id })} className="button-primary">
-              Open the ride timer
+              {t('Open the ride timer')}
             </a>
           </div>
         );
@@ -69,19 +75,28 @@ export function TripTimers({ trip, log, waits, now }: Props) {
       {finished.map((w) => (
         <p key={w.id} className="timer-status">
           <Icon name="check" />
-          {w.leg === 'return' ? 'Ride home' : 'Pickup'} recorded by your timer
-          {w.result === 'never_came' ? ' (never came).' : w.finalMinutesLate ? ` (${w.finalMinutesLate} minutes late).` : ' (on time).'}
+          {w.leg === 'return'
+            ? w.result === 'never_came'
+              ? t('Ride home recorded by your timer (never came).')
+              : w.finalMinutesLate
+                ? tn(w.finalMinutesLate, 'Ride home recorded by your timer ({n} minute late).', 'Ride home recorded by your timer ({n} minutes late).')
+                : t('Ride home recorded by your timer (on time).')
+            : w.result === 'never_came'
+              ? t('Pickup recorded by your timer (never came).')
+              : w.finalMinutesLate
+                ? tn(w.finalMinutesLate, 'Pickup recorded by your timer ({n} minute late).', 'Pickup recorded by your timer ({n} minutes late).')
+                : t('Pickup recorded by your timer (on time).')}
         </p>
       ))}
 
       {!pickupWait && !returnWait && pickupSoon && (
         <button type="button" className="button-primary" onClick={() => start('pickup')}>
-          <Icon name="clock" /> I'm waiting for my ride
+          <Icon name="clock" /> {t("I'm waiting for my ride")}
         </button>
       )}
       {!returnWait && (pickupWait?.finishedAt || (!pickupWait && appointmentStarted)) && (
         <button type="button" className="button-secondary" onClick={() => start('return')}>
-          <Icon name="home" /> I'm waiting for my ride home
+          <Icon name="home" /> {t("I'm waiting for my ride home")}
         </button>
       )}
       {finished.length > 0 && running.length === 0 && (
@@ -89,7 +104,7 @@ export function TripTimers({ trip, log, waits, now }: Props) {
           href={routeToHash({ name: 'checkin', appointmentId: trip.appointment.id, date: trip.date })}
           className="button-secondary"
         >
-          Finish check-in
+          {t('Finish check-in')}
         </a>
       )}
     </div>

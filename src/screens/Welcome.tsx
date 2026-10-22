@@ -19,6 +19,7 @@ import { getStateRule, listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
 import type { MobilityNeeds, Profile, Role } from '../types';
 import { MOBILITY_LABELS } from '../lib/callScript';
+import { t } from '../lib/i18n';
 
 const EMPTY_PROFILE: Profile = {
   role: 'rider',
@@ -37,9 +38,9 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
   const [saving, setSaving] = useState(false);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   useLeaveWarning(editing && JSON.stringify(form) !== JSON.stringify(profile), {
-    title: 'Leave without saving?',
-    message: 'Your changes to your information will be lost.',
-    confirmLabel: 'Leave without saving',
+    title: t('Leave without saving?'),
+    message: t('Your changes to your information will be lost.'),
+    confirmLabel: t('Leave without saving'),
   });
 
   // One helper to update any single field of the form.
@@ -76,7 +77,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
     if (editing) {
       allowLeave();
       navigate({ name: 'settings' });
-      showSnackbar('Changes saved.');
+      showSnackbar(t('Changes saved.'));
     }
   }
 
@@ -84,10 +85,10 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
   return (
     <Screen
-      title={editing ? 'Your information' : 'Welcome to RideConnect'}
-      back={editing ? { to: { name: 'settings' }, label: 'Settings' } : undefined}
+      title={editing ? t('Your information') : t('Welcome to RideConnect')}
+      back={editing ? { to: { name: 'settings' }, label: t('Settings') } : undefined}
     >
-      {!editing && <p>Keep track of your medical rides, and prove it when rides go wrong.</p>}
+      {!editing && <p>{t('Keep track of your medical rides, and prove it when rides go wrong.')}</p>}
       <Disclaimer />
 
       {/* noValidate: we show our own friendlier error messages instead of the browser's. */}
@@ -96,10 +97,10 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
         {/* A fieldset + legend groups the two choices under one question. */}
         <fieldset className="choice-group">
-          <legend>Who is using RideConnect?</legend>
+          <legend>{t('Who is using RideConnect?')}</legend>
           {([
-            ['rider', 'I am the rider', 'I ride to my own appointments.'],
-            ['caregiver', 'I help a rider', 'I am a family member or caregiver.'],
+            ['rider', t('I am the rider'), t('I ride to my own appointments.')],
+            ['caregiver', t('I help a rider'), t('I am a family member or caregiver.')],
           ] as [Role, string, string][]).map(([value, label, hint]) => (
             <label key={value} className="choice-card">
               <input
@@ -119,7 +120,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
         <TextField
           id="riderFirstName"
-          label={isCaregiver ? "Rider's first name" : 'Your first name'}
+          label={isCaregiver ? t("Rider's first name") : t('Your first name')}
           value={form.riderFirstName}
           error={errors.riderFirstName}
           onChange={(v) => update('riderFirstName', v)}
@@ -129,8 +130,8 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
         {isCaregiver && (
           <TextField
             id="caregiverName"
-            label="Your first name (optional)"
-            hint="Used to sign letters, like “prepared with help from Maria.”"
+            label={t('Your first name (optional)')}
+            hint={t('Used to sign letters, like “prepared with help from Maria.”')}
             value={form.caregiverName}
             onChange={(v) => update('caregiverName', v)}
             autoComplete="given-name"
@@ -138,7 +139,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
         )}
 
         <div className="field">
-          <label htmlFor="state">State</label>
+          <label htmlFor="state">{t('State')}</label>
           <select
             id="state"
             value={form.state}
@@ -146,7 +147,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
             aria-invalid={errors.state ? true : undefined}
             aria-describedby={errors.state ? 'state-error' : undefined}
           >
-            <option value="">Choose a state</option>
+            <option value="">{t('Choose a state')}</option>
             {listStates().map((s) => (
               <option key={s.code} value={s.code}>{s.name}</option>
             ))}
@@ -158,20 +159,20 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
             booking reminders can still work. (Settings has it for everyone.) */}
         {!editing && form.state && !getStateRule(form.state) && (
           <fieldset className="choice-group optional-step">
-            <legend>Booking reminders (optional)</legend>
+            <legend>{t('Booking reminders (optional)')}</legend>
             <BookingWindowPicker
               id="setup-booking-window"
               profile={form}
               onChange={(value) => update('riderBookingWindow', value)}
             />
-            <p className="field-hint">You can skip this and set it later in Settings.</p>
+            <p className="field-hint">{t('You can skip this and set it later in Settings.')}</p>
           </fieldset>
         )}
 
         <TextField
           id="rideCompanyName"
-          label="Ride company name"
-          hint="The company that schedules your Medicaid rides."
+          label={t('Ride company name')}
+          hint={t('The company that schedules your Medicaid rides.')}
           value={form.rideCompanyName}
           error={errors.rideCompanyName}
           onChange={(v) => update('rideCompanyName', v)}
@@ -179,7 +180,7 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
         <TextField
           id="rideCompanyPhone"
-          label="Ride company phone number"
+          label={t('Ride company phone number')}
           type="tel"
           value={form.rideCompanyPhone}
           error={errors.rideCompanyPhone}
@@ -188,33 +189,33 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
 
         <TextField
           id="healthPlanName"
-          label="Health plan name (optional)"
+          label={t('Health plan name (optional)')}
           value={form.healthPlanName}
           onChange={(v) => update('healthPlanName', v)}
         />
 
         <fieldset className="choice-group optional-step">
-          <legend>For booking calls (optional)</legend>
+          <legend>{t('For booking calls (optional)')}</legend>
           <p className="field-hint">
-            RideConnect uses these in the “What to say” script when you call to book. Leave them blank to fill in during the call.
+            {t('RideConnect uses these in the “What to say” script when you call to book. Leave them blank to fill in during the call.')}
           </p>
           <div className="field">
-            <label htmlFor="mobilityNeeds">{isCaregiver ? "The rider's mobility needs" : 'Your mobility needs'}</label>
+            <label htmlFor="mobilityNeeds">{isCaregiver ? t("The rider's mobility needs") : t('Your mobility needs')}</label>
             <select
               id="mobilityNeeds"
               value={form.mobilityNeeds ?? ''}
               onChange={(e) => update('mobilityNeeds', (e.target.value || undefined) as MobilityNeeds | undefined)}
             >
-              <option value="">Not sure / skip</option>
+              <option value="">{t('Not sure / skip')}</option>
               {(Object.keys(MOBILITY_LABELS) as MobilityNeeds[]).map((need) => (
-                <option key={need} value={need}>{MOBILITY_LABELS[need]}</option>
+                <option key={need} value={need}>{t(MOBILITY_LABELS[need])}</option>
               ))}
             </select>
           </div>
           <TextField
             id="homeAddress"
-            label="Pickup address (optional)"
-            hint="Usually home. Saved only on this device."
+            label={t('Pickup address (optional)')}
+            hint={t('Usually home. Saved only on this device.')}
             value={form.homeAddress ?? ''}
             onChange={(v) => update('homeAddress', v)}
             autoComplete={isCaregiver ? 'off' : 'street-address'}
@@ -222,19 +223,19 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
         </fieldset>
 
         <p className="privacy-note">
-          Your information stays on this device. RideConnect never sends it anywhere.
+          {t('Your information stays on this device. RideConnect never sends it anywhere.')}
         </p>
 
         <button type="submit" className="button-primary" disabled={saving}>
-          {saving ? 'Saving…' : editing ? 'Save changes' : 'Save and continue'}
+          {saving ? t('Saving…') : editing ? t('Save changes') : t('Save and continue')}
         </button>
         {!editing && (
           <div className="restore-box">
-            <p>Moving from another phone?</p>
-            <RestoreButton label="Restore a RideConnect backup" />
+            <p>{t('Moving from another phone?')}</p>
+            <RestoreButton label={t('Restore a RideConnect backup')} />
           </div>
         )}
-        {editing && <a href="#/settings" className="button-secondary">Cancel</a>}
+        {editing && <a href="#/settings" className="button-secondary">{t('Cancel')}</a>}
       </form>
     </Screen>
   );

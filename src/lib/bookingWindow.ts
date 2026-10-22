@@ -9,6 +9,7 @@
 //      than guessing a deadline and being wrong).
 // ---------------------------------------------------------------------------
 import type { Profile, RiderBookingWindow } from '../types';
+import { tn } from './i18n';
 import type { StateRule } from './stateRules';
 
 export const MIN_BOOKING_DAYS = 1;
@@ -43,7 +44,7 @@ export function effectiveBookingWindow(profile: Profile, stateRule: StateRule | 
   return { days: null, source: 'none', stateDays };
 }
 
-/** "1 business day" / "5 business days". */
+/** "1 business day" / "5 business days" ("1 día hábil" / "5 días hábiles"). */
 export function businessDaysText(days: number): string {
-  return `${days} business ${days === 1 ? 'day' : 'days'}`;
+  return tn(days, '{n} business day', '{n} business days');
 }

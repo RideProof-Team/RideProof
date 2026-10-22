@@ -5,6 +5,7 @@
 //   - complaintRecipients: the choices for "Who did you send it to?"
 // ---------------------------------------------------------------------------
 import { COMPLAINT_STATUS_LABELS } from '../lib/complaints';
+import { t, tx } from '../lib/i18n';
 import type { ComplaintContact, StateRule } from '../lib/stateRules';
 import type { ComplaintStatus, Profile } from '../types';
 import { Icon, type IconName } from './Icon';
@@ -21,7 +22,7 @@ export function ComplaintStatusBadge({ status }: { status: ComplaintStatus }) {
   return (
     <span className={`status ${look.className}`}>
       <Icon name={look.icon} size={20} />
-      {COMPLAINT_STATUS_LABELS[status]}
+      {t(COMPLAINT_STATUS_LABELS[status])}
     </span>
   );
 }
@@ -49,8 +50,7 @@ export function ContactList({ stateRule }: { stateRule: StateRule | undefined })
   if (!stateRule || stateRule.complaintContacts.length === 0) {
     return (
       <p>
-        RideConnect doesn't have contacts for your state yet. Your state Medicaid website, or the member services number
-        on your Medicaid card, can tell you where to send transportation complaints.
+        {t("RideConnect doesn't have contacts for your state yet. Your state Medicaid website, or the member services number on your Medicaid card, can tell you where to send transportation complaints.")}
       </p>
     );
   }
@@ -58,8 +58,8 @@ export function ContactList({ stateRule }: { stateRule: StateRule | undefined })
     <>
       {stateRule.isPlaceholder && (
         <p className="placeholder-warning">
-          <Icon name="warning" /> These contacts are placeholders. Check your state Medicaid website for the right place to
-          send complaints.
+          <Icon name="warning" />{' '}
+          {t('These contacts are placeholders. Check your state Medicaid website for the right place to send complaints.')}
         </p>
       )}
       <ul className="plain-list contact-list">
@@ -77,14 +77,14 @@ export function ContactItem({ contact }: { contact: ComplaintContact }) {
       {contact.phone && (
         <>
           <br />
-          Phone: {phoneIsReal ? <a href={`tel:${contact.phone}`}>{contact.phone}</a> : contact.phone}
+          {tx('Phone: {phone}', { phone: phoneIsReal ? <a href={`tel:${contact.phone}`}>{contact.phone}</a> : contact.phone })}
         </>
       )}
-      {isRealEmail(contact.email) && <><br />Email: {contact.email}</>}
+      {isRealEmail(contact.email) && <><br />{t('Email: {email}', { email: contact.email })}</>}
       {contact.website && (
         <>
           <br />
-          <a href={contact.website} target="_blank" rel="noreferrer">Website</a>
+          <a href={contact.website} target="_blank" rel="noreferrer">{t('Website')}</a>
         </>
       )}
     </li>

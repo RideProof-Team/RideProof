@@ -13,6 +13,7 @@
 //   - Ride HOME: minutes since the rider started waiting.
 // ---------------------------------------------------------------------------
 import type { ActiveWait, Appointment, MinutesLate, WaitLeg } from '../types';
+import { t } from './i18n';
 
 /** Show the "I'm waiting for my ride" button from this long before pickup. */
 export const WAIT_BUTTON_LEAD_MINUTES = 15;
@@ -172,15 +173,15 @@ export function prefillFromWaits(waits: ActiveWait[]): WaitPrefill {
   return prefill;
 }
 
-/** The gentle "call the ride company" prompt, for the screen and for notifications. */
+/** The gentle "call the ride company" prompt, for the screen and for notifications (in the app's language). */
 export function promptText(wait: ActiveWait, minutes: number, rideCompanyName: string): { title: string; body: string } {
   const isHome = wait.leg === 'return';
   const title = isHome
-    ? `You've waited ${minutes} minutes for your ride home`
-    : `Your ride is ${minutes} minutes late`;
+    ? t("You've waited {minutes} minutes for your ride home", { minutes })
+    : t('Your ride is {minutes} minutes late', { minutes });
   const body =
     minutes >= NEVER_CAME_AFTER_MINUTES
-      ? `Call ${rideCompanyName} now. If the ride doesn't come, you can tap "My ride never came" to record it.`
-      : `You may want to call ${rideCompanyName} and ask where the driver is. Write down who you talk to.`;
+      ? t('Call {company} now. If the ride doesn\'t come, you can tap "My ride never came" to record it.', { company: rideCompanyName })
+      : t('You may want to call {company} and ask where the driver is. Write down who you talk to.', { company: rideCompanyName });
   return { title, body };
 }
