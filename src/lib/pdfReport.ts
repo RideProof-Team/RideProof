@@ -4,7 +4,8 @@
 //   2. the complaint letter
 // The PDF is made entirely on the phone; nothing is uploaded anywhere.
 // ---------------------------------------------------------------------------
-import type { Profile, RideLog } from '../types';
+import type { FailedBooking, Profile, RideLog } from '../types';
+import { attemptsInRange, describeAttempt } from './bookingAttempts';
 import { formatLongDate } from './dates';
 import { APPOINTMENT_TYPE_LABELS, MINUTES_LATE_SHORT, OUTCOME_LABELS, PICKUP_LABELS, RETURN_LABELS } from './labels';
 import { pickupTimesText } from './complaintLetter';
@@ -22,6 +23,8 @@ interface ReportInput {
   logs: RideLog[];
   period: ReportPeriod;
   today: string;
+  /** Calls to book a ride that didn't work (optional). */
+  attempts?: FailedBooking[];
   /** A picture of the chart from the Report screen, with its size, if available. */
   chartImage: { dataUrl: string; width: number; height: number } | null;
 }
@@ -31,9 +34,9 @@ export async function downloadReportPdf(input: ReportInput) {
 }
 
 /** Make the report PDF (without saving it), so tests can check what's in it. */
-export function buildReportPdf({ profile, logs, period, today, chartImage }: ReportInput): PdfWriter {
+export function buildReportPdf({ profile, logs, period, today, chartImage, attempts = [] }: ReportInput): PdfWriter {
   const pdf = new PdfWriter();
-  const stats = computeStats(logs, period.from, period.to);
+  const stats = computeStats(logs, period.from, period.to, attempts);
   const rides = logsInRange(logs, period.from, period.to);
 
   // ----- Title -----
@@ -68,6 +71,7 @@ export function buildReportPdf({ profile, logs, period, today, chartImage }: Rep
     ['Missed appointments', stats.missedAppointments],
     ['Ride home never came (stranded)', stats.strandedReturns],
     ['Ride home was late', stats.lateReturns],
+    ['Calls to book a ride that failed', stats.failedBookings],
   ];
   pdf.doc.setFontSize(11);
   for (const [label, value] of summaryRows) {
@@ -144,6 +148,17 @@ export function buildReportPdf({ profile, logs, period, today, chartImage }: Rep
     pdf.y += rowHeight;
     pdf.doc.setDrawColor(225);
     pdf.doc.line(pdf.margin, pdf.y - 3, pdf.pageWidth - pdf.margin, pdf.y - 3);
+  }
+
+  // ----- Booking calls that didn't work -----
+  const failed = attemptsInRange(attempts, period.from, period.to);
+  if (failed.length > 0) {
+    pdf.y += 10;
+    pdf.ensureSpace(60);
+    pdf.text('Calls to book a ride that did not work', { size: 14, bold: true });
+    for (const attempt of failed) {
+      pdf.text(`${formatLongDate(attempt.attemptedOn, true)}: ${describeAttempt(attempt)}`, { size: 10, gapAfter: 4 });
+    }
   }
 
   pdf.addFooters(FOOTER);

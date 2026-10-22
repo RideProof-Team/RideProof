@@ -26,6 +26,7 @@ import { Appointments } from './screens/Appointments';
 import { CheckIn } from './screens/CheckIn';
 import { Complaint } from './screens/Complaint';
 import { Complaints } from './screens/Complaints';
+import { CallScript } from './screens/CallScript';
 import { ComplaintSent } from './screens/ComplaintSent';
 import { Help } from './screens/Help';
 import { History } from './screens/History';
@@ -177,6 +178,9 @@ export function App() {
         break;
       case 'history':
         screen = <History />;
+        break;
+      case 'call':
+        screen = <CallScript key={`${route.appointmentId}|${route.date}`} appointmentId={route.appointmentId} date={route.date} />;
         break;
       case 'wait':
         screen = <Wait key={route.id ?? 'running'} id={route.id} />;

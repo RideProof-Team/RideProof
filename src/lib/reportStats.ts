@@ -3,7 +3,8 @@
 // and the complaint letter. All three use these same functions, so the
 // numbers always match everywhere.
 // ---------------------------------------------------------------------------
-import type { RideLog } from '../types';
+import type { BookingFailReason, FailedBooking, RideLog } from '../types';
+import { attemptsInRange } from './bookingAttempts';
 import { addDays, formatShortDate, parseDate, toDateString, weekdayOf } from './dates';
 import { totalWait, type WaitPrecision } from './timeLost';
 
@@ -29,6 +30,9 @@ export interface RideStats {
   untimedNeverCame: number;
   /** Late rides home with no minutes recorded (older check-ins). */
   untimedLate: number;
+  /** Calls to book a ride that didn't work (see bookingAttempts.ts). */
+  failedBookings: number;
+  failedBookingsByReason: Record<BookingFailReason, number>;
   /** First and last ride dates in the period (null if no rides). */
   firstDate: string | null;
   lastDate: string | null;
@@ -41,8 +45,14 @@ export function logsInRange(logs: RideLog[], from: string, to: string): RideLog[
     .sort((a, b) => a.rideDate.localeCompare(b.rideDate));
 }
 
-export function computeStats(logs: RideLog[], from: string, to: string): RideStats {
+/**
+ * THE place every number is counted. `attempts` (failed booking calls) is
+ * optional so callers that only care about rides can leave it out.
+ */
+export function computeStats(logs: RideLog[], from: string, to: string, attempts: FailedBooking[] = []): RideStats {
   const inRange = logsInRange(logs, from, to);
+  const failed = attemptsInRange(attempts, from, to);
+  const byReason = (reason: BookingFailReason) => failed.filter((a) => a.reason === reason).length;
   // A small helper: count the logs that match a test.
   const count = (test: (log: RideLog) => boolean) => inRange.filter(test).length;
 
@@ -58,6 +68,13 @@ export function computeStats(logs: RideLog[], from: string, to: string): RideSta
     strandedReturns: count((l) => l.returnRideStatus === 'never_came'),
     lateReturns: count((l) => l.returnRideStatus === 'late'),
     ...totalWait(inRange),
+    failedBookings: failed.length,
+    failedBookingsByReason: {
+      no_answer: byReason('no_answer'),
+      no_rides: byReason('no_rides'),
+      too_late: byReason('too_late'),
+      other: byReason('other'),
+    },
     firstDate: inRange[0]?.rideDate ?? null,
     lastDate: inRange[inRange.length - 1]?.rideDate ?? null,
   };

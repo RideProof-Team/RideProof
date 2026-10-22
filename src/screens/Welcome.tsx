@@ -17,7 +17,8 @@ import { allowLeave, navigate, useLeaveWarning } from '../lib/router';
 import { BookingWindowPicker } from '../components/BookingWindowPicker';
 import { getStateRule, listStates } from '../lib/stateRules';
 import { validateProfile, type ProfileErrors } from '../lib/validateProfile';
-import type { Profile, Role } from '../types';
+import type { MobilityNeeds, Profile, Role } from '../types';
+import { MOBILITY_LABELS } from '../lib/callScript';
 
 const EMPTY_PROFILE: Profile = {
   role: 'rider',
@@ -65,7 +66,10 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
       rideCompanyName: form.rideCompanyName.trim(),
       rideCompanyPhone: form.rideCompanyPhone.trim(),
       healthPlanName: form.healthPlanName.trim(),
+      homeAddress: form.homeAddress?.trim() || undefined,
     };
+    if (!cleaned.homeAddress) delete cleaned.homeAddress;
+    if (!cleaned.mobilityNeeds) delete cleaned.mobilityNeeds;
     await storage.saveProfile(cleaned);
     setProfile(cleaned);
     if (!editing) navigate({ name: 'home' });
@@ -188,6 +192,34 @@ export function Welcome({ editing = false }: { editing?: boolean }) {
           value={form.healthPlanName}
           onChange={(v) => update('healthPlanName', v)}
         />
+
+        <fieldset className="choice-group optional-step">
+          <legend>For booking calls (optional)</legend>
+          <p className="field-hint">
+            RideConnect uses these in the “What to say” script when you call to book. Leave them blank to fill in during the call.
+          </p>
+          <div className="field">
+            <label htmlFor="mobilityNeeds">{isCaregiver ? "The rider's mobility needs" : 'Your mobility needs'}</label>
+            <select
+              id="mobilityNeeds"
+              value={form.mobilityNeeds ?? ''}
+              onChange={(e) => update('mobilityNeeds', (e.target.value || undefined) as MobilityNeeds | undefined)}
+            >
+              <option value="">Not sure / skip</option>
+              {(Object.keys(MOBILITY_LABELS) as MobilityNeeds[]).map((need) => (
+                <option key={need} value={need}>{MOBILITY_LABELS[need]}</option>
+              ))}
+            </select>
+          </div>
+          <TextField
+            id="homeAddress"
+            label="Pickup address (optional)"
+            hint="Usually home. Saved only on this device."
+            value={form.homeAddress ?? ''}
+            onChange={(v) => update('homeAddress', v)}
+            autoComplete={isCaregiver ? 'off' : 'street-address'}
+          />
+        </fieldset>
 
         <p className="privacy-note">
           Your information stays on this device. RideConnect never sends it anywhere.

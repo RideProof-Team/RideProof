@@ -16,6 +16,7 @@ describe('router', () => {
       { name: 'checkin', appointmentId: 'abc', date: '2026-10-30' },
       { name: 'history' },
       { name: 'wait' },
+      { name: 'call', appointmentId: 'demo-cardiology', date: '2026-11-03' },
       { name: 'wait', id: 'demo-dialysis|2026-10-30|return' },
       { name: 'report' },
       { name: 'complaint' },

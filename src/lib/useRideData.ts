@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../AppContext';
 import type { Storage } from './storage';
-import type { ActiveWait, Appointment, RideLog, SentComplaint } from '../types';
+import type { ActiveWait, Appointment, FailedBooking, RideLog, SentComplaint } from '../types';
 
 export interface RideData {
   appointments: Appointment[];
@@ -17,17 +17,20 @@ export interface RideData {
   waits: ActiveWait[];
   /** Complaints the rider sent (the follow-up tracker). */
   complaints: SentComplaint[];
+  /** Calls to book a ride that didn't work (evidence). */
+  bookingAttempts: FailedBooking[];
 }
 
 async function loadAll(storage: Storage): Promise<RideData> {
   // Promise.all runs both loads at the same time instead of one after another.
-  const [appointments, rideLogs, waits, complaints] = await Promise.all([
+  const [appointments, rideLogs, waits, complaints, bookingAttempts] = await Promise.all([
     storage.listAppointments(),
     storage.listRideLogs(),
     storage.listWaits(),
     storage.listComplaints(),
+    storage.listBookingAttempts(),
   ]);
-  return { appointments, rideLogs, waits, complaints };
+  return { appointments, rideLogs, waits, complaints, bookingAttempts };
 }
 
 export function useRideData() {

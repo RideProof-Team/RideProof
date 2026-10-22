@@ -3,6 +3,8 @@
 // Each ride is color-coded (green / yellow / red) AND shows an icon and a
 // word ("On time", "Late", "Problem"), so color is never the only signal.
 // At the top, any recent trips that were never checked in on.
+// Calls to book a ride that didn't work are listed too (as problems), on
+// the day of the call.
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { useApp } from '../AppContext';
@@ -28,14 +30,19 @@ import {
   type HistoryFilter,
 } from '../lib/rideStatus';
 import { routeToHash } from '../lib/router';
+import { showSnackbar } from '../lib/feedback';
 import { useRideData } from '../lib/useRideData';
-import type { RideLog } from '../types';
+import type { FailedBooking, RideLog } from '../types';
+import { FAIL_REASON_LABELS } from '../lib/bookingAttempts';
+
+/** One row in History: a ride, or a failed booking call. */
+type HistoryItem = { kind: 'ride'; date: string; log: RideLog } | { kind: 'call'; date: string; attempt: FailedBooking };
 
 /** Show at most this many "needs a check-in" trips. */
 const MAX_UNLOGGED = 5;
 
 export function History() {
-  const { today } = useApp();
+  const { today, storage } = useApp();
   const { data, reload } = useRideData();
   const [filter, setFilter] = useState<HistoryFilter>('all');
   const [search, setSearch] = useState('');
@@ -46,13 +53,22 @@ export function History() {
   const allLogs = [...data.rideLogs].sort((a, b) => b.rideDate.localeCompare(a.rideDate));
   const logs = filterLogs(allLogs, filter, search);
   const filtering = filter !== 'all' || search.trim() !== '';
+  // Failed booking calls are problems, so they show under "All" and "Problems only".
+  const words = search.trim().toLowerCase();
+  const calls = data.bookingAttempts.filter(
+    (a) => (filter === 'all' || filter === 'problems') && (!words || `${a.clinicName} ${a.details}`.toLowerCase().includes(words)),
+  );
+  const items: HistoryItem[] = [
+    ...logs.map((log): HistoryItem => ({ kind: 'ride', date: log.rideDate, log })),
+    ...calls.map((attempt): HistoryItem => ({ kind: 'call', date: attempt.attemptedOn, attempt })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
 
   // Group into months: { "October 2026": [...], "September 2026": [...] }
-  const months = new Map<string, RideLog[]>();
-  for (const log of logs) {
-    const month = parseDate(log.rideDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const months = new Map<string, HistoryItem[]>();
+  for (const item of items) {
+    const month = parseDate(item.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     if (!months.has(month)) months.set(month, []);
-    months.get(month)!.push(log);
+    months.get(month)!.push(item);
   }
 
   return (
@@ -83,7 +99,7 @@ export function History() {
         </section>
       )}
 
-      {allLogs.length > 0 && (
+      {(allLogs.length > 0 || data.bookingAttempts.length > 0) && (
         <div className="history-tools">
           <div className="field search-field">
             <label htmlFor="history-search">
@@ -105,6 +121,7 @@ export function History() {
           {/* aria-live: screen readers hear the new count as filters change. */}
           <p className="filter-count" aria-live="polite">
             {filtering ? `Showing ${logs.length} of ${allLogs.length} rides.` : `${allLogs.length} rides logged.`}
+            {calls.length > 0 && ` ${calls.length} booking ${calls.length === 1 ? 'call' : 'calls'} that didn't work.`}
           </p>
           {filtering && logs.length === 0 && (
             <button type="button" className="link-button" onClick={() => { setFilter('all'); setSearch(''); }}>
@@ -114,17 +131,31 @@ export function History() {
         </div>
       )}
 
-      {allLogs.length === 0 && (
+      {allLogs.length === 0 && data.bookingAttempts.length === 0 && (
         <p className="empty-note">
           No rides logged yet. After each ride, tap "Check in on today's ride" on the Home screen.
         </p>
       )}
 
-      {[...months.entries()].map(([month, monthLogs]) => (
+      {[...months.entries()].map(([month, monthItems]) => (
         <section key={month} aria-labelledby={`month-${month}`}>
           <h2 id={`month-${month}`}>{month}</h2>
           <ul className="card-list">
-            {monthLogs.map((log) => <RideCard key={log.id} log={log} />)}
+            {monthItems.map((item) =>
+              item.kind === 'ride'
+                ? <RideCard key={item.log.id} log={item.log} />
+                : <CallCard key={item.attempt.id} attempt={item.attempt} onDelete={async () => {
+                    await storage.deleteBookingAttempt(item.attempt.id);
+                    await reload();
+                    showSnackbar('Booking call record deleted.', {
+                      label: 'Undo',
+                      run: async () => {
+                        await storage.saveBookingAttempt(item.attempt);
+                        await reload();
+                      },
+                    });
+                  }} />,
+            )}
           </ul>
         </section>
       ))}
@@ -177,6 +208,38 @@ function RideCard({ log }: { log: RideLog }) {
       <a href={routeToHash({ name: 'checkin', appointmentId: log.appointmentId, date: log.rideDate })}>
         Edit this ride<span className="visually-hidden"> on {formatLongDate(log.rideDate)}</span>
       </a>
+    </li>
+  );
+}
+
+/** A call to book a ride that didn't work. Shown as a problem (red), with words and an icon. */
+function CallCard({ attempt, onDelete }: { attempt: FailedBooking; onDelete(): void }) {
+  return (
+    <li className="card ride-card sev-problem">
+      <div className="ride-card-top">
+        <span className="card-title">{formatLongDate(attempt.attemptedOn)}</span>
+        <span className="badge badge-problem">
+          <Icon name="phone" size={20} />
+          Couldn't book
+        </span>
+      </div>
+      <span className="card-detail">
+        Call to book the ride for {APPOINTMENT_TYPE_LABELS[attempt.appointmentType]} at {attempt.clinicName},{' '}
+        {formatLongDate(attempt.tripDate)}
+      </span>
+      <dl className="ride-details">
+        <dt>What happened</dt>
+        <dd>{FAIL_REASON_LABELS[attempt.reason]}</dd>
+        {attempt.details && (
+          <>
+            <dt>Details</dt>
+            <dd>{attempt.details}</dd>
+          </>
+        )}
+      </dl>
+      <button type="button" className="link-button" onClick={onDelete}>
+        Delete this record<span className="visually-hidden"> of the call on {formatLongDate(attempt.attemptedOn)}</span>
+      </button>
     </li>
   );
 }

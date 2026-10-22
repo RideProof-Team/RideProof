@@ -15,6 +15,7 @@ import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { buildComplaintLetter, buildFollowUpLetter, hadProblem } from '../lib/complaintLetter';
 import { FOLLOW_UP_AFTER_DAYS } from '../lib/complaints';
+import { attemptsInRange } from '../lib/bookingAttempts';
 import { formatLongDate } from '../lib/dates';
 import { findPeriod, logsInRange, reportPeriods } from '../lib/reportStats';
 import { getStateRule } from '../lib/stateRules';
@@ -37,8 +38,8 @@ export function Complaint({ periodId: initialPeriodId, followUpOf }: { periodId?
   const original = !data || !profile || !period
     ? ''
     : followUpOf
-      ? earlier ? buildFollowUpLetter({ profile, logs: data.rideLogs, complaint: earlier, today }) : ''
-      : buildComplaintLetter({ profile, logs: data.rideLogs, period, today, stateRule });
+      ? earlier ? buildFollowUpLetter({ profile, logs: data.rideLogs, complaint: earlier, today, attempts: data.bookingAttempts }) : ''
+      : buildComplaintLetter({ profile, logs: data.rideLogs, period, today, stateRule, attempts: data.bookingAttempts });
   const title = followUpOf ? 'Follow-up letter' : 'Complaint letter';
   const back = followUpOf
     ? { to: { name: 'complaints' as const, id: followUpOf }, label: 'Complaints' }
@@ -68,7 +69,10 @@ export function Complaint({ periodId: initialPeriodId, followUpOf }: { periodId?
   }
 
   // A follow-up always has something to say (at least: "please answer").
-  const problemCount = followUpOf ? 1 : logsInRange(data.rideLogs, period.from, period.to).filter(hadProblem).length;
+  const problemCount = followUpOf
+    ? 1
+    : logsInRange(data.rideLogs, period.from, period.to).filter(hadProblem).length +
+      attemptsInRange(data.bookingAttempts, period.from, period.to).length;
   const contacts = stateRule?.complaintContacts ?? [];
   const emails = contacts.map((c) => c.email).filter(isRealEmail);
   const subject = earlier ? `Follow-up: ${SUBJECT} (sent ${formatLongDate(earlier.sentDate, true)})` : SUBJECT;

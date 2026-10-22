@@ -149,7 +149,7 @@ export function Home() {
         </section>
       )}
 
-      <BookingReminders reminders={reminders} onBooked={(r) => markBooked(r.appointment)} />
+      <BookingReminders reminders={reminders} attempts={data.bookingAttempts} onBooked={(r) => markBooked(r.appointment)} />
       <ComplaintFollowUps due={dueFollowUps(complaints, today)} onChange={reload} />
       {remindersOff && (
         <section className="card card-info" aria-labelledby="reminders-off-heading">
@@ -176,7 +176,7 @@ export function Home() {
           {/* Skip these buttons if the reminder box above already shows them. */}
           {!nextTrip.appointment.rideBooked && !reminders.some((r) => r.appointment.id === nextTrip.appointment.id) && (
             <div className="button-stack">
-              <a href={`tel:${profile.rideCompanyPhone}`} className="button-secondary">
+              <a href={routeToHash({ name: 'call', appointmentId: nextTrip.appointment.id, date: nextTrip.date })} className="button-secondary">
                 <Icon name="phone" /> Call {profile.rideCompanyName} to book
               </a>
               <button type="button" className="button-secondary" onClick={() => markBooked(nextTrip.appointment)}>

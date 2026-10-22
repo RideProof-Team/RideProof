@@ -9,7 +9,8 @@
 // "1 time" vs "5 times", one missed date vs several, dates in different
 // years, and so on. Each of those is its own small function below.
 // ---------------------------------------------------------------------------
-import type { AppointmentType, ComplaintMethod, Profile, RideLog, SentComplaint } from '../types';
+import type { AppointmentType, ComplaintMethod, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
+import { attemptsInRange, describeAttempt } from './bookingAttempts';
 import { daysSinceSent } from './complaints';
 import { addDays, formatDateInSentence, formatLongDate, formatTime, parseDate } from './dates';
 import { computeStats, logsInRange, plural, type ReportPeriod } from './reportStats';
@@ -172,13 +173,34 @@ export interface LetterInput {
   period: ReportPeriod;
   today: string;
   stateRule: StateRule | undefined;
+  /** Calls to book a ride that didn't work (optional). */
+  attempts?: FailedBooking[];
+}
+
+/** "I also called to book a ride 1 time and could not get one booked (on October 29, 2026)." */
+export function attemptsLetterSentence(attempts: FailedBooking[]): string {
+  if (attempts.length === 0) return '';
+  const days = [...new Set(attempts.map((a) => a.attemptedOn))].sort();
+  return `I also called to book a ride ${plural(attempts.length, 'time', 'times')} and could not get one booked (on ${joinDates(days)}).`;
+}
+
+/** The "- date: what happened" lines for failed booking calls. */
+function attemptLines(attempts: FailedBooking[]): string[] {
+  if (attempts.length === 0) return [];
+  return [
+    '',
+    'Calls to book a ride that did not work:',
+    '',
+    ...attempts.map((a) => `- ${formatLongDate(a.attemptedOn, true)}: ${describeAttempt(a)}`),
+  ];
 }
 
 /** The whole letter as plain text, ready to edit, copy, email, or print. */
-export function buildComplaintLetter({ profile, logs, period, today, stateRule }: LetterInput): string {
+export function buildComplaintLetter({ profile, logs, period, today, stateRule, attempts = [] }: LetterInput): string {
   const inRange = logsInRange(logs, period.from, period.to);
   const problems = inRange.filter(hadProblem);
-  const stats = computeStats(logs, period.from, period.to);
+  const stats = computeStats(logs, period.from, period.to, attempts);
+  const failed = attemptsInRange(attempts, period.from, period.to);
   const recipients = stateRule?.complaintContacts.map((c) => c.name) ?? [];
   const plan = profile.healthPlanName ? ` enrolled in ${profile.healthPlanName}` : '';
   const anyDialysis = problems.some((l) => l.appointmentType === 'dialysis');
@@ -197,17 +219,22 @@ export function buildComplaintLetter({ profile, logs, period, today, stateRule }
   );
   lines.push('');
   lines.push(
-    [summarySentence(inRange), ...extraSentences(inRange), timeLostLetterSentence(stats)].filter(Boolean).join(' '),
+    [summarySentence(inRange), ...extraSentences(inRange), timeLostLetterSentence(stats), attemptsLetterSentence(failed)]
+      .filter(Boolean)
+      .join(' '),
   );
   lines.push('');
-  lines.push(
-    `In total, I logged ${plural(stats.totalRides, 'ride', 'rides')} during this time, and ` +
-      `${plural(problems.length, 'ride', 'rides')} had a problem. Here is my record of each one:`,
-  );
-  lines.push('');
-  for (const log of problems) {
-    lines.push(`- ${formatLongDate(log.rideDate, true)}: ${describeProblem(log)}`);
+  if (problems.length > 0) {
+    lines.push(
+      `In total, I logged ${plural(stats.totalRides, 'ride', 'rides')} during this time, and ` +
+        `${plural(problems.length, 'ride', 'rides')} had a problem. Here is my record of each one:`,
+    );
+    lines.push('');
+    for (const log of problems) {
+      lines.push(`- ${formatLongDate(log.rideDate, true)}: ${describeProblem(log)}`);
+    }
   }
+  lines.push(...attemptLines(failed));
   lines.push('');
   lines.push(
     anyDialysis
@@ -266,15 +293,17 @@ export interface FollowUpInput {
   /** The complaint this letter follows up on. */
   complaint: SentComplaint;
   today: string;
+  attempts?: FailedBooking[];
 }
 
-export function buildFollowUpLetter({ profile, logs, complaint, today }: FollowUpInput): string {
+export function buildFollowUpLetter({ profile, logs, complaint, today, attempts = [] }: FollowUpInput): string {
   // "Since then" = from the day after the complaint was sent, up to today.
   // Counted with computeStats, like every other number in the app.
   const from = addDays(complaint.sentDate, 1);
   const inRange = logsInRange(logs, from, today);
-  const stats = computeStats(logs, from, today);
+  const stats = computeStats(logs, from, today, attempts);
   const problems = inRange.filter(hadProblem);
+  const failed = attemptsInRange(attempts, from, today);
   const sentOn = formatDateInSentence(complaint.sentDate);
   const reference = complaint.referenceNumber ? ` (reference number ${complaint.referenceNumber})` : '';
   const plan = profile.healthPlanName ? ` enrolled in ${profile.healthPlanName}` : '';
@@ -308,19 +337,28 @@ export function buildFollowUpLetter({ profile, logs, complaint, today }: FollowU
   );
   lines.push('');
 
-  if (problems.length > 0) {
+  if (problems.length > 0 || failed.length > 0) {
     lines.push(
-      ['Since my complaint, the problems have continued.', summarySentence(inRange), ...extraSentences(inRange), timeLostLetterSentence(stats)]
+      [
+        'Since my complaint, the problems have continued.',
+        summarySentence(inRange),
+        ...extraSentences(inRange),
+        timeLostLetterSentence(stats),
+        attemptsLetterSentence(failed),
+      ]
         .filter(Boolean)
         .join(' '),
     );
-    lines.push('');
-    lines.push(
-      `Since ${sentOn}, I logged ${plural(stats.totalRides, 'ride', 'rides')}, and ` +
-        `${plural(problems.length, 'ride', 'rides')} had a problem. Here is my record of each new one:`,
-    );
-    lines.push('');
-    for (const log of problems) lines.push(`- ${formatLongDate(log.rideDate, true)}: ${describeProblem(log)}`);
+    if (problems.length > 0) {
+      lines.push('');
+      lines.push(
+        `Since ${sentOn}, I logged ${plural(stats.totalRides, 'ride', 'rides')}, and ` +
+          `${plural(problems.length, 'ride', 'rides')} had a problem. Here is my record of each new one:`,
+      );
+      lines.push('');
+      for (const log of problems) lines.push(`- ${formatLongDate(log.rideDate, true)}: ${describeProblem(log)}`);
+    }
+    lines.push(...attemptLines(failed));
   } else {
     lines.push(
       stats.totalRides > 0
@@ -331,8 +369,9 @@ export function buildFollowUpLetter({ profile, logs, complaint, today }: FollowU
   lines.push('');
   lines.push('I am asking you to:');
   lines.push(`1. Respond in writing to my complaint of ${sentOn}${reference}.`);
-  if (problems.length > 0) lines.push('2. Investigate the new incidents listed above.');
-  lines.push(`${problems.length > 0 ? 3 : 2}. Tell me what will be done to make sure my rides arrive on time.`);
+  const anyNew = problems.length > 0 || failed.length > 0;
+  if (anyNew) lines.push('2. Investigate the new incidents listed above.');
+  lines.push(`${anyNew ? 3 : 2}. Tell me what will be done to make sure my rides arrive on time.`);
   lines.push('');
   lines.push(
     'If this is not resolved, I plan to contact my state Medicaid office. I kept a dated record of each ride and can share it if needed.',

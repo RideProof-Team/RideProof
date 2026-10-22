@@ -12,7 +12,7 @@
 // change, delete, or mix with the user's real data.
 // ---------------------------------------------------------------------------
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { ActiveWait, Appointment, Profile, RideLog, SentComplaint } from '../types';
+import type { ActiveWait, Appointment, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
 
 export type DataMode = 'real' | 'demo';
 
@@ -27,7 +27,8 @@ export const DB_NAMES: Record<DataMode, string> = {
 //   1: profile, appointments, rideLogs
 //   2: + waits (the "Where's my ride?" timers)
 //   3: + complaints (complaints the rider sent, for the follow-up tracker)
-export const DB_VERSION = 3;
+//   4: + bookingAttempts (calls to book a ride that didn't work)
+export const DB_VERSION = 4;
 
 // The profile is stored under this one fixed key, since there's only one.
 const PROFILE_KEY = 'profile';
@@ -39,6 +40,7 @@ interface RideConnectDB extends DBSchema {
   rideLogs: { key: string; value: RideLog };
   waits: { key: string; value: ActiveWait };
   complaints: { key: string; value: SentComplaint };
+  bookingAttempts: { key: string; value: FailedBooking };
 }
 
 // Opening a database takes time, so we remember the open connection for
@@ -65,6 +67,9 @@ function getDb(mode: DataMode): Promise<IDBPDatabase<RideConnectDB>> {
         }
         if (oldVersion < 3) {
           database.createObjectStore('complaints', { keyPath: 'id' });
+        }
+        if (oldVersion < 4) {
+          database.createObjectStore('bookingAttempts', { keyPath: 'id' });
         }
       },
       // Another tab (for example, a newer version of RideConnect) needs to
@@ -102,6 +107,9 @@ export interface Storage {
   listComplaints(): Promise<SentComplaint[]>;
   saveComplaint(complaint: SentComplaint): Promise<void>;
   deleteComplaint(id: string): Promise<void>;
+  listBookingAttempts(): Promise<FailedBooking[]>;
+  saveBookingAttempt(attempt: FailedBooking): Promise<void>;
+  deleteBookingAttempt(id: string): Promise<void>;
   /** Erase everything in THIS mode's database only. */
   clearAll(): Promise<void>;
 }
@@ -162,16 +170,27 @@ export function createStorage(mode: DataMode): Storage {
       await (await getDb(mode)).delete('complaints', id);
     },
 
+    async listBookingAttempts() {
+      return (await getDb(mode)).getAll('bookingAttempts');
+    },
+    async saveBookingAttempt(attempt) {
+      await (await getDb(mode)).put('bookingAttempts', attempt);
+    },
+    async deleteBookingAttempt(id) {
+      await (await getDb(mode)).delete('bookingAttempts', id);
+    },
+
     async clearAll() {
       const db = await getDb(mode);
       // A transaction groups changes so they all succeed or all fail.
-      const tx = db.transaction(['profile', 'appointments', 'rideLogs', 'waits', 'complaints'], 'readwrite');
+      const tx = db.transaction(['profile', 'appointments', 'rideLogs', 'waits', 'complaints', 'bookingAttempts'], 'readwrite');
       await Promise.all([
         tx.objectStore('profile').clear(),
         tx.objectStore('appointments').clear(),
         tx.objectStore('rideLogs').clear(),
         tx.objectStore('waits').clear(),
         tx.objectStore('complaints').clear(),
+        tx.objectStore('bookingAttempts').clear(),
         tx.done,
       ]);
     },

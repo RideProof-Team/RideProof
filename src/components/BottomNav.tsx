@@ -18,7 +18,7 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
-  { label: 'Home', icon: 'home', route: { name: 'home' }, matches: ['home', 'checkin'] },
+  { label: 'Home', icon: 'home', route: { name: 'home' }, matches: ['home', 'checkin', 'call', 'wait'] },
   {
     label: 'Schedule',
     icon: 'calendar',

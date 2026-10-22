@@ -29,7 +29,17 @@ export interface Profile {
    * profiles saved by older versions of the app don't have it.
    */
   riderBookingWindow?: RiderBookingWindow;
+  /**
+   * Optional, for the booking call script ("I use a walker"). Missing means
+   * the rider hasn't said; the script shows [brackets] instead.
+   */
+  mobilityNeeds?: MobilityNeeds;
+  /** Optional pickup address for the booking call script. Stays on this device. */
+  homeAddress?: string;
 }
+
+/** What help the rider needs getting into and riding in the vehicle. */
+export type MobilityNeeds = 'none' | 'walker' | 'wheelchair' | 'needs_help';
 
 /** 1–14 business days, or "Not sure". */
 export type RiderBookingWindow = number | 'not_sure';
@@ -186,4 +196,33 @@ export interface SentComplaint {
   remindOn?: string;
   /** If this is a follow-up letter: the id of the complaint it follows up on. */
   followUpOf?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Booking calls that didn't work (saved as evidence)
+// ---------------------------------------------------------------------------
+
+/** Why a ride couldn't be booked. */
+export type BookingFailReason = 'no_rides' | 'too_late' | 'no_answer' | 'other';
+
+/**
+ * "I called to book a ride and couldn't." Saved as evidence: shown in
+ * History and counted in the Report, PDF, and complaint letter.
+ * (A call that DID book the ride just marks the appointment as booked.)
+ */
+export interface FailedBooking {
+  id: string;
+  appointmentId: string;
+  /** "YYYY-MM-DD" of the trip they were trying to book. */
+  tripDate: string;
+  /** Copied from the appointment, so the record still makes sense if it's edited or deleted. */
+  clinicName: string;
+  appointmentType: AppointmentType;
+  /** "YYYY-MM-DD": the day of the call. Report periods use this date. */
+  attemptedOn: string;
+  /** Exact moment it was saved (ISO format). */
+  recordedAt: string;
+  reason: BookingFailReason;
+  /** Optional: more detail, e.g. "On hold 40 minutes, then cut off". */
+  details: string;
 }

@@ -17,6 +17,8 @@ import { timeLostHeadline, timeLostNotCounted } from '../lib/timeLost';
 import { markReportViewed } from '../lib/onboarding';
 import { routeToHash } from '../lib/router';
 import { useRideData } from '../lib/useRideData';
+import { FAIL_REASON_SHORT } from '../lib/bookingAttempts';
+import type { BookingFailReason } from '../types';
 
 export function Report() {
   const { today, profile, mode } = useApp();
@@ -34,7 +36,7 @@ export function Report() {
 
   const periods = reportPeriods(today, data.rideLogs);
   const period = findPeriod(periods, periodId);
-  const stats = computeStats(data.rideLogs, period.from, period.to);
+  const stats = computeStats(data.rideLogs, period.from, period.to, data.bookingAttempts);
   const weeks = weeklyCounts(data.rideLogs, period.from, period.to);
   const waiting = data.complaints.filter((c) => c.status === 'waiting').length;
 
@@ -46,6 +48,7 @@ export function Report() {
       await downloadReportPdf({
         profile: profile!,
         logs: data!.rideLogs,
+        attempts: data!.bookingAttempts,
         period,
         today,
         chartImage: chartRef.current
@@ -86,6 +89,9 @@ export function Report() {
         <StatTile label="Missed appointments" value={stats.missedAppointments} icon="warning" tone="problem" />
         {stats.strandedReturns > 0 && (
           <StatTile label="Stranded: ride home never came" value={stats.strandedReturns} icon="home" tone="problem" />
+        )}
+        {stats.failedBookings > 0 && (
+          <StatTile label="Calls to book that failed" value={stats.failedBookings} icon="phone" tone="problem" />
         )}
       </div>
 
@@ -129,7 +135,17 @@ export function Report() {
         </section>
       )}
 
-      {stats.totalRides === 0 ? (
+      {stats.failedBookings > 0 && (
+        <p className="late-breakdown">
+          Why booking failed:{' '}
+          {(Object.entries(stats.failedBookingsByReason) as [BookingFailReason, number][])
+            .filter(([, n]) => n > 0)
+            .map(([reason, n]) => `${FAIL_REASON_SHORT[reason]} (${n})`)
+            .join(', ')}
+        </p>
+      )}
+
+      {stats.totalRides === 0 && stats.failedBookings === 0 ? (
         <p className="empty-note">Check in after each ride, and your report will appear here.</p>
       ) : (
         <div className="button-stack">

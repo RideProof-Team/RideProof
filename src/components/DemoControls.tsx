@@ -22,6 +22,7 @@ import { getStateRule } from '../lib/stateRules';
 const SHORTCUTS: { label: string; route: Route }[] = [
   { label: 'Home', route: { name: 'home' } },
   { label: 'Ride timer', route: { name: 'wait' } },
+  { label: 'Booking call script', route: { name: 'call', appointmentId: 'demo-cardiology', date: '2026-11-03' } },
   { label: 'Ride check-in', route: { name: 'checkin' } },
   { label: 'History', route: { name: 'history' } },
   { label: 'Report', route: { name: 'report' } },

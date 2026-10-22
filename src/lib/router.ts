@@ -24,6 +24,8 @@ export type Route =
   /** No appointmentId/date = "today's ride". */
   | { name: 'checkin'; appointmentId?: string; date?: string }
   | { name: 'history' }
+  /** "Call to book": what to say, then "Did you get it booked?" for one trip. */
+  | { name: 'call'; appointmentId: string; date: string }
   /** The "Where's my ride?" waiting screen. No id = the timer that's running. */
   | { name: 'wait'; id?: string }
   | { name: 'report' }
@@ -60,6 +62,7 @@ export function parseRoute(hash: string): Route {
     if (second && third) return { name: 'checkin', appointmentId: decodeURIComponent(second), date: third };
     return { name: 'checkin' };
   }
+  if (first === 'call' && second && third) return { name: 'call', appointmentId: decodeURIComponent(second), date: third };
   if (first === 'wait') return second ? { name: 'wait', id: decodeURIComponent(second) } : { name: 'wait' };
   if (first === 'complaints') {
     // "#/complaints/new", "#/complaints/<id>", "#/complaints/<id>/follow-up",
@@ -88,6 +91,8 @@ export function routeToHash(route: Route): string {
       return route.appointmentId && route.date
         ? `#/checkin/${encodeURIComponent(route.appointmentId)}/${route.date}`
         : '#/checkin';
+    case 'call':
+      return `#/call/${encodeURIComponent(route.appointmentId)}/${route.date}`;
     case 'wait':
       return route.id ? `#/wait/${encodeURIComponent(route.id)}` : '#/wait';
     case 'complaint':

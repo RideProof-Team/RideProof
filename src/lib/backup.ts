@@ -19,8 +19,11 @@
 //   1: profile, appointments, rideLogs
 //   2: + complaints (the complaint follow-up tracker). A version 1 file
 //      still loads; it just has no complaints.
+//   3: + bookingAttempts (failed booking calls), and the optional profile
+//      fields mobilityNeeds and homeAddress. Older files load with none.
 // ---------------------------------------------------------------------------
-import type { Appointment, Profile, RideLog, SentComplaint } from '../types';
+import type { Appointment, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
+import { FAIL_REASONS } from './bookingAttempts';
 import { COMPLAINT_METHODS, COMPLAINT_STATUSES } from './complaints';
 import { formatDateInSentence } from './dates';
 import { isValidRiderBookingWindow } from './bookingWindow';
@@ -28,7 +31,7 @@ import type { Storage } from './storage';
 
 // Keep the original identifier so backups created before the rename still import.
 export const BACKUP_FORMAT = 'rideproof-backup';
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
 export interface BackupFile {
   format: typeof BACKUP_FORMAT;
@@ -38,6 +41,7 @@ export interface BackupFile {
   appointments: Appointment[];
   rideLogs: RideLog[];
   complaints: SentComplaint[];
+  bookingAttempts: FailedBooking[];
 }
 
 /** A problem with a backup file, explained in plain language. */
@@ -54,6 +58,7 @@ export async function createBackup(storage: Storage, exportedAt: string): Promis
     appointments: await storage.listAppointments(),
     rideLogs: await storage.listRideLogs(),
     complaints: await storage.listComplaints(),
+    bookingAttempts: await storage.listBookingAttempts(),
   };
 }
 
@@ -64,6 +69,7 @@ export function backupFileName(today: string): string {
 // ----- Checking a loaded file -----
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const MOBILITY_NEEDS = ['none', 'walker', 'wheelchair', 'needs_help'] as const;
 const TIME = /^\d{2}:\d{2}$/;
 
 type Json = Record<string, unknown>;
@@ -79,6 +85,12 @@ function readProfile(v: unknown): Profile {
   if (v.riderBookingWindow !== undefined && v.riderBookingWindow !== null && !isValidRiderBookingWindow(v.riderBookingWindow)) {
     throw new BackupError('The booking reminder setting in this file is damaged. It must be a number of business days from 1 to 14, or "Not sure".');
   }
+  if (v.mobilityNeeds !== undefined && !oneOf(v.mobilityNeeds, MOBILITY_NEEDS)) {
+    throw new BackupError('The mobility needs setting in this file is damaged. It must be none, walker, wheelchair, or needs help.');
+  }
+  if (v.homeAddress !== undefined && typeof v.homeAddress !== 'string') {
+    throw new BackupError('The home address in this file is damaged.');
+  }
   return {
     role: v.role,
     riderFirstName: text(v.riderFirstName),
@@ -88,6 +100,8 @@ function readProfile(v: unknown): Profile {
     rideCompanyPhone: text(v.rideCompanyPhone),
     healthPlanName: text(v.healthPlanName),
     ...(isValidRiderBookingWindow(v.riderBookingWindow) ? { riderBookingWindow: v.riderBookingWindow } : {}),
+    ...(oneOf(v.mobilityNeeds, MOBILITY_NEEDS) ? { mobilityNeeds: v.mobilityNeeds } : {}),
+    ...(text(v.homeAddress).trim() ? { homeAddress: text(v.homeAddress).trim() } : {}),
   };
 }
 
@@ -190,6 +204,29 @@ function readComplaint(v: unknown): SentComplaint {
   };
 }
 
+function readBookingAttempt(v: unknown): FailedBooking {
+  const types = ['dialysis', 'checkup', 'specialist', 'therapy', 'other'] as const;
+  if (!isObject(v) || !text(v.id) || !text(v.appointmentId) || !DATE.test(text(v.tripDate)) || !DATE.test(text(v.attemptedOn))) {
+    throw new BackupError('A record of a booking call in this file is damaged.');
+  }
+  if (!oneOf(v.reason, FAIL_REASONS)) {
+    throw new BackupError(
+      `The booking call on ${formatDateInSentence(text(v.attemptedOn))} has a damaged reason. It must be "couldn't get through", "no rides available", "too late to book", or "something else".`,
+    );
+  }
+  return {
+    id: text(v.id),
+    appointmentId: text(v.appointmentId),
+    tripDate: text(v.tripDate),
+    clinicName: text(v.clinicName),
+    appointmentType: oneOf(v.appointmentType, types) ? v.appointmentType : 'other',
+    attemptedOn: text(v.attemptedOn),
+    recordedAt: text(v.recordedAt),
+    reason: v.reason,
+    details: text(v.details),
+  };
+}
+
 /** A measured wait: a whole number of minutes, from 0 up to one day. */
 function isWaitMinutes(value: unknown): value is number {
   return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 24 * 60;
@@ -216,6 +253,10 @@ export function parseBackup(fileText: string): BackupFile {
   if (data.complaints !== undefined && !Array.isArray(data.complaints)) {
     throw new BackupError('The complaints in this backup file are damaged.');
   }
+  // Booking calls were added in version 3.
+  if (data.bookingAttempts !== undefined && !Array.isArray(data.bookingAttempts)) {
+    throw new BackupError('The booking calls in this backup file are damaged.');
+  }
   return {
     format: BACKUP_FORMAT,
     version: data.version,
@@ -224,6 +265,7 @@ export function parseBackup(fileText: string): BackupFile {
     appointments: data.appointments.map(readAppointment),
     rideLogs: data.rideLogs.map(readRideLog),
     complaints: Array.isArray(data.complaints) ? data.complaints.map(readComplaint) : [],
+    bookingAttempts: Array.isArray(data.bookingAttempts) ? data.bookingAttempts.map(readBookingAttempt) : [],
   };
 }
 
@@ -235,6 +277,7 @@ export async function restoreBackup(storage: Storage, backup: BackupFile) {
   for (const appointment of backup.appointments) await storage.saveAppointment(appointment);
   for (const log of backup.rideLogs) await storage.saveRideLog(log);
   for (const complaint of backup.complaints) await storage.saveComplaint(complaint);
+  for (const attempt of backup.bookingAttempts) await storage.saveBookingAttempt(attempt);
 }
 
 // ----- Remembering when the last backup was made -----

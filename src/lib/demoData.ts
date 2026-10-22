@@ -13,13 +13,16 @@
 // and has been waiting 10 minutes for her ride home (the wait timer).
 // On Oct 16 Maria emailed a complaint to Rosa's health plan. Two weeks
 // later there's still no answer, so Home asks "Did you hear back?".
+// On Oct 29 Maria called to book Tuesday's cardiology ride but couldn't
+// get through (on hold, then the call dropped). It's saved as evidence,
+// and the ride still shows as NOT booked.
 // "Today" in demo mode is DEMO_TODAY (Friday, Oct 30, 2026): there's a
 // dialysis appointment to check in on, and a cardiology appointment on
 // Tuesday whose ride isn't booked yet, so a booking reminder shows.
 //
 // The demo data is only ever written to the DEMO database (see storage.ts).
 // ---------------------------------------------------------------------------
-import type { ActiveWait, Appointment, Profile, RideLog, SentComplaint } from '../types';
+import type { ActiveWait, Appointment, FailedBooking, Profile, RideLog, SentComplaint } from '../types';
 import { DEMO_TODAY, nowMoment, resetDemoClock } from './clock';
 import type { Storage } from './storage';
 import { waitId } from './waitTimer';
@@ -32,6 +35,8 @@ export const DEMO_PROFILE: Profile = {
   rideCompanyName: 'Sample Ride Co.',
   rideCompanyPhone: '555-0100', // 555-01xx numbers are reserved for fiction
   healthPlanName: 'Sample Health Plan',
+  mobilityNeeds: 'walker',
+  homeAddress: '300 Sample Lane, Sampletown', // fake
 };
 
 export const DEMO_APPOINTMENTS: Appointment[] = [
@@ -126,6 +131,21 @@ export const DEMO_COMPLAINTS: SentComplaint[] = [
   },
 ];
 
+/** Maria's call on Thursday to book Tuesday's cardiology ride didn't get through. */
+export const DEMO_BOOKING_ATTEMPTS: FailedBooking[] = [
+  {
+    id: 'demo-booking-call',
+    appointmentId: 'demo-cardiology',
+    tripDate: '2026-11-03',
+    clinicName: 'Sample Heart Clinic (cardiology)',
+    appointmentType: 'specialist',
+    attemptedOn: '2026-10-29',
+    recordedAt: '2026-10-29T17:45:00.000Z',
+    reason: 'no_answer',
+    details: 'On hold for 25 minutes, then the call dropped.',
+  },
+];
+
 /** Refuse to touch anything except the demo database. */
 function requireDemo(storage: Storage) {
   if (storage.mode !== 'demo') {
@@ -160,6 +180,7 @@ async function writeDemoData(storage: Storage) {
   for (const appointment of DEMO_APPOINTMENTS) await storage.saveAppointment(appointment);
   for (const log of DEMO_RIDE_LOGS) await storage.saveRideLog(log);
   for (const complaint of DEMO_COMPLAINTS) await storage.saveComplaint(complaint);
+  for (const attempt of DEMO_BOOKING_ATTEMPTS) await storage.saveBookingAttempt(attempt);
   // Start the simulated clock at noon, then add the running wait timer.
   resetDemoClock();
   for (const wait of demoWaits(nowMoment('demo'))) await storage.saveWait(wait);

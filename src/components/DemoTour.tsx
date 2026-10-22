@@ -17,8 +17,8 @@ const STEPS: TourStep[] = [
     route: { name: 'home' },
     chapter: 'Today',
     title: 'Start with the ride that matters now',
-    description: 'Rosa’s sample dashboard puts the next clinic visit, its ride status, and the most useful next action in one calm view.',
-    notice: 'Notice the appointment first, then check whether transportation is already booked.',
+    description: 'Rosa’s sample dashboard puts the next clinic visit, its ride status, and the most useful next action in one calm view. Tuesday’s cardiology ride still isn’t booked: Maria’s call on Thursday didn’t get through.',
+    notice: '“Call Sample Ride Co. to book” opens a “What to say” script built from the appointment, then asks whether the ride got booked.',
   },
   {
     route: { name: 'appointments' },
@@ -45,7 +45,7 @@ const STEPS: TourStep[] = [
     route: { name: 'history' },
     chapter: 'History',
     title: 'Find the ride instead of reconstructing it',
-    description: 'Searchable ride history keeps each trip’s outcome and timing in one place, including missed pickups and delayed returns.',
+    description: 'Searchable ride history keeps each trip’s outcome and timing in one place, including missed pickups, delayed returns, and booking calls that didn’t work.',
     notice: 'Try the filters or open a record. Any interaction with the page pauses autoplay.',
   },
   {
