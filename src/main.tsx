@@ -10,10 +10,13 @@ import './motion.css';
 import { startPwa } from './lib/pwa';
 import { applyMotion, loadMotion } from './lib/motion';
 import { applyTheme, loadTheme } from './lib/theme';
+import { applyLanguage, getLanguage } from './lib/i18n';
 
 // Apply Light/Dark before drawing anything, so the screen doesn't flash.
 applyTheme(loadTheme());
 applyMotion(loadMotion());
+// Tell the browser (and screen readers) which language the page is in.
+applyLanguage(getLanguage());
 
 // Set up offline support, updates, and the install button (see lib/pwa.ts).
 // The offline helper only runs in the built app: during development it

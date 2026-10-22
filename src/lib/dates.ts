@@ -8,7 +8,11 @@
 //
 // When we need to do math (add days, find the weekday), we turn the text
 // into a LOCAL Date, do the math, and turn it back into text.
+//
+// Dates and times are written in the app's language (see i18n.ts):
+// "Friday, October 30" or "viernes, 30 de octubre".
 // ---------------------------------------------------------------------------
+import { getLanguage, locale } from './i18n';
 
 /** "2026-10-30" -> a Date at local midnight on that day. */
 export function parseDate(text: string): Date {
@@ -39,11 +43,13 @@ export function weekdayOf(text: string): number {
 }
 
 /**
- * "2026-10-30" -> "Friday, October 30".
+ * "2026-10-30" -> "Friday, October 30" (Spanish: "viernes, 30 de octubre").
  * Pass withYear = true for "Friday, October 30, 2026".
+ * Spanish writes weekdays and months in lowercase; use capitalize() when
+ * the date starts a line.
  */
 export function formatLongDate(text: string, withYear = false): string {
-  return parseDate(text).toLocaleDateString('en-US', {
+  return parseDate(text).toLocaleDateString(locale(), {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -53,18 +59,29 @@ export function formatLongDate(text: string, withYear = false): string {
 
 /** "2026-10-16" -> "October 16, 2026" (no weekday: reads better inside a sentence). */
 export function formatDateInSentence(text: string): string {
-  return parseDate(text).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return parseDate(text).toLocaleDateString(locale(), { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 /** "2026-10-30" -> "Oct 30" (short, for lists). */
 export function formatShortDate(text: string): string {
-  return parseDate(text).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return parseDate(text).toLocaleDateString(locale(), { month: 'short', day: 'numeric' });
 }
 
-/** "09:00" -> "9:00 AM", "14:30" -> "2:30 PM". */
+/** "2026-10-30" -> "October 2026" (Spanish: "Octubre de 2026"), for headings. */
+export function formatMonthYear(text: string): string {
+  return capitalize(parseDate(text).toLocaleDateString(locale(), { month: 'long', year: 'numeric' }));
+}
+
+/** "viernes, 30 de octubre" -> "Viernes, 30 de octubre" (for the start of a line). */
+export function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** "09:00" -> "9:00 AM", "14:30" -> "2:30 PM" (Spanish: "9:00 a. m.", "2:30 p. m."). */
 export function formatTime(time: string): string {
   const [hours, minutes] = time.split(':').map(Number);
-  const suffix = hours >= 12 ? 'PM' : 'AM';
+  const spanish = getLanguage() === 'es';
+  const suffix = hours >= 12 ? (spanish ? 'p. m.' : 'PM') : spanish ? 'a. m.' : 'AM';
   const hour12 = hours % 12 === 0 ? 12 : hours % 12;
   return `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}`;
 }

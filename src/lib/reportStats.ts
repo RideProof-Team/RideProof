@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 import type { BookingFailReason, FailedBooking, RideLog } from '../types';
 import { attemptsInRange } from './bookingAttempts';
-import { addDays, formatShortDate, parseDate, toDateString, weekdayOf } from './dates';
+import { addDays, formatMonthYear, formatShortDate, parseDate, toDateString, weekdayOf } from './dates';
 import { totalWait, type WaitPrecision } from './timeLost';
 
 export interface RideStats {
@@ -135,7 +135,7 @@ export function reportPeriods(today: string, logs: RideLog[]): ReportPeriod[] {
     const last = toDateString(new Date(d.getFullYear(), d.getMonth() + 1, 0));
     periods.push({
       id: month,
-      label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      label: formatMonthYear(first),
       from: first,
       to: last,
     });

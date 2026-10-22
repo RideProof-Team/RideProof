@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 import type { Profile } from '../types';
 import { Brand } from '../components/Brand';
+import { LanguageButton } from '../components/LanguageSwitch';
 import './public.css';
 
 function PublicHeader() {
-  return <header className="rp-nav"><Brand /><nav aria-label="Website"><a href="#/signin">Sign in <span aria-hidden="true">↗</span></a></nav></header>;
+  return <header className="rp-nav"><Brand /><nav aria-label="Website"><a href="#/signin">Sign in <span aria-hidden="true">↗</span></a><LanguageButton /></nav></header>;
 }
 
 function usePageTitle(title: string) {

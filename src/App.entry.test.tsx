@@ -32,7 +32,7 @@ afterEach(async () => {
 
 it('opens the demo from the landing page and returns to real device access', async () => {
   await act(async () => root.render(<App />));
-  await act(async () => container.querySelector('button')!.click());
+  await act(async () => Array.from(container.querySelectorAll('button')).find(b => b.textContent === 'Watch the auto-demo')!.click());
   await vi.waitFor(async () => {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)); });
     expect(container.querySelector('main')?.textContent).toBe('demo:Rosa');

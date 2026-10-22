@@ -12,7 +12,7 @@ import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { SkipDayButton } from '../components/SkipDayButton';
 import { tripsNeedingCheckIn } from '../lib/checkinFlow';
-import { formatLongDate, formatTime, parseDate } from '../lib/dates';
+import { formatLongDate, formatMonthYear, formatTime } from '../lib/dates';
 import { pickupTimesText } from '../lib/complaintLetter';
 import {
   APPOINTMENT_TYPE_LABELS,
@@ -66,7 +66,7 @@ export function History() {
   // Group into months: { "October 2026": [...], "September 2026": [...] }
   const months = new Map<string, HistoryItem[]>();
   for (const item of items) {
-    const month = parseDate(item.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const month = formatMonthYear(item.date);
     if (!months.has(month)) months.set(month, []);
     months.get(month)!.push(item);
   }

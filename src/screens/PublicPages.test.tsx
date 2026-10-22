@@ -32,7 +32,7 @@ describe('public entry pages', () => {
     expect(document.title).toBe('Keep a record. Have a voice. · RideConnect');
     expect(container.querySelector('a[href="#/setup"]')).not.toBeNull();
     expect(container.querySelector('a[href="#/signin"]')).not.toBeNull();
-    await act(async () => container.querySelector('button')!.click());
+    await act(async () => Array.from(container.querySelectorAll('button')).find(b => b.textContent === 'Watch the auto-demo')!.click());
     expect(demo).toHaveBeenCalledOnce();
     expect(demo).toHaveBeenLastCalledWith(true);
     const guided = Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Take a guided tour');

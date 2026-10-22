@@ -8,6 +8,7 @@ import { useRef } from 'react';
 import { useApp } from '../AppContext';
 import { DemoControls } from './DemoControls';
 import { Brand } from './Brand';
+import { LanguageButton } from './LanguageSwitch';
 
 export function Header({ onStartTour }: { onStartTour(): void }) {
   const { mode, toggleDemo } = useApp();
@@ -20,6 +21,7 @@ export function Header({ onStartTour }: { onStartTour(): void }) {
       <div className="header-bar">
         <Brand />
         <a href="#/signin" className="device-access-link">Device access</a>
+        <LanguageButton />
         {isDemo && <button type="button" className="demo-button" onClick={onStartTour}>Restart tour</button>}
         <button
           type="button"

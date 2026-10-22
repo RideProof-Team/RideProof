@@ -14,6 +14,7 @@ import { askConfirm } from '../lib/feedback';
 import { requestPersistentStorage, type PersistState } from '../lib/persist';
 import { loadMotion, saveMotion, systemReducesMotion, type MotionChoice } from '../lib/motion';
 import { loadTheme, saveTheme, type ThemeChoice } from '../lib/theme';
+import { LanguageChoice } from '../components/LanguageSwitch';
 import { navigate, routeToHash } from '../lib/router';
 import { BookingWindowPicker } from '../components/BookingWindowPicker';
 import { showSnackbar } from '../lib/feedback';
@@ -104,6 +105,7 @@ export function Settings() {
 
       <section className="card" aria-labelledby="appearance-heading">
         <h2 id="appearance-heading">Appearance</h2>
+        <LanguageChoice />
         <fieldset className="choice-group">
           <legend className="visually-hidden">Light or dark colors</legend>
           <div className="chip-row">

@@ -39,6 +39,7 @@ import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 import { Landing, SignIn } from './screens/PublicPages';
 import type { Profile } from './types';
+import { useLanguage } from './lib/i18n';
 
 export function App() {
   const [mode, setMode] = useState<DataMode>(() => (loadDemoFlag() ? 'demo' : 'real'));
@@ -55,6 +56,8 @@ export function App() {
   const [tourAutoPlay, setTourAutoPlay] = useState(true);
   const switchingMode = useRef(false);
   const route = useRoute();
+  // Redraw everything when the language changes (English / Español).
+  useLanguage();
   const today = getToday(mode);
   const isPublic = route.name === 'landing' || route.name === 'signin';
   useEffect(() => {
