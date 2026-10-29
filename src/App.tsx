@@ -7,6 +7,7 @@
 //   4. Shows Welcome (no profile yet) or the current screen.
 // ---------------------------------------------------------------------------
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { AppContext, type AppContextValue, type ToastMessage } from './AppContext';
 import { BottomNav } from './components/BottomNav';
 import { FeedbackHost } from './components/FeedbackHost';
@@ -234,6 +235,7 @@ export function App() {
       {profile && !loading && !isPublic && <BottomNav current={route} />}
       <FeedbackHost />
       {profile && !loading && !isPublic && <WaitWatcher onWaitScreen={route.name === 'wait'} />}
+      <Analytics />
     </AppContext.Provider>
   );
 }
